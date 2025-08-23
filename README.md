@@ -1,6 +1,14 @@
 # Dev-Bug-Coder-Blog – A Full-Stack Developer Blog for Coding Errors & Solutions – React, Express, Prisma Website
 
-<img width="1382" height="738" alt="Screenshot 2025-08-23 at 23 04 48" src="https://github.com/user-attachments/assets/d184b39a-e19d-48c4-8988-1b511b9f4924" /> <img width="1371" height="730" alt="Screenshot 2025-08-23 at 23 06 25" src="https://github.com/user-attachments/assets/eeccee97-96e5-4d14-90c4-015716f5ac8d" /> <img width="1355" height="725" alt="Screenshot 2025-08-23 at 23 06 52" src="https://github.com/user-attachments/assets/ea4cb0ab-0c2d-4e0b-a183-6fa0b785cbff" /> <img width="1286" height="741" alt="Screenshot 2025-08-23 at 23 07 50" src="https://github.com/user-attachments/assets/988809c2-69a7-46ee-b7ed-e6368a30e29e" /> <img width="1275" height="742" alt="Screenshot 2025-08-23 at 23 08 07" src="https://github.com/user-attachments/assets/ef6130cb-0411-4c81-b7de-d0e05abfc4c9" /> <img width="1280" height="742" alt="Screenshot 2025-08-23 at 23 08 25" src="https://github.com/user-attachments/assets/3b8bc105-f1a4-4c23-84d3-329d9fff0d45" /> <img width="1278" height="509" alt="Screenshot 2025-08-23 at 23 08 44" src="https://github.com/user-attachments/assets/e92de0c7-150c-4b4e-bc14-29630ab3e0e6" /> <img width="1280" height="741" alt="Screenshot 2025-08-23 at 23 09 00" src="https://github.com/user-attachments/assets/b1702db5-8fab-4191-8cd4-01caaa3269a6" /> <img width="1285" height="575" alt="Screenshot 2025-08-23 at 23 09 21" src="https://github.com/user-attachments/assets/0b6b151f-c5aa-49cb-a657-b93e4371856c" />
+![Screenshot 2025-08-23 at 23 04 48](https://github.com/user-attachments/assets/d184b39a-e19d-48c4-8988-1b511b9f4924)
+![Screenshot 2025-08-23 at 23 06 25](https://github.com/user-attachments/assets/eeccee97-96e5-4d14-90c4-015716f5ac8d)
+![Screenshot 2025-08-23 at 23 06 52](https://github.com/user-attachments/assets/ea4cb0ab-0c2d-4e0b-a183-6fa0b785cbff)
+![Screenshot 2025-08-23 at 23 07 50](https://github.com/user-attachments/assets/988809c2-69a7-46ee-b7ed-e6368a30e29e)
+![Screenshot 2025-08-23 at 23 08 07](https://github.com/user-attachments/assets/ef6130cb-0411-4c81-b7de-d0e05abfc4c9)
+![Screenshot 2025-08-23 at 23 08 25](https://github.com/user-attachments/assets/3b8bc105-f1a4-4c23-84d3-329d9fff0d45)
+![Screenshot 2025-08-23 at 23 08 44](https://github.com/user-attachments/assets/e92de0c7-150c-4b4e-bc14-29630ab3e0e6)
+![Screenshot 2025-08-23 at 23 09 00](https://github.com/user-attachments/assets/b1702db5-8fab-4191-8cd4-01caaa3269a6)
+![Screenshot 2025-08-23 at 23 09 21](https://github.com/user-attachments/assets/0b6b151f-c5aa-49cb-a657-b93e4371856c)
 
 ---
 
