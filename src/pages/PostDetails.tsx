@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import LoadingSpinner from "../components/LoadingSpinner";
 import { useParams, useNavigate } from "react-router-dom";
 
 import { Post } from "../types";
@@ -254,15 +255,7 @@ const PostDetails: React.FC = () => {
   }, [showDropdown]);
 
   if (loading) {
-    return (
-      <div className="container mx-auto pt-24 max-w-3xl px-4">
-        <div className="animate-pulse">
-          <div className="h-12 bg-gray-200 rounded-lg mb-4"></div>
-          <div className="h-64 bg-gray-200 rounded-lg mb-4"></div>
-          <div className="h-32 bg-gray-200 rounded-lg"></div>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner text="Loading post..." />;
   }
 
   if (!post) {

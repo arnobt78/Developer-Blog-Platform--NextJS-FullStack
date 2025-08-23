@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import PostCard from "../components/PostCard";
+import LoadingSpinner from "../components/LoadingSpinner";
 import Sidebar from "../components/Sidebar";
 import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { Post } from "../types";
@@ -211,11 +212,7 @@ const Posts: React.FC = () => {
 
         {/* Loading state or posts */}
         {loading ? (
-          <div className="space-y-4">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="animate-pulse"></div>
-            ))}
-          </div>
+          <LoadingSpinner text="Loading posts..." />
         ) : filteredPosts.length === 0 ? (
           <div className="flex items-center justify-center h-[40vh]">
             <span className="text-gray-500 text-2xl">

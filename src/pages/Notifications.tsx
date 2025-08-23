@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import LoadingSpinner from "../components/LoadingSpinner";
 import { api } from "../api";
 import { Link } from "react-router-dom";
 
@@ -34,7 +35,7 @@ const Notifications: React.FC = () => {
     <div className="max-w-2xl mx-auto mt-32 p-6 bg-white rounded shadow">
       <h2 className="text-2xl font-bold mb-6">Notifications</h2>
       {loading ? (
-        <div>Loading...</div>
+        <LoadingSpinner text="Loading notifications..." />
       ) : notifications.length === 0 ? (
         <div className="text-gray-500">No notifications yet.</div>
       ) : (

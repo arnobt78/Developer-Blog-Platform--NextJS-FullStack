@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import LoadingSpinner from "../components/LoadingSpinner";
 import { api } from "../api";
 import { Post, User } from "../types";
 
@@ -13,11 +14,13 @@ interface Report {
 
 const AdminReports: React.FC = () => {
   const [reports, setReports] = useState<Report[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchReports = async () => {
       const res = await api.get<Report[]>("/reports");
       setReports(res.data);
+      setLoading(false);
     };
     fetchReports();
   }, []);
@@ -27,6 +30,9 @@ const AdminReports: React.FC = () => {
     setReports((prev) => prev.map((r) => (r.id === id ? { ...r, status } : r)));
   };
 
+  if (loading) {
+    return <LoadingSpinner text="Loading reports..." />;
+  }
   return (
     <div className="container mx-auto pt-24 px-4">
       <h1 className="text-2xl font-bold mb-4">Reported Posts</h1>

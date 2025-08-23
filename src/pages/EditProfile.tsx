@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import LoadingSpinner from "../components/LoadingSpinner";
 import { useNavigate } from "react-router-dom";
 import { api } from "../api";
 
@@ -76,7 +77,7 @@ const EditProfile: React.FC = () => {
     }
   };
 
-  if (loading) return <div className="text-center mt-24">Loading...</div>;
+  if (loading) return <LoadingSpinner text="Loading profile..." />;
 
   return (
     <form
