@@ -53,10 +53,7 @@ export default function Home() {
           <Image
             src="/assets/hero-1.png"
             alt="Hero"
-            width={1200}
-            height={200}
-            className="w-full h-[200px] hover:scale-105 transition-transform duration-300"
-            style={{ height: "auto" }}
+            className="w-full h-[400px] hover:scale-105 transition-transform duration-300"
           />
         </section>
 
