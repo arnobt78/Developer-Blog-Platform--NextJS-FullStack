@@ -74,8 +74,12 @@ export function usePost(id: string) {
 
 /**
  * Fetch saved posts for current user
+ * 
+ * @param options - Optional query options
+ * @param options.enabled - Whether to enable the query (default: true)
+ *                        Set to false to skip fetching when user is not authenticated
  */
-export function useSavedPosts() {
+export function useSavedPosts(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: ["saved-posts"],
     queryFn: async () => {
@@ -90,6 +94,7 @@ export function useSavedPosts() {
       return response.json() as Promise<Post[]>;
     },
     staleTime: 2 * 60 * 1000,
+    enabled: options?.enabled !== false, // Default to true, but can be disabled
   });
 }
 

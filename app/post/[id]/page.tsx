@@ -41,13 +41,17 @@ export default function PostDetails() {
 
   // React Query hooks
   const { data: post, isLoading } = usePost(id || "");
-  const { data: savedPosts = [] } = useSavedPosts();
+  const { data: authData } = useAuth();
+  const isAuthenticated = !!authData?.user;
+  // Only fetch saved posts if user is authenticated (optimization)
+  const { data: savedPosts = [] } = useSavedPosts({
+    enabled: isAuthenticated,
+  });
   const likePost = useLikePost();
   const markHelpful = useMarkHelpful();
   const savePost = useSavePost();
   const unsavePost = useUnsavePost();
   const deletePost = useDeletePost();
-  const { data: authData } = useAuth();
 
   const currentUser = authData?.user || null;
   const isLoggedIn = !!currentUser;
