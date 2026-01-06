@@ -39,6 +39,13 @@ export function useCreateComment() {
       imageUrl?: string;
       fileId?: string;
     }) => {
+      // Get token from localStorage for authentication
+      const token =
+        typeof window !== "undefined" ? localStorage.getItem("token") : null;
+      if (!token) {
+        throw new Error("Not authenticated");
+      }
+
       // Create FormData for file upload support
       const formData = new FormData();
       formData.append("content", data.content);
@@ -48,11 +55,14 @@ export function useCreateComment() {
 
       const response = await fetch(`/api/comments/post/${data.postId}`, {
         method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
         body: formData,
       });
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || "Failed to create comment");
+        throw new Error(error.error || error.message || "Failed to create comment");
       }
       return response.json();
     },
@@ -93,14 +103,24 @@ export function useUpdateComment() {
       content: string;
       postId: string;
     }) => {
+      // Get token from localStorage for authentication
+      const token =
+        typeof window !== "undefined" ? localStorage.getItem("token") : null;
+      if (!token) {
+        throw new Error("Not authenticated");
+      }
+
       const response = await fetch(`/api/comments/${id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({ content }),
       });
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || "Failed to update comment");
+        throw new Error(error.message || error.error || "Failed to update comment");
       }
       return response.json();
     },
@@ -138,12 +158,22 @@ export function useDeleteComment() {
       id: string;
       postId: string;
     }) => {
+      // Get token from localStorage for authentication
+      const token =
+        typeof window !== "undefined" ? localStorage.getItem("token") : null;
+      if (!token) {
+        throw new Error("Not authenticated");
+      }
+
       const response = await fetch(`/api/comments/${id}`, {
         method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || "Failed to delete comment");
+        throw new Error(error.message || error.error || "Failed to delete comment");
       }
       return response.json();
     },
@@ -182,8 +212,18 @@ export function useLikeComment() {
       commentId: string;
       postId: string;
     }) => {
+      // Get token from localStorage for authentication
+      const token =
+        typeof window !== "undefined" ? localStorage.getItem("token") : null;
+      if (!token) {
+        throw new Error("Not authenticated");
+      }
+
       const response = await fetch(`/api/comments/${commentId}/like`, {
         method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
       if (!response.ok) throw new Error("Failed to like comment");
       return response.json();

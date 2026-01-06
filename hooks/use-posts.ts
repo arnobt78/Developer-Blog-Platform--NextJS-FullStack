@@ -221,12 +221,22 @@ export function useDeletePost() {
 
   return useMutation({
     mutationFn: async (id: string) => {
+      // Get token from localStorage for authentication
+      const token =
+        typeof window !== "undefined" ? localStorage.getItem("token") : null;
+      if (!token) {
+        throw new Error("Not authenticated");
+      }
+
       const response = await fetch(`/api/posts/${id}`, {
         method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || "Failed to delete post");
+        throw new Error(error.message || error.error || "Failed to delete post");
       }
       return response.json();
     },
@@ -269,9 +279,19 @@ export function useLikePost() {
 
   return useMutation({
     mutationFn: async (postId: string) => {
+      // Get token from localStorage for authentication
+      const token =
+        typeof window !== "undefined" ? localStorage.getItem("token") : null;
+      if (!token) {
+        throw new Error("Not authenticated");
+      }
+
       // Actual API call to like/unlike post
       const response = await fetch(`/api/posts/${postId}/like`, {
         method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
       if (!response.ok) throw new Error("Failed to like post");
       return response.json();
@@ -325,8 +345,18 @@ export function useMarkHelpful() {
 
   return useMutation({
     mutationFn: async (postId: string) => {
+      // Get token from localStorage for authentication
+      const token =
+        typeof window !== "undefined" ? localStorage.getItem("token") : null;
+      if (!token) {
+        throw new Error("Not authenticated");
+      }
+
       const response = await fetch(`/api/posts/${postId}/helpful`, {
         method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
       if (!response.ok) throw new Error("Failed to mark helpful");
       return response.json();
@@ -367,8 +397,18 @@ export function useSavePost() {
 
   return useMutation({
     mutationFn: async (postId: string) => {
+      // Get token from localStorage for authentication
+      const token =
+        typeof window !== "undefined" ? localStorage.getItem("token") : null;
+      if (!token) {
+        throw new Error("Not authenticated");
+      }
+
       const response = await fetch(`/api/posts/${postId}/save`, {
         method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
       if (!response.ok) throw new Error("Failed to save post");
       return response.json();
@@ -400,8 +440,18 @@ export function useUnsavePost() {
 
   return useMutation({
     mutationFn: async (postId: string) => {
+      // Get token from localStorage for authentication
+      const token =
+        typeof window !== "undefined" ? localStorage.getItem("token") : null;
+      if (!token) {
+        throw new Error("Not authenticated");
+      }
+
       const response = await fetch(`/api/posts/${postId}/unsave`, {
         method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
       if (!response.ok) throw new Error("Failed to unsave post");
       return response.json();
