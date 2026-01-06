@@ -203,22 +203,15 @@ export function useLogout() {
 
   return useMutation({
     mutationFn: async () => {
-      // Clear localStorage
+      // Clear localStorage first (client-side logout)
       if (typeof window !== "undefined") {
         localStorage.removeItem("token");
         localStorage.removeItem("user");
       }
-      // Call logout endpoint if it exists
-      try {
-        const response = await fetch("/api/auth/logout", {
-          method: "POST",
-        });
-        if (!response.ok) throw new Error("Logout failed");
-        return response.json();
-      } catch {
-        // If endpoint doesn't exist, still proceed with logout
-        return { success: true };
-      }
+      // Note: No server-side logout endpoint needed
+      // Token-based auth doesn't require server-side session cleanup
+      // Just clearing localStorage and cache is sufficient
+      return { success: true };
     },
     onSuccess: () => {
       queryClient.clear(); // Clear all cached data
