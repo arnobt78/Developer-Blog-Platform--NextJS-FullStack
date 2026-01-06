@@ -265,9 +265,16 @@ export function useUpdateProfile() {
       }
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      // Update localStorage with new user data (including updated avatar)
+      if (typeof window !== "undefined" && data) {
+        localStorage.setItem("user", JSON.stringify(data));
+      }
+      // Invalidate and refetch auth query to get updated user data
       queryClient.invalidateQueries({ queryKey: ["auth"] });
       queryClient.invalidateQueries({ queryKey: ["user"] });
+      // Force immediate refetch of auth data
+      queryClient.refetchQueries({ queryKey: ["auth"] });
       toast({
         title: "Success",
         description: "Profile updated successfully",
