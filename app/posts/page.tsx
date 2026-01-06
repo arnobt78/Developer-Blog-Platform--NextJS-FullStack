@@ -18,14 +18,18 @@
 
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import PostCard from "@/components/PostCard";
 import { PostCardSkeleton } from "@/components/ui/skeleton";
 import Sidebar from "@/components/Sidebar";
 import { useRouter, useSearchParams } from "next/navigation";
 import { usePosts, useSavedPosts } from "@/hooks/use-posts";
 
-export default function PostsPage() {
+/**
+ * Posts content component that uses useSearchParams
+ * Must be wrapped in Suspense boundary for Next.js static generation
+ */
+function PostsContent() {
   // Local state for tag filtering
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const router = useRouter();
@@ -241,5 +245,30 @@ export default function PostsPage() {
         popularTopics={popularTopics}
       />
     </div>
+  );
+}
+
+/**
+ * Default export - Wraps PostsContent in Suspense boundary
+ * Required by Next.js when using useSearchParams() for static generation
+ */
+export default function PostsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex pt-24">
+          <main className="w-3/4 p-8">
+            <div className="grid grid-cols-1 gap-4 w-full">
+              {[1, 2, 3].map((i) => (
+                <PostCardSkeleton key={i} />
+              ))}
+            </div>
+          </main>
+          <Sidebar onTagSelect={() => {}} recentPosts={[]} popularTopics={[]} />
+        </div>
+      }
+    >
+      <PostsContent />
+    </Suspense>
   );
 }
