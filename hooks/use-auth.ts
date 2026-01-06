@@ -242,13 +242,23 @@ export function useUpdateProfile() {
 
   return useMutation({
     mutationFn: async (formData: FormData) => {
+      // Get token from localStorage for authentication
+      const token =
+        typeof window !== "undefined" ? localStorage.getItem("token") : null;
+      if (!token) {
+        throw new Error("Not authenticated");
+      }
+
       const response = await fetch("/api/auth/me", {
         method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
         body: formData,
       });
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || "Failed to update profile");
+        throw new Error(error.message || error.error || "Failed to update profile");
       }
       return response.json();
     },

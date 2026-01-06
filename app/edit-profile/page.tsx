@@ -69,6 +69,7 @@ export default function EditProfile() {
     }
     updateProfile.mutate(formData, {
       onSuccess: () => {
+        // Redirect after successful update
         router.push("/");
       },
     });
