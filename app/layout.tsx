@@ -163,10 +163,10 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
-      <body suppressHydrationWarning>
+      <body suppressHydrationWarning className="flex flex-col min-h-screen">
         <QueryProvider>
           <Navbar />
-          <main>{children}</main>
+          <main className="flex-1">{children}</main>
           <Footer />
           <Toaster />
         </QueryProvider>

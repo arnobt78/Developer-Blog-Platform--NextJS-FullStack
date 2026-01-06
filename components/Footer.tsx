@@ -9,7 +9,7 @@ import Arnob from "@/public/assets/arnob.png";
 
 const Footer: React.FC = () => {
   return (
-    <footer className="bg-gray-800 shadow-xl text-white px-4 py-4">
+    <footer className="bg-gray-800 shadow-xl text-white px-4 py-4 mt-auto">
       <div className="container mx-auto flex flex-col md:flex-row justify-between items-center">
         <div className="flex flex-col items-center">
           <Link href="/" className="flex items-center">
