@@ -134,9 +134,10 @@ export function useLogin() {
           localStorage.setItem("user", JSON.stringify(data.user));
         }
       }
-      // Invalidate auth query to trigger refetch with new token
-      // This updates all components using useAuth() hook
+      // Invalidate and immediately refetch auth query to get fresh user data
+      // This ensures avatar and other profile data are up-to-date immediately
       queryClient.invalidateQueries({ queryKey: ["auth"] });
+      queryClient.refetchQueries({ queryKey: ["auth"] });
       toast({
         title: "Success",
         description: "Logged in successfully",
