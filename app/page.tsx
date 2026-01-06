@@ -53,7 +53,7 @@ export default function Home() {
           <Image
             src="/assets/hero-1.png"
             alt="Hero"
-            className="w-full h-[400px] hover:scale-105 transition-transform duration-300"
+            className="w-full h-[400px]"
           />
         </section>
 
