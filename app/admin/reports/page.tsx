@@ -20,16 +20,27 @@ export default function AdminReports() {
 
   useEffect(() => {
     const fetchReports = async () => {
-      const res = await api.get<Report[]>("/reports");
-      setReports(res.data);
-      setLoading(false);
+      try {
+        const res = await api.get<Report[]>("/reports");
+        setReports(res.data);
+      } catch (error) {
+        console.error("Error fetching reports:", error);
+        // Silently fail - don't show error if user is not admin or not logged in
+      } finally {
+        setLoading(false);
+      }
     };
     fetchReports();
   }, []);
 
   const handleStatusChange = async (id: string, status: string) => {
-    await api.patch(`/reports/${id}`, { status });
-    setReports((prev) => prev.map((r) => (r.id === id ? { ...r, status } : r)));
+    try {
+      await api.patch(`/reports/${id}`, { status });
+      setReports((prev) => prev.map((r) => (r.id === id ? { ...r, status } : r)));
+    } catch (error) {
+      console.error("Error updating report status:", error);
+      // Optionally show error toast here
+    }
   };
 
   return (

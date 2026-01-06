@@ -1,12 +1,17 @@
 import axios from "axios";
 import { Post, Comment, Notification } from "@/types";
 
-// Get the backend URL from environment variables with fallback
-const BACKEND_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-
-// Create axios instance with default config
+/**
+ * Create axios instance for API calls
+ * 
+ * In Next.js, we use relative URLs since API routes are in the same app
+ * This works in both development and production without hardcoding URLs
+ * 
+ * For client-side requests, we use relative paths which automatically
+ * resolve to the current domain (localhost in dev, vercel.app in production)
+ */
 export const api = axios.create({
-  baseURL: `${BACKEND_URL}/api`,
+  baseURL: "/api", // Relative URL - works in dev and production
   withCredentials: true,
   headers: {
     "Content-Type": "application/json",
