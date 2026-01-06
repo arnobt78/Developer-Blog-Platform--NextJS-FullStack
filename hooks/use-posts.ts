@@ -83,7 +83,20 @@ export function useSavedPosts(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: ["saved-posts"],
     queryFn: async () => {
-      const response = await fetch("/api/users/me/saved-posts");
+      // Get token from localStorage for authentication
+      const token =
+        typeof window !== "undefined" ? localStorage.getItem("token") : null;
+      
+      // If no token, return empty array (user not authenticated)
+      if (!token) {
+        return [];
+      }
+
+      const response = await fetch("/api/users/me/saved-posts", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       if (!response.ok) {
         // Return empty array if not authenticated or error
         if (response.status === 401 || response.status === 404) {
@@ -193,7 +206,75 @@ export function useUpdatePost() {
       }
       return response.json();
     },
+    onMutate: async ({ id, formData }) => {
+      // Cancel outgoing refetches to prevent race conditions
+      await queryClient.cancelQueries({ queryKey: ["post", id] });
+      await queryClient.cancelQueries({ queryKey: ["posts"] });
+
+      // Snapshot previous values for rollback
+      const previousPost = queryClient.getQueryData<Post>(["post", id]);
+      const previousPosts = queryClient.getQueryData<Post[]>(["posts"]);
+
+      // Extract form data for optimistic update
+      const title = formData.get("title") as string;
+      const description = formData.get("description") as string;
+      const content = formData.get("content") as string;
+      const codeSnippet = formData.get("codeSnippet") as string;
+      const tagsStr = formData.get("tags") as string;
+      const imageUrl = formData.get("imageUrl") as string | null;
+      const tags = tagsStr ? JSON.parse(tagsStr) : [];
+
+      // Optimistically update the post in cache
+      if (previousPost) {
+        queryClient.setQueryData<Post>(["post", id], {
+          ...previousPost,
+          title: title || previousPost.title,
+          description: description || previousPost.description,
+          content: content || previousPost.content,
+          codeSnippet: codeSnippet || previousPost.codeSnippet || "",
+          tags: tags.length > 0 ? tags : previousPost.tags,
+          imageUrl: imageUrl || previousPost.imageUrl,
+        });
+      }
+
+      // Optimistically update posts list
+      if (previousPosts) {
+        queryClient.setQueryData<Post[]>(
+          ["posts"],
+          previousPosts.map((post) =>
+            post.id === id
+              ? {
+                  ...post,
+                  title: title || post.title,
+                  description: description || post.description,
+                  content: content || post.content,
+                  codeSnippet: codeSnippet || post.codeSnippet || "",
+                  tags: tags.length > 0 ? tags : post.tags,
+                  imageUrl: imageUrl || post.imageUrl,
+                }
+              : post
+          )
+        );
+      }
+
+      return { previousPost, previousPosts };
+    },
+    onError: (error, variables, context) => {
+      // Rollback on error
+      if (context?.previousPost) {
+        queryClient.setQueryData(["post", variables.id], context.previousPost);
+      }
+      if (context?.previousPosts) {
+        queryClient.setQueryData(["posts"], context.previousPosts);
+      }
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
     onSuccess: (data, variables) => {
+      // Invalidate to refetch fresh data from server
       queryClient.invalidateQueries({ queryKey: ["posts"] });
       queryClient.invalidateQueries({ queryKey: ["post", variables.id] });
       queryClient.invalidateQueries({ queryKey: ["saved-posts"] });
@@ -201,13 +282,6 @@ export function useUpdatePost() {
         title: "Success",
         description: "Post updated successfully",
         variant: "success",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
       });
     },
   });
