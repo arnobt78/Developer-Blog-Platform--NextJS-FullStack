@@ -258,7 +258,9 @@ export function useUpdateProfile() {
       });
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || error.error || "Failed to update profile");
+        throw new Error(
+          error.message || error.error || "Failed to update profile"
+        );
       }
       return response.json();
     },
