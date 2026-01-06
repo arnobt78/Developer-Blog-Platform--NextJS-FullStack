@@ -14,9 +14,11 @@ export async function POST(request: NextRequest) {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // Upload avatar to ImageKit if provided
     let avatarUrl: string | null = null;
     if (avatarFile) {
-      const uploaded = await handleFileUpload(request, "avatar", "avatars");
+      // Pass File directly to handleFileUpload (fixes request body consumption issue)
+      const uploaded = await handleFileUpload(avatarFile, "avatars");
       if (uploaded) {
         avatarUrl = uploaded.url;
       }

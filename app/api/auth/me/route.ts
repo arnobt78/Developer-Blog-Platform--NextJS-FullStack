@@ -76,8 +76,10 @@ export async function PUT(request: NextRequest) {
       updateData.password = hashedPassword;
     }
 
+    // Upload avatar to ImageKit if provided
     if (avatarFile) {
-      const uploaded = await handleFileUpload(request, "avatar", "avatars");
+      // Pass File directly to handleFileUpload (fixes request body consumption issue)
+      const uploaded = await handleFileUpload(avatarFile, "avatars");
       if (uploaded) {
         updateData.avatarUrl = uploaded.url;
       }

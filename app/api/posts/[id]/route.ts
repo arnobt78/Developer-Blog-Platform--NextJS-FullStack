@@ -92,7 +92,8 @@ export async function PUT(
 
     // If new screenshot file provided, upload it
     if (screenshotFile) {
-      const uploaded = await handleFileUpload(request, "screenshot", "posts");
+      // Pass File directly to handleFileUpload (fixes request body consumption issue)
+      const uploaded = await handleFileUpload(screenshotFile, "posts");
       if (uploaded) {
         // Delete old image from ImageKit if exists
         if (post.fileId) {

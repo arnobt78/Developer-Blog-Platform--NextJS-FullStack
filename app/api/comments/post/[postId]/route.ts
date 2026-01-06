@@ -79,7 +79,8 @@ export async function POST(
 
     // If image file provided, upload it (legacy support)
     if (imageFile && !imageUrl) {
-      const uploaded = await handleFileUpload(request, "image", "comments");
+      // Pass File directly to handleFileUpload (fixes request body consumption issue)
+      const uploaded = await handleFileUpload(imageFile, "comments");
       if (uploaded) {
         finalImageUrl = uploaded.url;
         finalFileId = uploaded.fileId;

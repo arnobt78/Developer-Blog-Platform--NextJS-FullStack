@@ -8,14 +8,40 @@ export interface UploadedFile {
   thumbnailUrl?: string;
 }
 
+/**
+ * Upload a file to ImageKit
+ * 
+ * Usage:
+ * 1. Pass File directly (recommended): handleFileUpload(file, "avatars")
+ * 2. Extract from request (legacy): handleFileUpload(request, "avatar", "avatars")
+ * 
+ * @param fileOrRequest - File object to upload OR NextRequest to extract file from
+ * @param folderOrFieldName - Folder name (if File passed) OR field name (if Request passed)
+ * @param folder - Folder name (only used when Request is passed)
+ * @returns UploadedFile with URL and fileId, or null on error
+ */
 export async function handleFileUpload(
-  request: NextRequest,
-  fieldName: string = "file",
-  folder: string = "dev-blog"
+  fileOrRequest: File | NextRequest,
+  folderOrFieldName: string = "dev-blog",
+  folder?: string
 ): Promise<UploadedFile | null> {
   try {
-    const formData = await request.formData();
-    const file = formData.get(fieldName) as File | null;
+    let file: File | null = null;
+    let uploadFolder: string = "dev-blog";
+
+    // If first parameter is a File, use it directly (recommended approach)
+    if (fileOrRequest instanceof File) {
+      file = fileOrRequest;
+      uploadFolder = folderOrFieldName; // Second param is folder when first is File
+    } else {
+      // Backward compatibility: extract from request (legacy approach)
+      // Note: This will fail if request.formData() was already called
+      const request = fileOrRequest as NextRequest;
+      const fieldName = folderOrFieldName; // Second param is fieldName when first is Request
+      uploadFolder = folder || "dev-blog"; // Third param is folder, or default
+      const formData = await request.formData();
+      file = formData.get(fieldName) as File | null;
+    }
 
     if (!file) {
       return null;
@@ -44,7 +70,7 @@ export async function handleFileUpload(
     const buffer = Buffer.from(arrayBuffer);
 
     // Upload to ImageKit
-    const result = await uploadToImageKit(buffer, file.name, folder);
+    const result = await uploadToImageKit(buffer, file.name, uploadFolder);
 
     return {
       filename: file.name,
@@ -58,6 +84,11 @@ export async function handleFileUpload(
   }
 }
 
+/**
+ * Parse form data and upload files to ImageKit
+ * @param request - NextRequest with formData
+ * @returns Object with fields (string values) and files (uploaded to ImageKit)
+ */
 export async function parseFormData(request: NextRequest): Promise<{
   fields: Record<string, string>;
   files: Record<string, UploadedFile>;
@@ -68,7 +99,8 @@ export async function parseFormData(request: NextRequest): Promise<{
 
   for (const [key, value] of formData.entries()) {
     if (value instanceof File) {
-      const uploadedFile = await handleFileUpload(request, key);
+      // Pass File directly to handleFileUpload
+      const uploadedFile = await handleFileUpload(value, "dev-blog");
       if (uploadedFile) {
         files[key] = uploadedFile;
       }

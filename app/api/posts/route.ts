@@ -97,7 +97,8 @@ export async function POST(request: NextRequest) {
 
     // If screenshot file provided, upload it (legacy support)
     if (screenshotFile && !imageUrl) {
-      const uploaded = await handleFileUpload(request, "screenshot", "posts");
+      // Pass File directly to handleFileUpload (fixes request body consumption issue)
+      const uploaded = await handleFileUpload(screenshotFile, "posts");
       if (uploaded) {
         finalImageUrl = uploaded.url;
         finalFileId = uploaded.fileId;
