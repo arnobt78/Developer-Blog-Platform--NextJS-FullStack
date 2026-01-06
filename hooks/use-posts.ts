@@ -116,14 +116,24 @@ export function useCreatePost() {
 
   return useMutation({
     mutationFn: async (formData: FormData) => {
+      // Get token from localStorage for authentication
+      const token =
+        typeof window !== "undefined" ? localStorage.getItem("token") : null;
+      if (!token) {
+        throw new Error("Not authenticated");
+      }
+
       // FormData is used to support file uploads (screenshots)
       const response = await fetch("/api/posts", {
         method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
         body: formData, // FormData includes text fields + file uploads
       });
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || "Failed to create post");
+        throw new Error(error.message || error.error || "Failed to create post");
       }
       return response.json();
     },
@@ -163,13 +173,23 @@ export function useUpdatePost() {
       id: string;
       formData: FormData;
     }) => {
+      // Get token from localStorage for authentication
+      const token =
+        typeof window !== "undefined" ? localStorage.getItem("token") : null;
+      if (!token) {
+        throw new Error("Not authenticated");
+      }
+
       const response = await fetch(`/api/posts/${id}`, {
         method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
         body: formData,
       });
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || "Failed to update post");
+        throw new Error(error.message || error.error || "Failed to update post");
       }
       return response.json();
     },
