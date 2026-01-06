@@ -15,26 +15,20 @@ interface LoginCredentials {
   password: string;
 }
 
-interface RegisterData {
-  username: string;
-  email: string;
-  password: string;
-}
-
 /**
  * Check if user is authenticated
  * Reads token from localStorage and validates with server
- * 
+ *
  * Authentication Flow:
  * 1. Check localStorage for token (client-side check)
  * 2. If token exists, validate with server
  * 3. Server returns user data if token is valid
- * 
+ *
  * Why validate with server?
  * - Token might be expired
  * - User might be deleted/banned
  * - Token might be invalid/revoked
- * 
+ *
  * retry: false - Don't retry auth failures (prevents infinite loops)
  */
 export function useAuth() {
@@ -92,14 +86,14 @@ export function useUser(userId?: string) {
 
 /**
  * Login mutation
- * 
+ *
  * Login Flow:
  * 1. Send credentials to server
  * 2. Server validates and returns token + user data
  * 3. Store token in localStorage (persists across page refreshes)
  * 4. Invalidate auth query to trigger refetch with new token
  * 5. Redirect to posts page
- * 
+ *
  * Why localStorage?
  * - Persists across browser sessions
  * - Available on all pages
@@ -336,11 +330,17 @@ export function useResetPassword() {
       const response = await fetch("/api/auth/reset-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, resetToken: token, newPassword: password }),
+        body: JSON.stringify({
+          email,
+          resetToken: token,
+          newPassword: password,
+        }),
       });
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || error.message || "Failed to reset password");
+        throw new Error(
+          error.error || error.message || "Failed to reset password"
+        );
       }
       return response.json();
     },
