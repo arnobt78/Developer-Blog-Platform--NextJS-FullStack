@@ -13,10 +13,15 @@ export default function Notifications() {
   const { data: notifications = [], isLoading } = useNotifications();
   const markAllRead = useMarkAllNotificationsRead();
 
-  // Mark all as read on mount
+  // Mark all as read on mount - only once, and only if there are unread notifications
   React.useEffect(() => {
-    markAllRead.mutate();
-  }, [markAllRead]);
+    // Check if there are any unread notifications before marking as read
+    const hasUnread = notifications.some((n) => !n.isRead);
+    if (hasUnread && !markAllRead.isPending) {
+      markAllRead.mutate();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty dependency array - only run once on mount
 
   return (
     <div className="max-w-2xl mx-auto mt-32 p-6 bg-white rounded shadow">
