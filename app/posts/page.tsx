@@ -24,6 +24,7 @@ import { PostCardSkeleton } from "@/components/ui/skeleton";
 import Sidebar from "@/components/Sidebar";
 import { useRouter, useSearchParams } from "next/navigation";
 import { usePosts, useSavedPosts } from "@/hooks/use-posts";
+import { useAuth } from "@/hooks/use-auth";
 
 /**
  * Posts content component that uses useSearchParams
@@ -38,6 +39,10 @@ function PostsContent() {
   // Get search query from URL (e.g., /posts?search=react)
   const searchQuery = searchParams.get("search")?.toLowerCase() || null;
 
+  // Check if user is authenticated
+  const { data: authData } = useAuth();
+  const isAuthenticated = !!authData?.user;
+
   /**
    * React Query hooks
    * 
@@ -48,13 +53,17 @@ function PostsContent() {
    * - Default to empty array if data is undefined
    * 
    * useSavedPosts: Fetches user's saved posts
+   * - Only called if user is authenticated (optimization)
    * - Used to show saved status on each post card
    */
   const { data: posts = [], isLoading } = usePosts({
     tag: selectedTag || undefined,
     search: searchQuery || undefined,
   });
-  const { data: savedPosts = [] } = useSavedPosts();
+  // Only fetch saved posts if user is authenticated (optimization)
+  const { data: savedPosts = [] } = useSavedPosts({
+    enabled: isAuthenticated, // Only fetch if user is logged in
+  });
   // Create array of saved post IDs for quick lookup
   const savedPostIds = savedPosts.map((p) => p.id);
 
