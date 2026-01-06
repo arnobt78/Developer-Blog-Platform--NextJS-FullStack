@@ -134,10 +134,9 @@ export function useLogin() {
           localStorage.setItem("user", JSON.stringify(data.user));
         }
       }
-      // Invalidate and immediately refetch auth query to get fresh user data
-      // This ensures avatar and other profile data are up-to-date immediately
+      // Invalidate auth query - this will automatically trigger a refetch
+      // No need to call refetchQueries separately (that causes duplicate calls)
       queryClient.invalidateQueries({ queryKey: ["auth"] });
-      queryClient.refetchQueries({ queryKey: ["auth"] });
       toast({
         title: "Success",
         description: "Logged in successfully",
