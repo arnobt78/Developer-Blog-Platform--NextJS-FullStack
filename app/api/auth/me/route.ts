@@ -78,11 +78,42 @@ export async function PUT(request: NextRequest) {
 
     // Upload avatar to ImageKit if provided
     if (avatarFile) {
-      // Pass File directly to handleFileUpload (fixes request body consumption issue)
-      const uploaded = await handleFileUpload(avatarFile, "avatars");
-      if (uploaded) {
-        updateData.avatarUrl = uploaded.url;
+      try {
+        // Pass File directly to handleFileUpload (fixes request body consumption issue)
+        const uploaded = await handleFileUpload(avatarFile, "avatars");
+        if (uploaded) {
+          updateData.avatarUrl = uploaded.url;
+          console.log("Avatar uploaded successfully:", uploaded.url);
+        } else {
+          console.warn("Avatar upload returned null - file might be invalid");
+        }
+      } catch (uploadError) {
+        console.error("Avatar upload error:", uploadError);
+        // Don't fail the entire update if avatar upload fails
+        // Just log the error and continue with other updates
       }
+    }
+
+    // Only update if there's data to update
+    if (Object.keys(updateData).length === 0) {
+      // No changes to make, return current user data
+      const currentUser = await prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          country: true,
+          avatarUrl: true,
+        },
+      });
+      if (!currentUser) {
+        return NextResponse.json(
+          { error: "User not found" },
+          { status: 404 }
+        );
+      }
+      return NextResponse.json(currentUser);
     }
 
     const user = await prisma.user.update({
@@ -99,8 +130,16 @@ export async function PUT(request: NextRequest) {
     });
   } catch (error) {
     console.error("Profile update error:", error);
+    // Log more details about the error
+    if (error instanceof Error) {
+      console.error("Error message:", error.message);
+      console.error("Error stack:", error.stack);
+    }
     return NextResponse.json(
-      { error: "Profile update failed" },
+      { 
+        error: "Profile update failed",
+        message: error instanceof Error ? error.message : "Unknown error"
+      },
       { status: 500 }
     );
   }

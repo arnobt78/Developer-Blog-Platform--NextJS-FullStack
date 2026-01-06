@@ -271,11 +271,10 @@ export function useUpdateProfile() {
       if (typeof window !== "undefined" && data) {
         localStorage.setItem("user", JSON.stringify(data));
       }
-      // Invalidate and refetch auth query to get updated user data
+      // Invalidate auth query - this will automatically trigger a refetch
+      // No need to call refetchQueries separately (that causes duplicate calls)
       queryClient.invalidateQueries({ queryKey: ["auth"] });
       queryClient.invalidateQueries({ queryKey: ["user"] });
-      // Force immediate refetch of auth data
-      queryClient.refetchQueries({ queryKey: ["auth"] });
       toast({
         title: "Success",
         description: "Profile updated successfully",
