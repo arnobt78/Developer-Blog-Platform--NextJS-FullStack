@@ -165,7 +165,7 @@ const Navbar: React.FC = () => {
                     <Image
                       src={
                         user.avatarUrl ||
-                        `https://robohash.org/${user.name || "user"}.png?size=80x80`
+                        `https://robohash.org/${(user.name || "user")}.png?size=80x80`
                       }
                       alt="avatar"
                       fill
@@ -173,7 +173,7 @@ const Navbar: React.FC = () => {
                     />
                   </div>
                   <span className="text-slate-700 font-courier text-pretty font-bold text-xl hover:text-blue-500">
-                    Welcome, {(user.name || "").split(" ")[0] || "User"}
+                    Welcome, {user.name ? user.name.split(" ")[0] : "User"}
                   </span>
                 </button>
                 {dropdownOpen && (
