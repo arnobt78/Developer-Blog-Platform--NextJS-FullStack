@@ -1,48 +1,30 @@
-import ts from "@typescript-eslint/eslint-plugin";
-import globals from "globals";
-import react from "eslint-plugin-react";
-import reactHooks from "eslint-plugin-react-hooks";
-import reactRefresh from "eslint-plugin-react-refresh";
+import { FlatCompat } from "@eslint/eslintrc";
+import { dirname } from "path";
+import { fileURLToPath } from "url";
 
-export default [
-  { ignores: ["dist"] },
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const compat = new FlatCompat({
+  baseDirectory: __dirname,
+});
+
+const eslintConfig = [
+  ...compat.extends("next/core-web-vitals", "next/typescript"),
   {
-    files: ["**/*.{ts,tsx}"],
-    languageOptions: {
-      ecmaVersion: 2020,
-      globals: {
-        ...globals.browser,
-        ...globals.node, // Add Node.js globals to avoid 'process is not defined' error
-      },
-      parserOptions: {
-        ecmaVersion: "latest",
-        ecmaFeatures: { tsx: true },
-        sourceType: "module",
-      },
-    },
-    settings: { react: { version: "18.3" } },
-    plugins: {
-      react,
-      "react-hooks": reactHooks,
-      "react-refresh": reactRefresh,
-    },
     rules: {
-      ...ts.rules,
-      ...react.configs.recommended.rules,
-      ...react.configs["tsx-runtime"].rules,
-      ...reactHooks.configs.recommended.rules,
-      "react/tsx-no-target-blank": "off",
-      "react-refresh/only-export-components": [
+      "@typescript-eslint/no-unused-vars": [
         "warn",
-        { allowConstantExport: true },
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+        },
       ],
-      "no-unused-vars": [
-        "warn",
-        { varsIgnorePattern: "^_", argsIgnorePattern: "^_" }, // Ignore variables starting with '_'
-      ],
-      "import/no-unresolved": [
-        "off", // Disable unresolved import errors for directories like assets, components, and utility
-      ],
+      "@typescript-eslint/no-explicit-any": "warn",
+      "react-hooks/exhaustive-deps": "warn",
+      "react/no-unescaped-entities": "off",
     },
   },
 ];
+
+export default eslintConfig;

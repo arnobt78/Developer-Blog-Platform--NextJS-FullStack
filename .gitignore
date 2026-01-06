@@ -1,24 +1,55 @@
-# Logs
-logs
-*.log
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Testing
+coverage/
+*.lcov
+.nyc_output
+
+# Next.js
+.next/
+out/
+build/
+dist/
+dist-ssr/
+
+# Production
+/build
+/dist
+
+# Misc
+.DS_Store
+*.pem
+
+# Debug
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
+# Environment Variables
 .env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 .env.*
+!.env.example
+
+# Vercel
+.vercel
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
 
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
 .idea
-.DS_Store
 *.suo
 *.ntvs*
 *.njsproj
@@ -27,7 +58,20 @@ dist-ssr
 
 # Local Netlify folder
 .netlify
-.vite
-.next
 
-setup-env.sh
+# Prisma
+prisma/*.db
+prisma/*.db-journal
+
+# Old migration files (optional - uncomment if you want to ignore them)
+# setup-env.sh
+HETZNER_VPS_MIGRATION_GUIDE.md
+
+# Temporary files
+*.log
+*.tmp
+*.bak
+*~
+
+.cursorignore
+

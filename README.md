@@ -1,4 +1,8 @@
-# Dev-Bug-Coder-Blog – A Full-Stack Developer Blog for Coding Errors & Solutions – React, Express, Prisma Website
+# Developer's Blog Platform – Next.js, MongoDB, Prisma, TanStack React Query FullStack Project (Blog for Coding Errors & Solutions)
+
+A full-stack developer blog platform where programmers share real-world coding errors, bugs, and their solutions. Built with Next.js 16, React 19, TypeScript, MongoDB, Prisma, and TanStack React Query.
+
+- **Live-Demo:** [https://dev-bug-coder-blog.vercel.app/](https://dev-bug-coder-blog.vercel.app/)
 
 ![Screenshot 2025-08-23 at 23 04 48](https://github.com/user-attachments/assets/d184b39a-e19d-48c4-8988-1b511b9f4924)
 ![Screenshot 2025-08-23 at 23 06 25](https://github.com/user-attachments/assets/eeccee97-96e5-4d14-90c4-015716f5ac8d)
@@ -10,260 +14,944 @@
 ![Screenshot 2025-08-23 at 23 09 00](https://github.com/user-attachments/assets/b1702db5-8fab-4191-8cd4-01caaa3269a6)
 ![Screenshot 2025-08-23 at 23 09 21](https://github.com/user-attachments/assets/0b6b151f-c5aa-49cb-a657-b93e4371856c)
 
----
+## 📋 Table of Contents
 
-Dev-Bug-Coder-Blog is a full-stack blog platform where developers can document coding errors, share fixes, and learn from each other. It features authentication, real-time notifications, an admin dashboard, and a modern, responsive UI.
-
-- **Live-Demo:** [https://dev-bug-coder-blog.vercel.app/](https://dev-bug-coder-blog.vercel.app/)
-
----
-
-## 📚 Table of Contents
-
-1. [Project Summary](#project-summary)
-2. [Features](#features)
-3. [Tech Stack](#tech-stack)
-4. [Project Structure](#project-structure)
-5. [How to Run Locally](#how-to-run-locally)
-6. [Deployment](#deployment)
-7. [Environment Variables](#environment-variables)
-8. [API & Backend](#api--backend)
-9. [Frontend Components](#frontend-components)
-10. [How to Reuse Components](#how-to-reuse-components)
-11. [Keywords](#keywords)
-12. [Conclusion](#conclusion)
+- [Overview](#-overview)
+- [Features](#-features)
+- [Technology Stack](#-technology-stack)
+- [Project Structure](#-project-structure)
+- [Getting Started](#-getting-started)
+- [Environment Variables](#-environment-variables)
+- [Installation & Setup](#-installation--setup)
+- [Running the Project](#-running-the-project)
+- [API Endpoints](#-api-endpoints)
+- [Components Documentation](#-components-documentation)
+- [Custom Hooks](#-custom-hooks)
+- [Database Schema](#-database-schema)
+- [Reusing Components](#-reusing-components)
+- [Deployment](#-deployment)
+- [Keywords](#-keywords)
+- [Conclusion](#-conclusion)
 
 ---
 
-## Project Summary
+## 🎯 Overview
 
-Dev-Bug-Coder-Blog is a modern, full-stack developer blog platform for sharing real-world coding errors and their solutions. It empowers developers to post, discuss, and resolve bugs, fostering a collaborative learning environment. The project is designed for both practical use and as a teaching resource for full-stack development with React, Node.js, Express, Prisma (MongoDB), and Tailwind CSS.
+Dev-Bug-Coder-Blog is a modern, full-stack blogging platform designed for developers to share coding errors, bugs, and solutions. It features real-time interactions, optimistic UI updates, nested comments, image uploads, and a comprehensive notification system.
 
----
+### Key Highlights
 
-## Features
-
-- Post coding errors, solutions, code snippets, and screenshots
-- Like, mark as helpful, comment, and report posts
-- Save posts for later
-- User authentication (JWT-based)
-- Profile management (edit profile, avatar upload)
-- Admin dashboard for reports
-- Real-time notifications (likes, comments, helpful, reports)
-- Responsive, modern UI (Tailwind CSS)
-- Full REST API backend (Express, Prisma, MongoDB)
-- File uploads (Multer)
-- Secure routes and error handling
+- **Server-Side Rendering (SSR)** with Next.js App Router
+- **Client-Side Rendering (CSR)** with React Query for instant updates
+- **Optimistic Updates** for seamless user experience
+- **Real-time Notifications** system
+- **Nested Comments** with threading support
+- **Image Upload** with ImageKit integration
+- **Authentication** with JWT tokens
+- **Responsive Design** with Tailwind CSS
 
 ---
 
-## Tech Stack
+## ✨ Features
 
-**Frontend:**
+### Core Functionality
 
-- React 18 (TypeScript)
-- Vite
-- Tailwind CSS
-- Axios
-- React Router DOM
+- **User Authentication**
 
-**Backend:**
+  - Registration with avatar upload
+  - Login/Logout
+  - Password reset via email
+  - JWT-based session management
 
-- Node.js
-- Express.js
-- Prisma ORM (MongoDB)
-- Multer (file uploads)
-- JWT (authentication)
-- Nodemailer (email)
+- **Post Management**
 
-**Dev Tools:**
+  - Create, edit, and delete posts
+  - Rich text content with code snippets
+  - Image/screenshot uploads
+  - Tag system for categorization
+  - Like and helpful marks
+  - Save/unsave posts
 
-- ESLint, Prettier
-- TypeScript
-- Vercel (frontend deploy)
-- Render (backend deploy)
+- **Comments System**
+
+  - Nested comment threads
+  - Reply to comments
+  - Like comments
+  - Edit and delete own comments
+  - Image uploads in comments
+
+- **Notifications**
+
+  - Real-time notifications for interactions
+  - Mark as read/unread
+  - Notification count badge
+
+- **Search & Filter**
+
+  - Search posts by title, content, tags
+  - Filter by tags
+  - Recent posts sidebar
+  - Popular topics
+
+- **Admin Features**
+  - View and manage reported posts
+  - Admin dashboard
 
 ---
 
-## Project Structure
+## 🛠 Technology Stack
+
+### Frontend
+
+- **Next.js 16.1.1** - React framework with App Router
+- **React 19.0.0** - UI library
+- **TypeScript 5.8.3** - Type safety
+- **Tailwind CSS 3.4.17** - Utility-first CSS
+- **TanStack React Query 5.62.8** - Data fetching and caching
+- **ShadCN UI** - Reusable component library
+- **Radix UI** - Accessible component primitives
+
+### Backend
+
+- **Next.js API Routes** - Serverless API endpoints
+- **Prisma 6.19.1** - Type-safe ORM
+- **MongoDB** - NoSQL database
+- **JWT** - Authentication tokens
+- **bcrypt** - Password hashing
+
+### Services & Tools
+
+- **ImageKit** - Image hosting and optimization
+- **Nodemailer** - Email sending (password reset)
+- **React Icons** - Icon library
+- **Lucide React** - Additional icons
+
+---
+
+## 📁 Project Structure
 
 ```bash
-dev-bug-blog/
-├── src/
-│   ├── components/         # Reusable React components (PostCard, Sidebar, Navbar, LoadingSpinner, etc.)
-│   ├── pages/              # Main app pages (Posts, PostDetails, CreatePost, EditProfile, AdminReports, etc.)
-│   ├── api.ts              # Axios API logic and helpers
-│   ├── types/              # TypeScript types
-│   └── ...
-├── routes/                 # Express backend routes (posts, comments, users, auth, reports, notifications)
-├── middleware/             # Express middleware (authenticate)
-├── prisma/
-│   └── schema.prisma       # Prisma schema (MongoDB models)
-├── public/                 # Static assets
-├── uploads/                # Uploaded images/screenshots
-├── server.js               # Express server entrypoint
-├── package.json            # Project config and scripts
-├── tailwind.config.js      # Tailwind CSS config
-├── vite.config.ts          # Vite config
-└── ...
+dev-blog/
+├── app/                          # Next.js App Router
+│   ├── api/                      # API routes
+│   │   ├── auth/                 # Authentication endpoints
+│   │   ├── posts/                # Post CRUD operations
+│   │   ├── comments/             # Comment operations
+│   │   ├── notifications/        # Notification endpoints
+│   │   ├── upload/               # Image upload
+│   │   └── users/                # User endpoints
+│   ├── (pages)/                  # Public pages
+│   │   ├── page.tsx              # Home page
+│   │   ├── posts/                # Posts listing
+│   │   ├── post/[id]/            # Post details
+│   │   ├── login/                # Login page
+│   │   ├── register/             # Registration page
+│   │   ├── create-post/          # Create post
+│   │   ├── edit-post/[id]/       # Edit post
+│   │   ├── saved-posts/          # Saved posts
+│   │   ├── notifications/        # Notifications page
+│   │   └── admin/                # Admin pages
+│   └── layout.tsx                # Root layout
+├── components/                    # React components
+│   ├── ui/                       # ShadCN UI components
+│   ├── providers/                 # Context providers
+│   └── (feature components)      # Feature-specific components
+├── hooks/                         # Custom React hooks
+│   ├── use-posts.ts              # Post operations
+│   ├── use-auth.ts               # Authentication
+│   ├── use-comments.ts           # Comments
+│   └── use-notifications.ts      # Notifications
+├── lib/                          # Utility libraries
+│   ├── prisma.ts                 # Prisma client
+│   ├── query-client.ts           # React Query config
+│   ├── imagekit.ts               # ImageKit integration
+│   └── utils.ts                  # Helper functions
+├── types/                         # TypeScript types
+├── prisma/                       # Database schema
+│   └── schema.prisma
+└── public/                       # Static assets
 ```
 
 ---
 
-## How to Run Locally
+## 🚀 Getting Started
 
-1. **Clone the repository:**
+### Prerequisites
 
-```sh
-git clone https://github.com/arnobt78/dev-bug-blog.git
-cd dev-bug-blog
+- **Node.js** 18.x or higher
+- **npm** or **yarn** package manager
+- **MongoDB** database (local or cloud)
+- **ImageKit** account (for image uploads)
+- **Gmail** account (for email sending)
+
+---
+
+## 🔐 Environment Variables
+
+Create a `.env` file in the root directory with the following variables:
+
+```env
+# App Configuration
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+
+# Database
+# MongoDB connection string
+# Format: mongodb://username:password@host:port/database?authSource=admin
+DATABASE_URL="mongodb://localhost:27017/dev-blog"
+
+# JWT Secret
+# Generate a secure random string (minimum 256 characters recommended)
+# You can generate one using: openssl rand -base64 32
+JWT_SECRET="your-super-secret-jwt-key-change-this-in-production"
+
+# Admin Configuration
+# Email address for admin user (exposed to client for admin checks)
+NEXT_PUBLIC_ADMIN_EMAIL="admin@example.com"
+
+# Email Configuration (for password reset)
+# Gmail SMTP credentials
+EMAIL_USER="your-email@gmail.com"
+EMAIL_PASS="your-app-specific-password"
+
+# ImageKit Configuration
+# Get these from your ImageKit dashboard
+NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY="your-imagekit-public-key"
+IMAGEKIT_PRIVATE_KEY="your-imagekit-private-key"
+NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT="https://ik.imagekit.io/your-imagekit-id"
 ```
 
-2. **Install dependencies:**
+### How to Get Environment Variables
 
-```sh
+#### 1. MongoDB Connection String
+
+**Local MongoDB:**
+
+```env
+DATABASE_URL="mongodb://localhost:27017/dev-blog"
+```
+
+**MongoDB Atlas (Cloud):**
+
+1. Create account at [MongoDB Atlas](https://www.mongodb.com/cloud/atlas)
+2. Create a cluster
+3. Get connection string from "Connect" button
+4. Replace `<password>` with your database password
+
+```env
+DATABASE_URL="mongodb+srv://username:password@cluster.mongodb.net/dev-blog?retryWrites=true&w=majority"
+```
+
+#### 2. JWT Secret
+
+Generate a secure random string:
+
+```bash
+# Using OpenSSL
+openssl rand -base64 32
+
+# Or use Node.js
+node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+```
+
+#### 3. Gmail App Password (for Email)
+
+1. Enable 2-Factor Authentication on your Google Account
+2. Go to [Google App Passwords](https://myaccount.google.com/apppasswords)
+3. Create a new app password for "Mail"
+4. Use this password in `EMAIL_PASS`
+
+#### 4. ImageKit Credentials
+
+1. Sign up at [ImageKit](https://imagekit.io/)
+2. Create a new project
+3. Get credentials from Dashboard → Developer Options
+4. Copy Public Key, Private Key, and URL Endpoint
+
+---
+
+## 📦 Installation & Setup
+
+### Step 1: Clone the Repository
+
+```bash
+git clone <repository-url>
+cd dev-blog
+```
+
+### Step 2: Install Dependencies
+
+```bash
 npm install
 ```
 
-3. **Set up environment variables:**
+### Step 3: Set Up Environment Variables
 
-- Copy `.env.example` to `.env` and fill in your MongoDB URI, JWT secret, etc.
+1. Copy `.env.example` to `.env`:
 
-4. **Generate Prisma client:**
+   ```bash
+   cp .env.example .env
+   ```
 
-```sh
-npx prisma generate
+2. Fill in all required environment variables (see [Environment Variables](#-environment-variables) section)
+
+### Step 4: Set Up Database
+
+1. **Start MongoDB** (if using local):
+
+   ```bash
+   # macOS (using Homebrew)
+   brew services start mongodb-community
+
+   # Linux
+   sudo systemctl start mongod
+
+   # Windows
+   # Start MongoDB service from Services panel
+   ```
+
+2. **Generate Prisma Client**:
+
+   ```bash
+   npm run prisma:generate
+   ```
+
+3. **Push Database Schema**:
+
+   ```bash
+   npm run prisma:push
+   ```
+
+   This creates all tables/collections in your MongoDB database.
+
+### Step 5: Run Development Server
+
+```bash
+npm run dev
 ```
 
-5. **Start the backend server:**
-
-```sh
-npm run dev:backend
-```
-
-6. **Start the frontend (Vite):**
-
-```sh
-npm run dev:frontend
-```
-
-7. **Visit the app:**
-
-- Frontend: [http://localhost:5173](http://localhost:5173)
-- Backend API: [http://localhost:5000/api](http://localhost:5000/api)
+The application will be available at `http://localhost:3000`
 
 ---
 
-## Deployment
+## 🏃 Running the Project
 
-- **Frontend:** Deploy to Vercel (recommended)
-- **Backend:** Deploy to Render or any Node.js host
-- **Environment:** Set all required environment variables in your deploy dashboard
+### Development Mode
 
----
+```bash
+npm run dev
+```
 
-## Environment Variables
+Runs the app in development mode with Turbopack for faster builds.
 
-Create a `.env` file in the root with:
+### Production Build
 
-```env
+```bash
+# Build the application
+npm run build
 
-# Database Configuration
-DATABASE_URL="your_mongodb_uri"
+# Start production server
+npm start
+```
 
-# JWT Configuration
-JWT_SECRET="your_jwt_secret"
+### Other Commands
 
-# Admin Configuration
-ADMIN_EMAIL=your_admin_email@example.com
-VITE_ADMIN_EMAIL=your_admin_email@example.com
+```bash
+# Lint code
+npm run lint
 
-# Email Configuration for SMTP Authentication
-EMAIL_USER=your_email@example.com
-EMAIL_PASS=your_email_password_or_generated_app_password
+# Generate Prisma Client
+npm run prisma:generate
 
-# Local Development URLs
-PORT=5001
-FRONTEND_URL=http://localhost:5173
-BACKEND_URL=http://localhost:5001
-VITE_FRONTEND_URL=http://localhost:5173
-VITE_BACKEND_URL=http://localhost:5001
-NODE_ENV=development
-
+# Push database schema changes
+npm run prisma:push
 ```
 
 ---
 
-## API & Backend
+## 🔌 API Endpoints
 
-### Main REST Endpoints (see `/routes/`)
+### Authentication
 
-- `GET /api/posts` — List all posts
-- `GET /api/posts/:id` — Get post details
-- `POST /api/posts` — Create post (auth, file upload)
-- `PUT /api/posts/:id` — Edit post (auth)
-- `DELETE /api/posts/:id` — Delete post (auth)
-- `POST /api/posts/:id/like` — Toggle like (auth)
-- `POST /api/posts/:id/helpful` — Toggle helpful (auth)
-- `POST /api/posts/:id/save` — Save post (auth)
-- `POST /api/posts/:id/unsave` — Unsave post (auth)
-- `POST /api/comments/post/:postId` — Add comment (auth)
-- `PUT /api/comments/:id` — Edit comment (auth)
-- `DELETE /api/comments/:id` — Delete comment (auth)
-- `POST /api/comments/:id/like` — Toggle comment like (auth)
-- `POST /api/comments/:id/helpful` — Toggle comment helpful (auth)
-- `GET /api/users/me/saved-posts` — Get saved posts (auth)
-- `GET /api/notifications` — Get notifications (auth)
-- `POST /api/notifications/mark-all-read` — Mark all notifications as read (auth)
-- `POST /api/reports` — Report post (auth)
+| Method | Endpoint                    | Description               |
+| ------ | --------------------------- | ------------------------- |
+| POST   | `/api/auth/register`        | Register new user         |
+| POST   | `/api/auth/login`           | Login user                |
+| GET    | `/api/auth/validate`        | Validate JWT token        |
+| GET    | `/api/auth/me`              | Get current user          |
+| POST   | `/api/auth/forgot-password` | Request password reset    |
+| POST   | `/api/auth/reset-password`  | Reset password with token |
 
-### Prisma Schema (see `/prisma/schema.prisma`)
+### Posts
 
-- **User, Post, Comment, SavedPost, Like, Helpful, Report, Notification** models
-- MongoDB as the database
-- Relations: users <-> posts <-> comments, likes, helpful, saved, reports, notifications
+| Method | Endpoint                  | Description                  |
+| ------ | ------------------------- | ---------------------------- |
+| GET    | `/api/posts`              | Get all posts (with filters) |
+| GET    | `/api/posts/[id]`         | Get single post              |
+| POST   | `/api/posts`              | Create new post              |
+| PUT    | `/api/posts/[id]`         | Update post                  |
+| DELETE | `/api/posts/[id]`         | Delete post                  |
+| POST   | `/api/posts/[id]/like`    | Like/unlike post             |
+| POST   | `/api/posts/[id]/helpful` | Mark post as helpful         |
+| POST   | `/api/posts/[id]/save`    | Save post                    |
+| POST   | `/api/posts/[id]/unsave`  | Unsave post                  |
+| POST   | `/api/posts/[id]/report`  | Report post                  |
+
+### Comments
+
+| Method | Endpoint                      | Description             |
+| ------ | ----------------------------- | ----------------------- |
+| GET    | `/api/comments/post/[postId]` | Get comments for post   |
+| POST   | `/api/comments/post/[postId]` | Create comment          |
+| PUT    | `/api/comments/[id]`          | Update comment          |
+| DELETE | `/api/comments/[id]`          | Delete comment          |
+| POST   | `/api/comments/[id]/like`     | Like/unlike comment     |
+| POST   | `/api/comments/[id]/helpful`  | Mark comment as helpful |
+
+### Notifications
+
+| Method | Endpoint                            | Description               |
+| ------ | ----------------------------------- | ------------------------- |
+| GET    | `/api/notifications`                | Get user notifications    |
+| PUT    | `/api/notifications/[id]/mark-read` | Mark notification as read |
+| PUT    | `/api/notifications/mark-all-read`  | Mark all as read          |
+| DELETE | `/api/notifications/[id]`           | Delete notification       |
+
+### Upload
+
+| Method | Endpoint      | Description              |
+| ------ | ------------- | ------------------------ |
+| POST   | `/api/upload` | Upload image to ImageKit |
+
+### Users
+
+| Method | Endpoint                    | Description         |
+| ------ | --------------------------- | ------------------- |
+| GET    | `/api/users/me/saved-posts` | Get saved posts     |
+| PUT    | `/api/users/me`             | Update user profile |
 
 ---
 
-## Frontend Components
+## 🧩 Components Documentation
 
-All UI is built from reusable React components in `/src/components/`:
+### Core Components
 
-- `PostCard` — Displays a post with actions (like, helpful, save, report, etc.)
-- `Sidebar` — Tag selector, recent posts, popular topics
-- `Navbar` — Top navigation, search, user menu, notifications
-- `CommentSection` — Nested comments, add/edit/delete, like/helpful
-- `LoadingSpinner` — Animated loading overlay (customizable text)
-- `TagSelector`, `PostHeader`, `PostStats`, `PostActionsBar`, `PostDropdownMenu`, etc.
+#### PostCard
 
-### Example: Using the LoadingSpinner
+Displays a post card with all interactions.
 
 ```tsx
-import LoadingSpinner from "./components/LoadingSpinner";
-<LoadingSpinner text="Loading..." />;
+import PostCard from "@/components/PostCard";
+
+<PostCard
+  post={{
+    id: "post-id",
+    title: "Post Title",
+    description: "Description",
+    // ... other post fields
+  }}
+  saved={false}
+  onUnsave={(postId) => {
+    /* handle unsave */
+  }}
+  onDelete={(postId) => {
+    /* handle delete */
+  }}
+  onLikeHelpfulUpdate={(postId, data) => {
+    /* handle update */
+  }}
+/>;
+```
+
+**Props:**
+
+- `post`: Post object with all post data
+- `saved`: Boolean indicating if post is saved
+- `onUnsave`: Callback when post is unsaved
+- `onDelete`: Callback when post is deleted
+- `onLikeHelpfulUpdate`: Callback for like/helpful updates
+
+#### CommentSection
+
+Nested comment system with replies.
+
+```tsx
+import CommentSection from "@/components/CommentSection";
+
+<CommentSection
+  postId="post-id"
+  parentId="comment-id" // Optional: for nested replies
+/>;
+```
+
+**Props:**
+
+- `postId`: ID of the post
+- `parentId`: Optional parent comment ID for nested replies
+
+#### ConfirmDialog
+
+Reusable confirmation dialog (replaces `window.confirm`).
+
+```tsx
+import { ConfirmDialog } from "@/components/ConfirmDialog";
+
+const [showConfirm, setShowConfirm] = useState(false);
+
+<ConfirmDialog
+  open={showConfirm}
+  onOpenChange={setShowConfirm}
+  title="Delete Post"
+  description="Are you sure you want to delete this post?"
+  confirmText="Delete"
+  cancelText="Cancel"
+  onConfirm={() => deletePost()}
+  variant="destructive" // "default" | "destructive"
+/>;
+```
+
+#### InputDialog
+
+Reusable input dialog (replaces `window.prompt`).
+
+```tsx
+import { InputDialog } from "@/components/InputDialog";
+
+const [showDialog, setShowDialog] = useState(false);
+
+<InputDialog
+  open={showDialog}
+  onOpenChange={setShowDialog}
+  title="Report Post"
+  description="Why are you reporting this post?"
+  placeholder="Enter reason..."
+  onConfirm={(value) => reportPost(value)}
+  type="textarea" // "text" | "textarea"
+/>;
+```
+
+### UI Components (ShadCN)
+
+All UI components are in `components/ui/`:
+
+- `skeleton.tsx` - Loading skeletons
+- `toast.tsx` - Toast notifications
+- `dialog.tsx` - Dialog component
+- `alert-dialog.tsx` - Alert dialog component
+
+---
+
+## 🎣 Custom Hooks
+
+### usePosts
+
+Fetch and manage posts with React Query.
+
+```tsx
+import { usePosts, usePost, useCreatePost } from "@/hooks/use-posts";
+
+// Fetch all posts
+const { data: posts, isLoading } = usePosts({
+  tag: "react", // Optional filter
+  search: "error", // Optional search
+});
+
+// Fetch single post
+const { data: post } = usePost("post-id");
+
+// Create post
+const createPost = useCreatePost();
+createPost.mutate(formData);
+```
+
+**Available Hooks:**
+
+- `usePosts()` - Get all posts
+- `usePost(id)` - Get single post
+- `useSavedPosts()` - Get saved posts
+- `useCreatePost()` - Create post mutation
+- `useUpdatePost()` - Update post mutation
+- `useDeletePost()` - Delete post mutation
+- `useLikePost()` - Like/unlike mutation (optimistic)
+- `useMarkHelpful()` - Mark helpful mutation (optimistic)
+- `useSavePost()` - Save post mutation
+- `useUnsavePost()` - Unsave post mutation
+
+### useAuth
+
+Authentication hooks.
+
+```tsx
+import { useAuth, useLogin, useLogout } from "@/hooks/use-auth";
+
+// Check authentication
+const { data: authData } = useAuth();
+const user = authData?.user;
+const isLoggedIn = !!user;
+
+// Login
+const login = useLogin();
+login.mutate({ email: "user@example.com", password: "password" });
+
+// Logout
+const logout = useLogout();
+logout.mutate();
+```
+
+**Available Hooks:**
+
+- `useAuth()` - Get current user
+- `useLogin()` - Login mutation
+- `useRegister()` - Register mutation
+- `useLogout()` - Logout mutation
+- `useUpdateProfile()` - Update profile mutation
+- `useRequestPasswordReset()` - Request password reset
+- `useResetPassword()` - Reset password with token
+
+### useComments
+
+Comment management hooks.
+
+```tsx
+import { useComments, useCreateComment } from "@/hooks/use-comments";
+
+// Fetch comments
+const { data: comments } = useComments("post-id");
+
+// Create comment
+const createComment = useCreateComment();
+createComment.mutate({
+  postId: "post-id",
+  content: "Comment text",
+  parentId: "parent-comment-id", // Optional: for replies
+});
+```
+
+**Available Hooks:**
+
+- `useComments(postId)` - Get comments for post
+- `useCreateComment()` - Create comment mutation
+- `useUpdateComment()` - Update comment mutation
+- `useDeleteComment()` - Delete comment mutation
+- `useLikeComment()` - Like/unlike comment (optimistic)
+
+### useNotifications
+
+Notification hooks.
+
+```tsx
+import {
+  useNotifications,
+  useMarkAllNotificationsRead,
+} from "@/hooks/use-notifications";
+
+// Fetch notifications
+const { data: notifications } = useNotifications();
+
+// Mark all as read
+const markAllRead = useMarkAllNotificationsRead();
+markAllRead.mutate();
+```
+
+**Available Hooks:**
+
+- `useNotifications()` - Get notifications (auto-refetches every 2 minutes)
+- `useUnreadCount()` - Get unread count
+- `useMarkNotificationRead()` - Mark single as read
+- `useMarkAllNotificationsRead()` - Mark all as read
+- `useDeleteNotification()` - Delete notification
+
+### useImageUpload
+
+Image upload hook.
+
+```tsx
+import { useImageUpload } from "@/hooks/use-image-upload";
+
+const { uploadImage, uploading, progress } = useImageUpload();
+
+const handleUpload = async () => {
+  const result = await uploadImage(file, "posts");
+  if (result) {
+    console.log(result.url); // Image URL
+    console.log(result.fileId); // ImageKit file ID
+  }
+};
 ```
 
 ---
 
-## How to Reuse Components
+## 🗄 Database Schema
 
-1. **Copy any component** from `/src/components/` into your own React project
-2. **Import and use** as shown in the example above
-3. **API logic** in `/src/api.ts` is reusable for any REST backend
-4. **TypeScript types** in `/src/types/` help with type safety
-5. **Follow the folder structure** for scalable, maintainable apps
+### Models
+
+#### User
+
+- `id`: String (ObjectId)
+- `name`: String
+- `email`: String (unique)
+- `password`: String (hashed)
+- `country`: String (optional)
+- `avatarUrl`: String (optional)
+- `resetToken`: String (optional)
+- `resetTokenExpiry`: DateTime (optional)
+
+#### Post
+
+- `id`: String (ObjectId)
+- `title`: String
+- `description`: String
+- `content`: String
+- `codeSnippet`: String (optional)
+- `createdAt`: DateTime
+- `tags`: String[]
+- `imageUrl`: String (optional)
+- `fileId`: String (optional) - ImageKit file ID
+- `likes`: Int
+- `helpfulCount`: Int
+- `authorId`: String (ObjectId) - Reference to User
+
+#### Comment
+
+- `id`: String (ObjectId)
+- `content`: String
+- `createdAt`: DateTime
+- `avatarUrl`: String (optional)
+- `imageUrl`: String (optional)
+- `fileId`: String (optional)
+- `postId`: String (ObjectId)
+- `authorId`: String (ObjectId)
+- `parentId`: String (ObjectId, optional) - For nested comments
+
+#### Notification
+
+- `id`: String (ObjectId)
+- `userId`: String (ObjectId)
+- `type`: String - 'like', 'helpful', 'comment', etc.
+- `message`: String
+- `isRead`: Boolean
+- `postId`: String (optional)
+- `commentId`: String (optional)
+- `fromUserId`: String (ObjectId, optional)
+- `createdAt`: DateTime
+
+### Relationships
+
+- User has many Posts, Comments, Likes, SavedPosts
+- Post belongs to User, has many Comments, Likes, Helpfuls
+- Comment belongs to User and Post, can have parent Comment (nested)
+- Notification belongs to User
 
 ---
 
-## Keywords
+## 🔄 Reusing Components
 
-`developer blog`, `coding errors`, `bug fixes`, `React`, `Node.js`, `MongoDB`, `Prisma`, `Express`, `Vite`, `Tailwind CSS`, `JWT`, `REST API`, `full stack`, `community`, `notifications`, `admin`, `report`, `save post`, `comment`, `like`, `helpful`, `tag`, `search`, `responsive`, `modern`, `open source`
+### How to Reuse PostCard in Another Project
+
+1. **Copy Component Files:**
+
+   ```bash
+   # Copy PostCard and its dependencies
+   components/PostCard.tsx
+   components/PostHeader.tsx
+   components/PostContent.tsx
+   components/PostStats.tsx
+   components/PostActionsBar.tsx
+   components/PostDropdownMenu.tsx
+   ```
+
+2. **Copy Required Hooks:**
+
+   ```bash
+   hooks/use-posts.ts
+   hooks/use-auth.ts
+   ```
+
+3. **Copy UI Components:**
+
+   ```bash
+   components/ui/skeleton.tsx
+   components/ui/toast.tsx
+   components/ui/toaster.tsx
+   hooks/use-toast.ts
+   ```
+
+4. **Install Dependencies:**
+
+   ```bash
+   npm install @tanstack/react-query react-icons
+   ```
+
+5. **Set Up React Query Provider:**
+
+   ```tsx
+   // In your root layout
+   import { QueryProvider } from "@/components/providers/query-provider";
+
+   export default function Layout({ children }) {
+     return <QueryProvider>{children}</QueryProvider>;
+   }
+   ```
+
+6. **Use the Component:**
+
+   ```tsx
+   import PostCard from "@/components/PostCard";
+   import { usePosts } from "@/hooks/use-posts";
+
+   function MyPage() {
+     const { data: posts } = usePosts();
+
+     return (
+       <div>
+         {posts?.map((post) => (
+           <PostCard key={post.id} post={post} />
+         ))}
+       </div>
+     );
+   }
+   ```
+
+### How to Reuse CommentSection
+
+1. **Copy Files:**
+
+   ```bash
+   components/CommentSection.tsx
+   components/CommentItem.tsx
+   components/CommentInput.tsx
+   components/CommentHeader.tsx
+   components/CommentAvatar.tsx
+   components/CommentActionsBar.tsx
+   hooks/use-comments.ts
+   hooks/use-image-upload.ts
+   ```
+
+2. **Set Up API Endpoint:**
+
+   Create `/api/comments/post/[postId]/route.ts` in your Next.js app.
+
+3. **Use the Component:**
+
+   ```tsx
+   import CommentSection from "@/components/CommentSection";
+
+   <CommentSection postId="post-id" />;
+   ```
+
+### How to Reuse Dialog Components
+
+1. **Copy Files:**
+
+   ```bash
+   components/ConfirmDialog.tsx
+   components/InputDialog.tsx
+   components/ui/dialog.tsx
+   components/ui/alert-dialog.tsx
+   ```
+
+2. **Install Dependencies:**
+
+   ```bash
+   npm install @radix-ui/react-dialog @radix-ui/react-alert-dialog
+   ```
+
+3. **Use Components:**
+
+   ```tsx
+   import { ConfirmDialog } from "@/components/ConfirmDialog";
+
+   // Replace window.confirm
+   <ConfirmDialog
+     open={showConfirm}
+     onOpenChange={setShowConfirm}
+     title="Confirm Action"
+     description="Are you sure?"
+     onConfirm={handleConfirm}
+   />;
+   ```
 
 ---
 
-## Conclusion
+## 🚢 Deployment
 
-This project is a complete, real-world example of a modern full-stack application. It’s designed for both practical use and as a learning resource. Study the code, experiment, and extend it for your own needs. Every feature is built with reusability, scalability, and developer experience in mind.
+### Deploy to Vercel
+
+1. **Push code to GitHub**
+
+2. **Import project in Vercel:**
+
+   - Go to [Vercel](https://vercel.com)
+   - Click "New Project"
+   - Import your GitHub repository
+
+3. **Add Environment Variables:**
+
+   - Go to Project Settings → Environment Variables
+   - Add all variables from `.env` file
+   - Make sure `NEXT_PUBLIC_*` variables are added
+
+4. **Configure Build Settings:**
+
+   - Build Command: `npm run build`
+   - Output Directory: `.next`
+   - Install Command: `npm install`
+
+5. **Deploy:**
+   - Click "Deploy"
+   - Vercel will automatically build and deploy
+
+### Environment Variables for Production
+
+All environment variables from `.env` must be added to Vercel:
+
+- `DATABASE_URL`
+- `JWT_SECRET`
+- `NEXT_PUBLIC_ADMIN_EMAIL`
+- `EMAIL_USER`
+- `EMAIL_PASS`
+- `NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY`
+- `IMAGEKIT_PRIVATE_KEY`
+- `NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT`
+- `NEXT_PUBLIC_APP_URL` (your Vercel URL)
+
+### Database Setup for Production
+
+1. Use MongoDB Atlas (cloud database)
+2. Whitelist Vercel IP ranges (or use 0.0.0.0/0 for all)
+3. Update `DATABASE_URL` in Vercel environment variables
+
+---
+
+## 🏷 Keywords
+
+**Technologies:** Next.js, React, TypeScript, MongoDB, Prisma, TanStack React Query, Tailwind CSS, ShadCN UI, ImageKit, JWT, bcrypt, Nodemailer
+
+**Features:** Blog Platform, Developer Community, Code Sharing, Bug Tracking, Error Solutions, Nested Comments, Real-time Notifications, Image Upload, Authentication, Search & Filter
+
+**Concepts:** Server-Side Rendering, Client-Side Rendering, Optimistic Updates, React Query, Caching, API Routes, Type Safety, Component Reusability, Responsive Design
+
+---
+
+## 📝 Conclusion
+
+Dev-Bug-Coder-Blog is a comprehensive, production-ready blogging platform that demonstrates modern web development practices. It showcases:
+
+- **Modern React Patterns:** Hooks, Context, Custom Hooks
+- **State Management:** React Query for server state
+- **Type Safety:** Full TypeScript implementation
+- **Performance:** Optimistic updates, caching, code splitting
+- **User Experience:** Skeleton loaders, toast notifications, smooth animations
+- **Best Practices:** Reusable components, centralized hooks, proper error handling
+
+This project serves as an excellent learning resource for:
+
+- Next.js App Router
+- React Query patterns
+- TypeScript in React
+- MongoDB with Prisma
+- Authentication flows
+- Image handling
+- Real-time features
 
 ---
 
@@ -276,5 +964,3 @@ If you have any questions or want to share your work, reach out via GitHub or my
 **Enjoy building and learning!** 🚀
 
 Thank you! 😊
-
----

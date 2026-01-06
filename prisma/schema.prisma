@@ -38,6 +38,7 @@ model Post {
   createdAt    DateTime      @default(now())
   tags         String[]
   imageUrl     String?
+  fileId       String?       // ImageKit fileId for deletion
   likes        Int           @default(0)
   helpfulCount Int           @default(0)
   author       User          @relation(fields: [authorId], references: [id])
@@ -65,6 +66,7 @@ model Comment {
   createdAt DateTime @default(now())
   avatarUrl String?
   imageUrl  String?
+  fileId    String?  // ImageKit fileId for deletion
   post      Post     @relation(fields: [postId], references: [id])
   postId    String   @db.ObjectId
   author    User     @relation(fields: [authorId], references: [id])
