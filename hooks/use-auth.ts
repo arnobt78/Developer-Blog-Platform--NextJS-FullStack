@@ -8,15 +8,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
-
-interface User {
-  id: string;
-  username: string;
-  email: string;
-  avatar?: string;
-  bio?: string;
-  role: string;
-}
+import type { User } from "@/types";
 
 interface LoginCredentials {
   email: string;
@@ -77,10 +69,21 @@ export function useUser(userId?: string) {
   return useQuery({
     queryKey: ["user", userId],
     queryFn: async () => {
-      const url = userId ? `/api/users/${userId}` : "/api/users/me";
-      const response = await fetch(url);
+      // Always use /api/auth/me for current user profile
+      // This endpoint returns the full user object
+      const token =
+        typeof window !== "undefined" ? localStorage.getItem("token") : null;
+      const response = await fetch("/api/auth/me", {
+        method: "GET",
+        headers: token
+          ? {
+              Authorization: `Bearer ${token}`,
+            }
+          : {},
+      });
       if (!response.ok) throw new Error("Failed to fetch user");
-      return response.json() as Promise<User>;
+      const data = await response.json();
+      return data as User;
     },
     enabled: !!userId || false,
     staleTime: 5 * 60 * 1000,
@@ -252,7 +255,7 @@ export function useUpdateProfile() {
 
   return useMutation({
     mutationFn: async (formData: FormData) => {
-      const response = await fetch("/api/users/me", {
+      const response = await fetch("/api/auth/me", {
         method: "PUT",
         body: formData,
       });

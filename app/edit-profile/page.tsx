@@ -35,12 +35,12 @@ export default function EditProfile() {
   useEffect(() => {
     if (authData?.user) {
       setForm({
-        name: authData.user.username || "",
+        name: authData.user.name || "",
         email: authData.user.email || "",
-        country: "",
+        country: authData.user.country || "",
         password: "",
       });
-      setAvatarUrl(authData.user.avatar || null);
+      setAvatarUrl(authData.user.avatarUrl || null);
     }
   }, [authData]);
 

@@ -1,9 +1,54 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcrypt";
-import { requireAuth } from "@/lib/auth";
+import { getUserIdFromRequest, requireAuth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { handleFileUpload } from "@/lib/upload";
 
+/**
+ * Get current user profile
+ */
+export async function GET(request: NextRequest) {
+  try {
+    const userId = getUserIdFromRequest(request);
+
+    if (!userId) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        country: true,
+        avatarUrl: true,
+      },
+    });
+
+    if (!user) {
+      return NextResponse.json(
+        { error: "User not found" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json(user);
+  } catch (error) {
+    console.error("Error fetching user:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch user" },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * Update current user profile
+ */
 export async function PUT(request: NextRequest) {
   try {
     const userId = await requireAuth(request);

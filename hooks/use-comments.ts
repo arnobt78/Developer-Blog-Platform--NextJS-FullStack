@@ -16,7 +16,7 @@ export function useComments(postId: string) {
   return useQuery({
     queryKey: ["comments", postId],
     queryFn: async () => {
-      const response = await fetch(`/api/comments?postId=${postId}`);
+      const response = await fetch(`/api/comments/post/${postId}`);
       if (!response.ok) throw new Error("Failed to fetch comments");
       return response.json() as Promise<Comment[]>;
     },
@@ -39,14 +39,20 @@ export function useCreateComment() {
       imageUrl?: string;
       fileId?: string;
     }) => {
-      const response = await fetch("/api/comments", {
+      // Create FormData for file upload support
+      const formData = new FormData();
+      formData.append("content", data.content);
+      if (data.parentId) formData.append("parentId", data.parentId);
+      if (data.imageUrl) formData.append("imageUrl", data.imageUrl);
+      if (data.fileId) formData.append("fileId", data.fileId);
+
+      const response = await fetch(`/api/comments/post/${data.postId}`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: formData,
       });
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || "Failed to create comment");
+        throw new Error(error.error || "Failed to create comment");
       }
       return response.json();
     },

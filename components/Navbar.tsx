@@ -164,7 +164,7 @@ const Navbar: React.FC = () => {
                   <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-blue-400 bg-gray-200">
                     <Image
                       src={
-                        user.avatar ||
+                        user.avatarUrl ||
                         `https://robohash.org/${user.name || "user"}.png?size=80x80`
                       }
                       alt="avatar"
@@ -173,7 +173,7 @@ const Navbar: React.FC = () => {
                     />
                   </div>
                   <span className="text-slate-700 font-courier text-pretty font-bold text-xl hover:text-blue-500">
-                    Welcome, {user.name?.split(" ")[0] || user.name || "User"}
+                    Welcome, {(user.name || "").split(" ")[0] || "User"}
                   </span>
                 </button>
                 {dropdownOpen && (

@@ -42,9 +42,9 @@ export function useMarkNotificationRead() {
   return useMutation({
     mutationFn: async (notificationId: string) => {
       const response = await fetch(
-        `/api/notifications/${notificationId}/read`,
+        `/api/notifications/${notificationId}/mark-read`,
         {
-          method: "PUT",
+          method: "POST",
         }
       );
       if (!response.ok) throw new Error("Failed to mark notification as read");
@@ -97,8 +97,8 @@ export function useMarkAllNotificationsRead() {
 
   return useMutation({
     mutationFn: async () => {
-      const response = await fetch("/api/notifications/read-all", {
-        method: "PUT",
+      const response = await fetch("/api/notifications/mark-all-read", {
+        method: "POST",
       });
       if (!response.ok) throw new Error("Failed to mark all as read");
       return response.json();
