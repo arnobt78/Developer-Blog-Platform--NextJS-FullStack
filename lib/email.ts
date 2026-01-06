@@ -12,7 +12,7 @@ export async function sendPasswordResetEmail(
     },
   });
 
-  const resetLink = `${process.env.NEXT_PUBLIC_APP_URL}/reset-password?token=${resetToken}`;
+  const resetLink = `${process.env.NEXT_PUBLIC_APP_URL}/reset-password?email=${encodeURIComponent(email)}&token=${resetToken}`;
 
   const mailOptions = {
     from: process.env.EMAIL_USER,
@@ -22,7 +22,7 @@ export async function sendPasswordResetEmail(
       <h1>Password Reset Request</h1>
       <p>You requested a password reset. Click the link below to reset your password:</p>
       <a href="${resetLink}">${resetLink}</a>
-      <p>This link will expire in 1 hour.</p>
+      <p>This link will expire in 15 minutes.</p>
       <p>If you didn't request this, please ignore this email.</p>
     `,
   };
