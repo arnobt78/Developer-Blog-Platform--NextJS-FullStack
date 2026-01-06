@@ -237,10 +237,23 @@ export function useUpdatePost() {
       });
     },
     onSuccess: (data, variables) => {
-      // Invalidate to refetch fresh data from server
+      // Update cache immediately with server response to prevent flicker
+      queryClient.setQueryData<Post>(["post", variables.id], data);
+      
+      // Update posts list cache
+      const posts = queryClient.getQueryData<Post[]>(["posts"]);
+      if (posts) {
+        queryClient.setQueryData<Post[]>(
+          ["posts"],
+          posts.map((post) => (post.id === variables.id ? data : post))
+        );
+      }
+      
+      // Invalidate to ensure all related queries are fresh
       queryClient.invalidateQueries({ queryKey: ["posts"] });
       queryClient.invalidateQueries({ queryKey: ["post", variables.id] });
       queryClient.invalidateQueries({ queryKey: ["saved-posts"] });
+      
       toast({
         title: "Success",
         description: "Post updated successfully",
