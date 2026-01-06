@@ -164,8 +164,11 @@ const Navbar: React.FC = () => {
                   <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-blue-400 bg-gray-200">
                     <Image
                       src={
-                        user.avatarUrl ||
-                        `https://robohash.org/${(user.name || "user")}.png?size=80x80`
+                        // Priority: Use uploaded image if available, otherwise use avatar fallback
+                        // Check for both null/undefined and empty string
+                        (user.avatarUrl && user.avatarUrl.trim() !== "")
+                          ? user.avatarUrl
+                          : `https://robohash.org/${(user.name || "user")}.png?size=80x80`
                       }
                       alt="avatar"
                       fill
