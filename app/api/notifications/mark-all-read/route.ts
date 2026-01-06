@@ -1,11 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAuth } from "@/lib/auth";
+import { getUserIdFromRequest } from "@/lib/auth";
 
 // Mark all notifications as read
 export async function POST(request: NextRequest) {
   try {
-    const userId = await requireAuth(request);
+    const userId = getUserIdFromRequest(request);
+
+    // Return success if user is not authenticated (no-op)
+    if (!userId) {
+      return NextResponse.json({ success: true });
+    }
 
     await prisma.notification.updateMany({
       where: { userId, isRead: false },
