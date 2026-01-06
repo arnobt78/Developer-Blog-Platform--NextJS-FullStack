@@ -183,6 +183,7 @@ const Navbar: React.FC = () => {
                   <div className="absolute right-0 mt-2 w-50 bg-slate-100 rounded shadow-lg z-50">
                     <Link
                       href="/notifications"
+                      prefetch={false}
                       className="block w-full p-4 text-slate-700 font-courier text-pretty font-bold text-xl hover:bg-white hover:text-blue-500 relative"
                       onClick={() => setDropdownOpen(false)}
                     >
@@ -195,6 +196,7 @@ const Navbar: React.FC = () => {
                     </Link>
                     <Link
                       href="/saved-posts"
+                      prefetch={false}
                       className="block w-full p-4 text-slate-700 font-courier text-pretty font-bold text-xl hover:bg-white hover:text-blue-500"
                       onClick={() => setDropdownOpen(false)}
                     >
@@ -203,6 +205,7 @@ const Navbar: React.FC = () => {
                     {isAdmin && (
                       <Link
                         href="/admin/reports"
+                        prefetch={false}
                         className="block w-full p-4 text-slate-700 font-courier text-pretty font-bold text-xl hover:bg-white hover:text-blue-500"
                         onClick={() => setDropdownOpen(false)}
                       >
@@ -211,6 +214,7 @@ const Navbar: React.FC = () => {
                     )}
                     <Link
                       href="/edit-profile"
+                      prefetch={false}
                       className="block w-full p-4 text-slate-700 font-courier text-pretty font-bold text-xl hover:bg-white hover:text-blue-500"
                       onClick={() => setDropdownOpen(false)}
                     >
@@ -303,6 +307,7 @@ const Navbar: React.FC = () => {
               <div className="flex flex-col items-center space-y-2 mt-4">
                 <Link
                   href="/notifications"
+                  prefetch={false}
                   className="block px-4 py-2 hover:bg-gray-100 text-black rounded relative"
                   onClick={() => setIsMenuOpen(false)}
                 >
@@ -315,6 +320,7 @@ const Navbar: React.FC = () => {
                 </Link>
                 <Link
                   href="/saved-posts"
+                  prefetch={false}
                   className="block px-4 py-2 hover:bg-gray-100 text-black rounded"
                   onClick={() => setIsMenuOpen(false)}
                 >
@@ -323,6 +329,7 @@ const Navbar: React.FC = () => {
                 {isAdmin && (
                   <Link
                     href="/admin/reports"
+                    prefetch={false}
                     className="block px-4 py-2 hover:bg-gray-100 text-black rounded"
                     onClick={() => setIsMenuOpen(false)}
                   >
@@ -331,6 +338,7 @@ const Navbar: React.FC = () => {
                 )}
                 <Link
                   href="/edit-profile"
+                  prefetch={false}
                   className="block px-4 py-2 hover:bg-gray-100 text-black rounded"
                   onClick={() => setIsMenuOpen(false)}
                 >
