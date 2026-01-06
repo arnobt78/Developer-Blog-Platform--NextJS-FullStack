@@ -79,8 +79,14 @@ export function useSavedPosts() {
   return useQuery({
     queryKey: ["saved-posts"],
     queryFn: async () => {
-      const response = await fetch("/api/users/saved-posts");
-      if (!response.ok) throw new Error("Failed to fetch saved posts");
+      const response = await fetch("/api/users/me/saved-posts");
+      if (!response.ok) {
+        // Return empty array if not authenticated or error
+        if (response.status === 401 || response.status === 404) {
+          return [];
+        }
+        throw new Error("Failed to fetch saved posts");
+      }
       return response.json() as Promise<Post[]>;
     },
     staleTime: 2 * 60 * 1000,
