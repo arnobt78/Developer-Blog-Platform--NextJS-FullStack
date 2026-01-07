@@ -62,15 +62,40 @@ export function useCreateComment() {
       });
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || error.message || "Failed to create comment");
+        throw new Error(
+          error.error || error.message || "Failed to create comment"
+        );
       }
       return response.json();
     },
+    onSettled: (data, error, variables) => {
+      // Update cache immediately with new comment if successful
+      if (data) {
+        const comments = queryClient.getQueryData<Comment[]>([
+          "comments",
+          variables.postId,
+        ]);
+        if (comments) {
+          queryClient.setQueryData<Comment[]>(
+            ["comments", variables.postId],
+            [...comments, data]
+          );
+        }
+      }
+    },
     onSuccess: (data, variables) => {
+      // Cache already updated in onSettled, now invalidate for background refetch
       queryClient.invalidateQueries({
         queryKey: ["comments", variables.postId],
+        refetchType: "none",
       });
-      queryClient.invalidateQueries({ queryKey: ["post", variables.postId] });
+      queryClient.invalidateQueries({
+        queryKey: ["post", variables.postId],
+        refetchType: "none",
+      });
+      // Background refetch (non-blocking)
+      queryClient.refetchQueries({ queryKey: ["comments", variables.postId] });
+      queryClient.refetchQueries({ queryKey: ["post", variables.postId] });
       toast({
         title: "Success",
         description: "Comment posted successfully",
@@ -120,14 +145,37 @@ export function useUpdateComment() {
       });
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || error.error || "Failed to update comment");
+        throw new Error(
+          error.message || error.error || "Failed to update comment"
+        );
       }
       return response.json();
     },
+    onSettled: (data, error, variables) => {
+      // Update cache immediately with updated comment if successful
+      if (data) {
+        const comments = queryClient.getQueryData<Comment[]>([
+          "comments",
+          variables.postId,
+        ]);
+        if (comments) {
+          queryClient.setQueryData<Comment[]>(
+            ["comments", variables.postId],
+            comments.map((comment) =>
+              comment.id === variables.id ? data : comment
+            )
+          );
+        }
+      }
+    },
     onSuccess: (data, variables) => {
+      // Cache already updated in onSettled, now invalidate for background refetch
       queryClient.invalidateQueries({
         queryKey: ["comments", variables.postId],
+        refetchType: "none",
       });
+      // Background refetch (non-blocking)
+      queryClient.refetchQueries({ queryKey: ["comments", variables.postId] });
       toast({
         title: "Success",
         description: "Comment updated successfully",
@@ -173,26 +221,64 @@ export function useDeleteComment() {
       });
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || error.error || "Failed to delete comment");
+        throw new Error(
+          error.message || error.error || "Failed to delete comment"
+        );
       }
       return response.json();
     },
-    onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: ["comments", variables.postId],
-      });
-      queryClient.invalidateQueries({ queryKey: ["post", variables.postId] });
-      toast({
-        title: "Success",
-        description: "Comment deleted successfully",
-        variant: "success",
-      });
+    onMutate: async ({ id, postId }) => {
+      // Cancel outgoing refetches to prevent race conditions
+      await queryClient.cancelQueries({ queryKey: ["comments", postId] });
+
+      // Snapshot previous value for rollback
+      const previousComments = queryClient.getQueryData<Comment[]>([
+        "comments",
+        postId,
+      ]);
+
+      // Optimistically remove comment from cache
+      if (previousComments) {
+        queryClient.setQueryData<Comment[]>(
+          ["comments", postId],
+          previousComments.filter((comment) => comment.id !== id)
+        );
+      }
+
+      return { previousComments };
     },
-    onError: (error: Error) => {
+    onError: (error, variables, context) => {
+      // Rollback on error
+      if (context?.previousComments) {
+        queryClient.setQueryData(
+          ["comments", variables.postId],
+          context.previousComments
+        );
+      }
       toast({
         title: "Error",
         description: error.message,
         variant: "destructive",
+      });
+    },
+    onSuccess: (data, variables) => {
+      // Cache already updated optimistically in onMutate
+      // Now invalidate for background refetch to ensure consistency
+      queryClient.invalidateQueries({
+        queryKey: ["comments", variables.postId],
+        refetchType: "none",
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["post", variables.postId],
+        refetchType: "none",
+      });
+      // Background refetch (non-blocking)
+      queryClient.refetchQueries({ queryKey: ["comments", variables.postId] });
+      queryClient.refetchQueries({ queryKey: ["post", variables.postId] });
+      toast({
+        title: "Success",
+        description: "Comment deleted successfully",
+        variant: "success",
       });
     },
   });

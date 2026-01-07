@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from "react";
 import { Post } from "@/types";
-import { BsThreeDots } from "react-icons/bs";
 
 import CommentSection from "./CommentSection";
 import { useRouter } from "next/navigation";
@@ -78,7 +77,6 @@ const PostCard: React.FC<PostCardProps> = ({
   // Local UI state (not synced with server)
   const [showComments, setShowComments] = useState(false); // Toggle comments visibility
   const [showLoginPrompt, setShowLoginPrompt] = useState(false); // Show login modal
-  const [showDropdown, setShowDropdown] = useState(false); // Show dropdown menu
   const [saved, setSaved] = useState(savedProp); // Saved state (synced with prop)
   const [reported, setReported] = useState(false); // Track if post was reported
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false); // Delete confirmation dialog
@@ -314,53 +312,23 @@ const PostCard: React.FC<PostCardProps> = ({
     }
   };
 
-  // Close dropdown on outside click
-  useEffect(() => {
-    if (!showDropdown) return;
-    function handleClickOutside(event: MouseEvent) {
-      const dropdown = document.getElementById(`postcard-dropdown-${id}`);
-      if (dropdown && !dropdown.contains(event.target as Node)) {
-        setShowDropdown(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [showDropdown, id]);
-
   return (
-    <div
-      className="bg-white rounded-lg shadow-md overflow-hidden"
-      onClick={handleCardClick}
-    >
+    <div className="bg-white rounded-lg shadow-md overflow-hidden">
       <div className="p-8">
         {/* Header */}
         <div className="flex items-center justify-between">
           <PostHeader author={author} createdAt={createdAt} />
-          <div className="relative">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowDropdown(!showDropdown);
-              }}
-              className="p-2 hover:bg-gray-100 rounded-full"
-            >
-              <BsThreeDots className="w-5 h-5 text-gray-500" />
-            </button>
-            {showDropdown && isLoggedIn && (
-              <PostDropdownMenu
-                isAuthor={currentUser?.id === author?.id}
-                saved={saved}
-                reported={reported}
-                onSave={handleSave}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-                onReport={handleReport}
-                onClose={() => setShowDropdown(false)}
-              />
-            )}
-          </div>
+          {isLoggedIn && (
+            <PostDropdownMenu
+              isAuthor={currentUser?.id === author?.id}
+              saved={saved}
+              reported={reported}
+              onSave={handleSave}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+              onReport={handleReport}
+            />
+          )}
         </div>
 
         {/* Content */}

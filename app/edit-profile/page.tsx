@@ -77,7 +77,7 @@ export default function EditProfile() {
 
   if (isLoadingAuth) {
     return (
-      <div className="space-y-4 max-w-md mx-auto m-36">
+      <div className="space-y-4 max-w-9xl mx-auto m-36">
         <Skeleton className="h-32 w-32 rounded-full mx-auto" />
         <Skeleton className="h-10 w-full" />
         <Skeleton className="h-10 w-full" />

@@ -29,14 +29,14 @@ interface CommentSectionProps {
 
 /**
  * CommentSection Component
- * 
+ *
  * Features:
  * - Nested comment threads (replies to comments)
  * - Image uploads in comments
  * - Real-time optimistic updates
  * - Edit/Delete own comments
  * - Like comments
- * 
+ *
  * Nested Structure:
  * - parentId === undefined: Top-level comments
  * - parentId === "comment-id": Replies to that comment
@@ -50,13 +50,12 @@ const CommentSection: React.FC<CommentSectionProps> = ({
   const [newComment, setNewComment] = useState(""); // Comment text
   const [image, setImage] = useState<File | null>(null); // Image file to upload
   const [replyTo, setReplyTo] = useState<string | null>(null); // Comment ID being replied to
-  
+
   // Edit state
   const [editingComment, setEditingComment] = useState<string | null>(null); // Comment ID being edited
   const [editText, setEditText] = useState(""); // Edited comment text
-  
+
   // UI state
-  const [showDropdown, setShowDropdown] = useState<string | null>(null); // Dropdown menu for comment actions
   const [imagePreview, setImagePreview] = useState<string | null>(null); // Preview URL for image before upload
   const [showShareModal, setShowShareModal] = useState<string | null>(null); // Share modal for comment link
   const [commentToDelete, setCommentToDelete] = useState<string | null>(null); // Comment ID to delete
@@ -74,13 +73,13 @@ const CommentSection: React.FC<CommentSectionProps> = ({
 
   /**
    * Filter comments by parentId for nested structure
-   * 
+   *
    * If parentId is provided:
    * - Show only comments that are replies to that parent
-   * 
+   *
    * If parentId is not provided:
    * - Show only top-level comments (no parentId)
-   * 
+   *
    * This allows recursive nesting of comment threads
    */
   const comments = allComments.filter((c: Comment) =>
@@ -97,14 +96,14 @@ const CommentSection: React.FC<CommentSectionProps> = ({
 
   /**
    * Handle adding a new comment with optimistic update
-   * 
+   *
    * Flow:
    * 1. Validate: Must have text or image
    * 2. Upload image if present (to ImageKit)
    * 3. Create comment with text + image URL
    * 4. React Query handles optimistic update automatically
    * 5. Reset form on success
-   * 
+   *
    * @param replyParentId - Optional: ID of comment being replied to (for nested replies)
    */
   const handleAddComment = async (replyParentId?: string) => {
@@ -260,10 +259,6 @@ const CommentSection: React.FC<CommentSectionProps> = ({
             key={comment.id}
             comment={comment}
             user={user}
-            isDropdownOpen={showDropdown === comment.id}
-            onDropdownToggle={() =>
-              setShowDropdown(showDropdown === comment.id ? null : comment.id)
-            }
             onEdit={() => handleEditComment(comment.id)}
             onDelete={() => handleDeleteComment(comment.id)}
             onLike={() => handleLikeComment(comment.id)}

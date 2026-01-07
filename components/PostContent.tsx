@@ -22,7 +22,9 @@ const PostContent: React.FC<PostContentProps> = ({
 }) => (
   <div className="mt-8">
     <h2
-      className="font-courier text-2xl font-bold my-4 hover:text-blue-600 cursor-pointer"
+      className={`font-courier text-2xl font-bold my-4 ${
+        onClick ? "hover:text-blue-600 cursor-pointer" : ""
+      }`}
       onClick={onClick}
     >
       {title}
@@ -31,10 +33,7 @@ const PostContent: React.FC<PostContentProps> = ({
       {description}
     </p>
     {imageUrl && (
-      <div
-        className="relative aspect-video mb-12 cursor-pointer"
-        onClick={onClick}
-      >
+      <div className="relative aspect-video mb-12">
         <Image
           src={imageUrl}
           alt={title}

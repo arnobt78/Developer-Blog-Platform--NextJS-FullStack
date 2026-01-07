@@ -7,7 +7,7 @@ import { useSavedPosts, useSavePost } from "@/hooks/use-posts";
 import { useAuth } from "@/hooks/use-auth";
 
 export default function SavedPosts() {
-  const { data: authData } = useAuth();
+  const { data: authData, isLoading: isLoadingAuth } = useAuth();
   const isAuthenticated = !!authData?.user;
 
   // Only fetch saved posts if user is authenticated
@@ -22,9 +22,9 @@ export default function SavedPosts() {
   };
 
   return (
-    <div className="max-w-9xl mx-auto pt-32 px-2 sm:px-4 xl:px-8 pb-8 flex flex-col min-h-screen">
+    <div className="max-w-9xl mx-auto pt-32 px-2 sm:px-4 xl:px-8 pb-8 flex flex-col">
       <h1 className="text-2xl font-bold mb-4">Your Saved Posts</h1>
-      {isLoading ? (
+      {isLoadingAuth || isLoading ? (
         <div className="grid grid-cols-1 gap-4 w-full">
           {[1, 2, 3].map((i) => (
             <PostCardSkeleton key={i} />

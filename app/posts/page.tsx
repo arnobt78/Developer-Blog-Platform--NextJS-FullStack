@@ -51,6 +51,8 @@ function PostsContent() {
    * - search: Search query
    * - Returns: { data, isLoading, error }
    * - Default to empty array if data is undefined
+   * - isLoading: true only on initial load (shows skeleton)
+   * - Background refetches happen seamlessly without showing skeleton
    *
    * useSavedPosts: Fetches user's saved posts
    * - Only called if user is authenticated (optimization)
@@ -128,7 +130,7 @@ function PostsContent() {
 
   return (
     <div className="flex pt-32 max-w-9xl mx-auto px-2 sm:px-4 xl:px-8 pb-8 flex-col md:flex-row">
-      <main className="w-3/4 p-8">
+      <main className="w-3/4 px-8">
         {/* Active filter chips */}
         <div className="mb-4 flex gap-2">
           {selectedTag && (
@@ -266,7 +268,7 @@ export default function PostsPage() {
     <Suspense
       fallback={
         <div className="flex pt-32">
-          <main className="w-3/4 p-8">
+          <main className="w-3/4 px-8">
             <div className="grid grid-cols-1 gap-4 w-full">
               {[1, 2, 3].map((i) => (
                 <PostCardSkeleton key={i} />

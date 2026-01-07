@@ -106,6 +106,7 @@ const TagSelector: React.FC<{ onSelectTag: (tag: string) => void }> = ({
         {visibleTags.map((tag) => (
           <button
             key={tag}
+            type="button"
             className="m-1 px-3 py-1 bg-blue-500 text-white rounded-2xl hover:bg-blue-600"
             onClick={() => onSelectTag(tag)}
           >
@@ -114,6 +115,7 @@ const TagSelector: React.FC<{ onSelectTag: (tag: string) => void }> = ({
         ))}
         {sortedTags.length > 20 && (
           <button
+            type="button"
             className="m-1 px-3 py-1 bg-gray-300 text-gray-800 rounded-2xl hover:bg-gray-400"
             onClick={() => setExpanded((e) => !e)}
           >

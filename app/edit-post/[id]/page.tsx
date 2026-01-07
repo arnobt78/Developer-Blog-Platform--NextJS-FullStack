@@ -17,7 +17,7 @@ export default function EditPost() {
   const params = useParams();
   const id = params?.id as string;
   const router = useRouter();
-  const { data: authData } = useAuth();
+  const { data: authData, isLoading: isLoadingAuth } = useAuth();
   const isLoggedIn = !!authData?.user;
 
   // Redirect if not logged in
@@ -114,10 +114,11 @@ export default function EditPost() {
     );
   };
 
-  // Show loading skeleton while fetching post data
-  if (isLoadingPost) {
+  // Show loading skeleton while checking auth or fetching post data
+  // This prevents white screen flash during navigation
+  if (isLoadingAuth || isLoadingPost) {
     return (
-      <div className="mx-auto pt-32 max-w-9xl px-2 sm:px-4 xl:px-8 pb-8 flex flex-col min-h-screen">
+      <div className="mx-auto pt-32 max-w-9xl px-2 sm:px-4 xl:px-8 pb-8 flex flex-col">
         <Skeleton className="h-8 w-48 mb-4" />
         <div className="space-y-4">
           <Skeleton className="h-10 w-full" />
@@ -131,7 +132,7 @@ export default function EditPost() {
   }
 
   return (
-    <div className="mx-auto pt-32 max-w-9xl px-2 sm:px-4 xl:px-8 pb-8 flex flex-col min-h-screen">
+    <div className="mx-auto pt-32 max-w-9xl px-2 sm:px-4 xl:px-8 pb-8">
       <h1 className="text-2xl font-bold mb-4">Edit Post</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
         <TagSelector onSelectTag={handleTagSelect} />
@@ -210,13 +211,23 @@ export default function EditPost() {
             className="w-full p-2 border border-gray-300 rounded"
           />
         </div>
-        <button
-          type="submit"
-          disabled={updatePost.isPending || uploading}
-          className="bg-blue-500 text-white p-2 rounded disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {updatePost.isPending ? "Updating..." : "Update"}
-        </button>
+        <div className="flex gap-3">
+          <button
+            type="submit"
+            disabled={updatePost.isPending || uploading}
+            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {updatePost.isPending ? "Updating..." : "Update Post"}
+          </button>
+          <button
+            type="button"
+            onClick={() => router.push("/posts")}
+            disabled={updatePost.isPending || uploading}
+            className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Cancel
+          </button>
+        </div>
       </form>
     </div>
   );

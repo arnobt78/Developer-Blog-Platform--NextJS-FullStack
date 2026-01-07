@@ -33,7 +33,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   };
 
   return (
-    <aside className="w-1/4 p-4 bg-gray-100">
+    <aside className="w-1/4 p-4 bg-gray-100 sticky top-32 self-start max-h-[calc(100vh-8rem)] overflow-y-auto">
       <TooltipProvider>
         <div className="mb-6">
           <h2 className="text-lg font-bold">Tags</h2>

@@ -11,8 +11,6 @@ import { Comment, User } from "@/types";
 interface CommentItemProps {
   comment: Comment;
   user: User | null;
-  isDropdownOpen: boolean;
-  onDropdownToggle: () => void;
   onEdit: () => void;
   onDelete: () => void;
   onLike: () => void;
@@ -40,8 +38,6 @@ interface CommentItemProps {
 const CommentItem: React.FC<CommentItemProps> = ({
   comment,
   user,
-  isDropdownOpen,
-  onDropdownToggle,
   onEdit,
   onDelete,
   onLike,
@@ -75,12 +71,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
             createdAt={comment.createdAt}
           />
           {user && comment.author.id === user.id && (
-            <CommentDropdownMenu
-              onEdit={onEdit}
-              onDelete={onDelete}
-              show={isDropdownOpen}
-              onToggle={onDropdownToggle}
-            />
+            <CommentDropdownMenu onEdit={onEdit} onDelete={onDelete} />
           )}
         </div>
         {isEditing ? (

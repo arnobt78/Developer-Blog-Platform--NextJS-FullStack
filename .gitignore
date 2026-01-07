@@ -66,6 +66,7 @@ prisma/*.db-journal
 # Old migration files (optional - uncomment if you want to ignore them)
 # setup-env.sh
 HETZNER_VPS_MIGRATION_GUIDE.md
+DROPDOWN_TEST_CREDENTIALS_DOCS.md
 
 # Temporary files
 *.log

@@ -7,6 +7,7 @@ import { useImageUpload } from "@/hooks/use-image-upload";
 import { useCreatePost } from "@/hooks/use-posts";
 import { useAuth } from "@/hooks/use-auth";
 import TagSelector from "@/components/TagSelector";
+import { Skeleton } from "@/components/ui/skeleton";
 
 /**
  * Create Post Page - Create or edit posts
@@ -14,7 +15,7 @@ import TagSelector from "@/components/TagSelector";
  */
 export default function CreatePost() {
   const router = useRouter();
-  const { data: authData } = useAuth();
+  const { data: authData, isLoading: isLoadingAuth } = useAuth();
   const isLoggedIn = !!authData?.user;
 
   // Redirect if not logged in
@@ -94,8 +95,25 @@ export default function CreatePost() {
     });
   };
 
+  // Show loading skeleton while checking auth
+  // This prevents white screen flash during navigation
+  if (isLoadingAuth) {
+    return (
+      <div className="mx-auto pt-32 max-w-9xl px-2 sm:px-4 xl:px-8">
+        <Skeleton className="h-8 w-48 mb-4" />
+        <div className="space-y-4">
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-32 w-full" />
+          <Skeleton className="h-32 w-full" />
+          <Skeleton className="h-32 w-full" />
+          <Skeleton className="h-10 w-32" />
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="mx-auto pt-32 max-w-9xl px-2 sm:px-4 xl:px-8 pb-8 flex flex-col min-h-screen">
+    <div className="mx-auto pt-32 max-w-9xl px-2 sm:px-4 xl:px-8 pb-8">
       <h1 className="text-2xl font-bold mb-4">Create a New Post</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
         <TagSelector onSelectTag={handleTagSelect} />

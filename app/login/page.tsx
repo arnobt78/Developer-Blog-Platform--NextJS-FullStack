@@ -3,19 +3,80 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useLogin } from "@/hooks/use-auth";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+/**
+ * Test account credentials for development/testing
+ * Maps role values to email and password credentials
+ */
+const testAccounts = {
+  "admin-user": {
+    email: "admin@test.com",
+    password: "admin123",
+    label: "Admin User",
+  },
+  "regular-user": {
+    email: "user@test.com",
+    password: "user123",
+    label: "Regular User",
+  },
+  "guest-user": {
+    email: "guest@test.com",
+    password: "guest123",
+    label: "Guest User",
+  },
+} as const;
 
 /**
  * Login Page - User authentication
  * Uses React Query for form submission with automatic cache invalidation
+ * Includes dropdown for quick test account selection (development/testing)
  */
 export default function Login() {
   const [form, setForm] = useState({ email: "", password: "" });
+  const [selectedRole, setSelectedRole] = useState<string>("");
   const login = useLogin();
 
+  /**
+   * Handle input field changes
+   */
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  /**
+   * Handle test account role selection
+   * Auto-fills email and password fields with test credentials
+   * Supports "clear" option to reset selection and form fields
+   */
+  const handleRoleSelect = (value: string) => {
+    if (value === "clear") {
+      // Reset to initial state
+      setSelectedRole("");
+      setForm({ email: "", password: "" });
+    } else {
+      // Auto-fill with test account credentials
+      setSelectedRole(value);
+      const account = testAccounts[value as keyof typeof testAccounts];
+      if (account) {
+        setForm({
+          email: account.email,
+          password: account.password,
+        });
+      }
+    }
+  };
+
+  /**
+   * Handle form submission
+   * Prevents default form behavior and triggers React Query mutation
+   */
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     login.mutate(form);
@@ -23,6 +84,50 @@ export default function Login() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4 max-w-md mx-auto m-36">
+      {/* Test Credentials Dropdown - Development/Testing Only */}
+      <div className="space-y-2">
+        <label className="text-sm font-medium text-gray-700">
+          Quick Test Login
+        </label>
+        <Select
+          key={`select-${selectedRole || "empty"}`}
+          value={selectedRole || undefined}
+          onValueChange={handleRoleSelect}
+        >
+          <SelectTrigger className="w-full border-gray-300 bg-white">
+            <SelectValue placeholder="Select Role Based Test Account" />
+          </SelectTrigger>
+          <SelectContent className="bg-white border border-gray-200">
+            {selectedRole && (
+              <SelectItem
+                value="clear"
+                className="text-gray-400 hover:text-gray-600 italic"
+              >
+                Clear Selection
+              </SelectItem>
+            )}
+            <SelectItem
+              value="admin-user"
+              className="cursor-pointer hover:bg-gray-100"
+            >
+              {testAccounts["admin-user"].label}
+            </SelectItem>
+            <SelectItem
+              value="regular-user"
+              className="cursor-pointer hover:bg-gray-100"
+            >
+              {testAccounts["regular-user"].label}
+            </SelectItem>
+            <SelectItem
+              value="guest-user"
+              className="cursor-pointer hover:bg-gray-100"
+            >
+              {testAccounts["guest-user"].label}
+            </SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
       <input
         name="email"
         type="email"

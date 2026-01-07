@@ -46,7 +46,7 @@ export default function AdminReports() {
   };
 
   return (
-    <div className="mx-auto pt-32 max-w-9xl px-2 sm:px-4 xl:px-8 pb-8 flex flex-col min-h-screen">
+    <div className="mx-auto pt-32 max-w-9xl px-2 sm:px-4 xl:px-8 pb-8">
       <h1 className="text-2xl font-bold mb-4">Reported Posts</h1>
       {loading ? (
         <div className="w-full overflow-x-auto">

@@ -12,7 +12,7 @@ import PostStats from "@/components/PostStats";
 import PostContent from "@/components/PostContent";
 import PostLoginPrompt from "@/components/PostLoginPrompt";
 
-import { BsThreeDots } from "react-icons/bs";
+import { BsArrowLeft } from "react-icons/bs";
 
 import {
   usePost,
@@ -34,7 +34,6 @@ export default function PostDetails() {
   const router = useRouter();
   const { toast } = useToast();
 
-  const [showDropdown, setShowDropdown] = useState(false);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [reported, setReported] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -189,24 +188,9 @@ export default function PostDetails() {
     }
   };
 
-  // Close dropdown on outside click
-  useEffect(() => {
-    if (!showDropdown) return;
-    function handleClickOutside(event: MouseEvent) {
-      const dropdown = document.getElementById("postdetails-dropdown");
-      if (dropdown && !dropdown.contains(event.target as Node)) {
-        setShowDropdown(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [showDropdown]);
-
   if (isLoading) {
     return (
-      <div className="mx-auto pt-32 max-w-9xl px-2 sm:px-4 xl:px-8 pb-8 flex flex-col min-h-screen">
+      <div className="mx-auto pt-32 max-w-9xl px-2 sm:px-4 xl:px-8 pb-8 flex flex-col">
         <div className="bg-white rounded-lg shadow-lg overflow-hidden">
           <Skeleton className="w-full h-64" />
           <div className="p-6 space-y-4">
@@ -230,7 +214,7 @@ export default function PostDetails() {
 
   if (!post) {
     return (
-      <div className="mx-auto pt-32 max-w-9xl px-2 sm:px-4 xl:px-8 pb-8 flex flex-col min-h-screen">
+      <div className="mx-auto pt-32 max-w-9xl px-2 sm:px-4 xl:px-8 pb-8 flex flex-col">
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
           Post not found.
         </div>
@@ -239,34 +223,33 @@ export default function PostDetails() {
   }
 
   return (
-    <div className="mx-auto pt-32 max-w-9xl px-2 sm:px-4 xl:px-8 pb-8 flex flex-col min-h-screen">
+    <div className="mx-auto pt-32 max-w-9xl px-2 sm:px-4 xl:px-8 pb-8 flex flex-col">
+      {/* Back Navigation */}
+      <button
+        onClick={() => router.push("/posts")}
+        className="flex items-center gap-2 text-blue-600 hover:text-blue-800 mb-4 font-semibold transition-colors"
+      >
+        <BsArrowLeft className="w-5 h-5" />
+        Back to Posts
+      </button>
       <div className="bg-white rounded-lg shadow-lg overflow-hidden">
         <div className="p-6">
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <PostHeader author={post.author} createdAt={post.createdAt} />
-            <div className="relative">
-              <button
-                onClick={() => setShowDropdown(!showDropdown)}
-                className="p-2 hover:bg-gray-100 rounded-full"
-              >
-                <BsThreeDots className="w-5 h-5 text-gray-500" />
-              </button>
-              {showDropdown && (
-                <PostDropdownMenu
-                  isAuthor={
-                    !!(currentUser && post && currentUser.id === post.author.id)
-                  }
-                  saved={saved}
-                  reported={reported}
-                  onSave={handleSave}
-                  onEdit={handleEdit}
-                  onDelete={handleDelete}
-                  onReport={handleReport}
-                  onClose={() => setShowDropdown(false)}
-                />
-              )}
-            </div>
+            {isLoggedIn && (
+              <PostDropdownMenu
+                isAuthor={
+                  !!(currentUser && post && currentUser.id === post.author.id)
+                }
+                saved={saved}
+                reported={reported}
+                onSave={handleSave}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                onReport={handleReport}
+              />
+            )}
           </div>
 
           {/* Content */}

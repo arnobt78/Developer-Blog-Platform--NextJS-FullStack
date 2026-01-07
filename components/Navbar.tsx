@@ -12,11 +12,16 @@ import { useRouter, usePathname } from "next/navigation";
 import { FiSearch, FiMenu, FiX } from "react-icons/fi";
 import { useAuth, useLogout } from "@/hooks/use-auth";
 import { useUnreadCount } from "@/hooks/use-notifications";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 
 const Navbar: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -32,24 +37,6 @@ const Navbar: React.FC = () => {
 
   const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL;
   const isAdmin = user && user.email === adminEmail;
-
-  // Close dropdown on outside click
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
-        setDropdownOpen(false);
-      }
-    }
-    if (dropdownOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [dropdownOpen]);
 
   const handleLogout = () => {
     logoutMutation.mutate();
@@ -74,14 +61,6 @@ const Navbar: React.FC = () => {
       setSearch("");
     }
   };
-
-  useEffect(() => {
-    setDropdownOpen(false);
-  }, [user]);
-
-  if (isLoading) {
-    return null;
-  }
 
   return (
     <>
@@ -156,82 +135,91 @@ const Navbar: React.FC = () => {
               </>
             )}
             {user && (
-              <div className="relative ml-4" ref={dropdownRef}>
-                <button
-                  className="flex items-center gap-2 focus:outline-none"
-                  onClick={() => setDropdownOpen((open) => !open)}
+              <DropdownMenu modal={false}>
+                <DropdownMenuTrigger asChild>
+                  <button className="flex items-center gap-2 focus:outline-none ml-4">
+                    <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-blue-400 bg-gray-200">
+                      <Image
+                        src={
+                          // Priority: Use uploaded image if available, otherwise use avatar fallback
+                          // Check for both null/undefined and empty string
+                          user.avatarUrl && user.avatarUrl.trim() !== ""
+                            ? user.avatarUrl
+                            : `https://robohash.org/${
+                                user.name || "user"
+                              }.png?size=80x80`
+                        }
+                        alt="avatar"
+                        fill
+                        sizes="40px"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <span className="text-slate-700 font-courier text-pretty font-bold text-xl hover:text-blue-500">
+                      Welcome, {user.name ? user.name.split(" ")[0] : "User"}
+                    </span>
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="end"
+                  className="w-50 bg-slate-100 border border-gray-200 shadow-lg"
                 >
-                  <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-blue-400 bg-gray-200">
-                    <Image
-                      src={
-                        // Priority: Use uploaded image if available, otherwise use avatar fallback
-                        // Check for both null/undefined and empty string
-                        user.avatarUrl && user.avatarUrl.trim() !== ""
-                          ? user.avatarUrl
-                          : `https://robohash.org/${
-                              user.name || "user"
-                            }.png?size=80x80`
-                      }
-                      alt="avatar"
-                      fill
-                      sizes="40px"
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <span className="text-slate-700 font-courier text-pretty font-bold text-xl hover:text-blue-500">
-                    Welcome, {user.name ? user.name.split(" ")[0] : "User"}
-                  </span>
-                </button>
-                {dropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-50 bg-slate-100 rounded shadow-lg z-50">
+                  <DropdownMenuItem asChild>
                     <Link
                       href="/notifications"
                       prefetch={false}
-                      className="block w-full p-4 text-slate-700 font-courier text-pretty font-bold text-xl hover:bg-white hover:text-blue-500 relative"
-                      onClick={() => setDropdownOpen(false)}
+                      className="w-full p-4 text-slate-700 font-courier text-pretty font-bold text-xl hover:bg-white hover:text-blue-500 cursor-pointer focus:bg-white focus:text-blue-500 relative flex items-center"
                     >
-                      Notifications
+                      <span className="flex-1">Notifications</span>
                       {unreadCount > 0 && (
-                        <span className="absolute right-4 top-2 bg-red-500 text-white rounded-full px-2 py-0.5 text-xs font-bold">
+                        <span className="bg-red-500 text-white rounded-full px-2 py-0.5 text-xs font-bold ml-2">
                           {unreadCount}
                         </span>
                       )}
                     </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
                     <Link
                       href="/saved-posts"
                       prefetch={false}
-                      className="block w-full p-4 text-slate-700 font-courier text-pretty font-bold text-xl hover:bg-white hover:text-blue-500"
-                      onClick={() => setDropdownOpen(false)}
+                      className="w-full p-4 text-slate-700 font-courier text-pretty font-bold text-xl hover:bg-white hover:text-blue-500 cursor-pointer focus:bg-white focus:text-blue-500"
                     >
                       Saved Posts
                     </Link>
-                    {isAdmin && (
-                      <Link
-                        href="/admin/reports"
-                        prefetch={false}
-                        className="block w-full p-4 text-slate-700 font-courier text-pretty font-bold text-xl hover:bg-white hover:text-blue-500"
-                        onClick={() => setDropdownOpen(false)}
-                      >
-                        Admin Reports
-                      </Link>
-                    )}
+                  </DropdownMenuItem>
+                  {isAdmin && (
+                    <>
+                      <DropdownMenuSeparator className="bg-gray-300" />
+                      <DropdownMenuItem asChild>
+                        <Link
+                          href="/admin/reports"
+                          prefetch={false}
+                          className="w-full p-4 text-slate-700 font-courier text-pretty font-bold text-xl hover:bg-white hover:text-blue-500 cursor-pointer focus:bg-white focus:text-blue-500"
+                        >
+                          Admin Reports
+                        </Link>
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                  <DropdownMenuSeparator className="bg-gray-300" />
+                  <DropdownMenuItem asChild>
                     <Link
                       href="/edit-profile"
                       prefetch={false}
-                      className="block w-full p-4 text-slate-700 font-courier text-pretty font-bold text-xl hover:bg-white hover:text-blue-500"
-                      onClick={() => setDropdownOpen(false)}
+                      className="w-full p-4 text-slate-700 font-courier text-pretty font-bold text-xl hover:bg-white hover:text-blue-500 cursor-pointer focus:bg-white focus:text-blue-500"
                     >
                       Edit Profile
                     </Link>
-                    <button
-                      onClick={handleLogout}
-                      className="block w-full p-4 text-slate-700 font-courier text-pretty font-bold text-xl hover:bg-white hover:text-blue-500 text-left"
-                    >
-                      Logout
-                    </button>
-                  </div>
-                )}
-              </div>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator className="bg-gray-300" />
+                  <DropdownMenuItem
+                    onClick={handleLogout}
+                    className="w-full p-4 text-slate-700 font-courier text-pretty font-bold text-xl hover:bg-white hover:text-blue-500 cursor-pointer focus:bg-white focus:text-blue-500"
+                  >
+                    Logout
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
           </div>
 

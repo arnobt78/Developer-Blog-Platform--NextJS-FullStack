@@ -1,7 +1,7 @@
 /**
  * Custom React Query hooks for posts
  * Provides caching, optimistic updates, and automatic refetching
- * 
+ *
  * React Query Benefits:
  * - Automatic caching reduces API calls
  * - Background refetching keeps data fresh
@@ -18,10 +18,10 @@ import type { Post } from "@/types";
 
 /**
  * Fetch all posts with optional filters
- * 
+ *
  * @param params - Optional filters: tag, search query, or authorId
  * @returns React Query hook with posts data, loading state, and error
- * 
+ *
  * How it works:
  * 1. queryKey: ["posts", params] - Unique cache key based on filters
  *    - Different params = different cache entries
@@ -74,7 +74,7 @@ export function usePost(id: string) {
 
 /**
  * Fetch saved posts for current user
- * 
+ *
  * @param options - Optional query options
  * @param options.enabled - Whether to enable the query (default: true)
  *                        Set to false to skip fetching when user is not authenticated
@@ -86,7 +86,7 @@ export function useSavedPosts(options?: { enabled?: boolean }) {
       // Get token from localStorage for authentication
       const token =
         typeof window !== "undefined" ? localStorage.getItem("token") : null;
-      
+
       // If no token, return empty array (user not authenticated)
       if (!token) {
         return [];
@@ -113,12 +113,12 @@ export function useSavedPosts(options?: { enabled?: boolean }) {
 
 /**
  * Create a new post
- * 
+ *
  * Mutation Pattern:
  * - mutationFn: Performs the API call
  * - onSuccess: Invalidates related queries and shows success toast
  * - onError: Shows error toast
- * 
+ *
  * Cache Invalidation:
  * - After creating a post, we invalidate "posts" query
  * - This triggers a refetch, showing the new post in the list
@@ -146,15 +146,36 @@ export function useCreatePost() {
       });
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || error.error || "Failed to create post");
+        throw new Error(
+          error.message || error.error || "Failed to create post"
+        );
       }
       return response.json();
     },
+    onSettled: (data, error) => {
+      // Add new post to cache immediately if successful
+      if (data) {
+        const posts = queryClient.getQueryData<Post[]>(["posts"]);
+        if (posts) {
+          // Add new post at the beginning of the list
+          queryClient.setQueryData<Post[]>(["posts"], [data, ...posts]);
+        }
+      }
+    },
     onSuccess: () => {
-      // Invalidate queries to trigger refetch
-      // This ensures the new post appears in lists immediately
-      queryClient.invalidateQueries({ queryKey: ["posts"] });
-      queryClient.invalidateQueries({ queryKey: ["saved-posts"] });
+      // Cache already updated in onSettled
+      // Now invalidate for background refetch to ensure consistency
+      queryClient.invalidateQueries({
+        queryKey: ["posts"],
+        refetchType: "none",
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["saved-posts"],
+        refetchType: "none",
+      });
+      // Background refetch (non-blocking)
+      queryClient.refetchQueries({ queryKey: ["posts"] });
+      queryClient.refetchQueries({ queryKey: ["saved-posts"] });
       toast({
         title: "Success",
         description: "Post created successfully",
@@ -202,7 +223,9 @@ export function useUpdatePost() {
       });
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || error.error || "Failed to update post");
+        throw new Error(
+          error.message || error.error || "Failed to update post"
+        );
       }
       return response.json();
     },
@@ -236,24 +259,53 @@ export function useUpdatePost() {
         variant: "destructive",
       });
     },
-    onSuccess: (data, variables) => {
-      // Update cache immediately with server response to prevent flicker
-      queryClient.setQueryData<Post>(["post", variables.id], data);
-      
-      // Update posts list cache
-      const posts = queryClient.getQueryData<Post[]>(["posts"]);
-      if (posts) {
-        queryClient.setQueryData<Post[]>(
-          ["posts"],
-          posts.map((post) => (post.id === variables.id ? data : post))
-        );
+    onSettled: (data, error, variables) => {
+      // onSettled runs after onSuccess/onError but before component re-renders
+      // This ensures cache is fully updated before any navigation occurs
+      if (data) {
+        // Update cache immediately with server response to prevent flicker
+        queryClient.setQueryData<Post>(["post", variables.id], data);
+
+        // Update posts list cache with the new data
+        const posts = queryClient.getQueryData<Post[]>(["posts"]);
+        if (posts) {
+          queryClient.setQueryData<Post[]>(
+            ["posts"],
+            posts.map((post) => (post.id === variables.id ? data : post))
+          );
+        }
+
+        // Update saved posts cache if the post is in there
+        const savedPosts = queryClient.getQueryData<Post[]>(["saved-posts"]);
+        if (savedPosts) {
+          queryClient.setQueryData<Post[]>(
+            ["saved-posts"],
+            savedPosts.map((post) => (post.id === variables.id ? data : post))
+          );
+        }
       }
-      
-      // Invalidate to ensure all related queries are fresh
-      queryClient.invalidateQueries({ queryKey: ["posts"] });
-      queryClient.invalidateQueries({ queryKey: ["post", variables.id] });
-      queryClient.invalidateQueries({ queryKey: ["saved-posts"] });
-      
+    },
+    onSuccess: (data, variables) => {
+      // Cache is already updated in onSettled above
+      // Now just invalidate for background refetch
+      queryClient.invalidateQueries({
+        queryKey: ["posts"],
+        refetchType: "none",
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["post", variables.id],
+        refetchType: "none",
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["saved-posts"],
+        refetchType: "none",
+      });
+
+      // Trigger background refetch (non-blocking)
+      queryClient.refetchQueries({ queryKey: ["posts"] });
+      queryClient.refetchQueries({ queryKey: ["post", variables.id] });
+      queryClient.refetchQueries({ queryKey: ["saved-posts"] });
+
       toast({
         title: "Success",
         description: "Post updated successfully",
@@ -286,23 +338,71 @@ export function useDeletePost() {
       });
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || error.error || "Failed to delete post");
+        throw new Error(
+          error.message || error.error || "Failed to delete post"
+        );
       }
       return response.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["posts"] });
-      toast({
-        title: "Success",
-        description: "Post deleted successfully",
-        variant: "success",
-      });
+    onMutate: async (id: string) => {
+      // Cancel outgoing refetches to prevent race conditions
+      await queryClient.cancelQueries({ queryKey: ["posts"] });
+      await queryClient.cancelQueries({ queryKey: ["saved-posts"] });
+
+      // Snapshot previous values for rollback
+      const previousPosts = queryClient.getQueryData<Post[]>(["posts"]);
+      const previousSavedPosts = queryClient.getQueryData<Post[]>([
+        "saved-posts",
+      ]);
+
+      // Optimistically remove post from cache
+      if (previousPosts) {
+        queryClient.setQueryData<Post[]>(
+          ["posts"],
+          previousPosts.filter((post) => post.id !== id)
+        );
+      }
+      if (previousSavedPosts) {
+        queryClient.setQueryData<Post[]>(
+          ["saved-posts"],
+          previousSavedPosts.filter((post) => post.id !== id)
+        );
+      }
+
+      return { previousPosts, previousSavedPosts };
     },
-    onError: (error: Error) => {
+    onError: (error, id, context) => {
+      // Rollback on error
+      if (context?.previousPosts) {
+        queryClient.setQueryData(["posts"], context.previousPosts);
+      }
+      if (context?.previousSavedPosts) {
+        queryClient.setQueryData(["saved-posts"], context.previousSavedPosts);
+      }
       toast({
         title: "Error",
         description: error.message,
         variant: "destructive",
+      });
+    },
+    onSuccess: () => {
+      // Cache already updated optimistically in onMutate
+      // Now invalidate for background refetch to ensure consistency
+      queryClient.invalidateQueries({
+        queryKey: ["posts"],
+        refetchType: "none",
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["saved-posts"],
+        refetchType: "none",
+      });
+      // Background refetch (non-blocking)
+      queryClient.refetchQueries({ queryKey: ["posts"] });
+      queryClient.refetchQueries({ queryKey: ["saved-posts"] });
+      toast({
+        title: "Success",
+        description: "Post deleted successfully",
+        variant: "success",
       });
     },
   });
@@ -310,7 +410,7 @@ export function useDeletePost() {
 
 /**
  * Like/unlike a post with optimistic update
- * 
+ *
  * Optimistic Update Pattern:
  * 1. onMutate: Update UI immediately (before server responds)
  *    - Cancel any pending queries to prevent race conditions
@@ -318,7 +418,7 @@ export function useDeletePost() {
  *    - Apply optimistic update to cache
  * 2. onError: If server request fails, rollback to previous state
  * 3. onSettled: Always refetch to sync with server (success or error)
- * 
+ *
  * Benefits:
  * - Instant UI feedback (feels faster)
  * - Automatic rollback on error

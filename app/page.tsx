@@ -94,24 +94,10 @@ export default function Home() {
           </p>
         </section>
       </main>
-      {isLoading ? (
-        <aside className="w-1/4 p-4 space-y-4">
-          <Skeleton className="h-6 w-32 mb-4" />
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-full" />
-          </div>
-          <Skeleton className="h-6 w-32 mt-6 mb-4" />
-          <div className="flex flex-wrap gap-2">
-            <Skeleton className="h-6 w-16" />
-            <Skeleton className="h-6 w-20" />
-            <Skeleton className="h-6 w-18" />
-          </div>
-        </aside>
-      ) : (
-        <Sidebar recentPosts={recentPosts} popularTopics={popularTopics} />
-      )}
+      <Sidebar
+        recentPosts={isLoading ? [] : recentPosts}
+        popularTopics={isLoading ? [] : popularTopics}
+      />
     </div>
   );
 }
