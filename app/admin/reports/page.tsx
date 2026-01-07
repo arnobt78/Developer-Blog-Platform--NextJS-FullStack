@@ -36,7 +36,9 @@ export default function AdminReports() {
   const handleStatusChange = async (id: string, status: string) => {
     try {
       await api.patch(`/reports/${id}`, { status });
-      setReports((prev) => prev.map((r) => (r.id === id ? { ...r, status } : r)));
+      setReports((prev) =>
+        prev.map((r) => (r.id === id ? { ...r, status } : r))
+      );
     } catch (error) {
       console.error("Error updating report status:", error);
       // Optionally show error toast here
@@ -44,7 +46,7 @@ export default function AdminReports() {
   };
 
   return (
-    <div className="container mx-auto pt-24 px-4">
+    <div className="mx-auto pt-32 max-w-9xl px-2 sm:px-4 xl:px-8 pb-8 flex flex-col min-h-screen">
       <h1 className="text-2xl font-bold mb-4">Reported Posts</h1>
       {loading ? (
         <div className="w-full overflow-x-auto">

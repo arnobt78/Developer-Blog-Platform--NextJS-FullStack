@@ -115,6 +115,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
                   src={comment.imageUrl}
                   alt="Comment attachment"
                   fill
+                  sizes="(max-width: 768px) 100vw, 320px"
                   className="object-cover rounded-lg"
                 />
               </div>

@@ -85,8 +85,8 @@ const Navbar: React.FC = () => {
 
   return (
     <>
-      <nav className="bg-slate-200 shadow-xl fixed top-0 left-0 w-full z-50 px-4">
-        <div className="container mx-auto flex items-center justify-between md:flex-row">
+      <nav className="bg-slate-200 shadow-xl fixed top-0 left-0 w-full z-50 px-2 sm:px-4 xl:px-8">
+        <div className="max-w-9xl mx-auto flex items-center justify-between md:flex-row">
           {/* Logo */}
           <div className="flex items-start">
             <Link href="/" className="flex items-center">
@@ -166,12 +166,15 @@ const Navbar: React.FC = () => {
                       src={
                         // Priority: Use uploaded image if available, otherwise use avatar fallback
                         // Check for both null/undefined and empty string
-                        (user.avatarUrl && user.avatarUrl.trim() !== "")
+                        user.avatarUrl && user.avatarUrl.trim() !== ""
                           ? user.avatarUrl
-                          : `https://robohash.org/${(user.name || "user")}.png?size=80x80`
+                          : `https://robohash.org/${
+                              user.name || "user"
+                            }.png?size=80x80`
                       }
                       alt="avatar"
                       fill
+                      sizes="40px"
                       className="w-full h-full object-cover"
                     />
                   </div>

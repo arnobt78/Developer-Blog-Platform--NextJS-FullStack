@@ -1,6 +1,6 @@
 /**
  * Posts Page - Main listing page for all posts
- * 
+ *
  * Features:
  * - React Query for data fetching and caching
  * - Optimistic updates (likes, saves update instantly)
@@ -8,7 +8,7 @@
  * - URL-based filtering (tag, search query)
  * - Client-side filtering as fallback
  * - Sidebar with recent posts and popular topics
- * 
+ *
  * React Query Benefits:
  * - Posts are cached, no refetch on navigation
  * - Background refetch keeps data fresh
@@ -45,13 +45,13 @@ function PostsContent() {
 
   /**
    * React Query hooks
-   * 
+   *
    * usePosts: Fetches posts with optional filters
    * - tag: Filter by tag
    * - search: Search query
    * - Returns: { data, isLoading, error }
    * - Default to empty array if data is undefined
-   * 
+   *
    * useSavedPosts: Fetches user's saved posts
    * - Only called if user is authenticated (optimization)
    * - Used to show saved status on each post card
@@ -69,7 +69,7 @@ function PostsContent() {
 
   /**
    * Sync selectedTag with URL parameter
-   * 
+   *
    * When URL changes (e.g., /posts?tag=react),
    * update local state to match
    */
@@ -80,12 +80,12 @@ function PostsContent() {
 
   /**
    * Filter posts by tag or search query (client-side filtering as fallback)
-   * 
+   *
    * Why client-side filtering?
    * - Server already filters, but this provides additional filtering
    * - Can combine multiple filters
    * - Instant filtering (no API call)
-   * 
+   *
    * Note: Server-side filtering is preferred for large datasets
    */
   const filteredPosts = posts.filter((post) => {
@@ -127,7 +127,7 @@ function PostsContent() {
     .map(([tag]) => tag);
 
   return (
-    <div className="flex pt-24">
+    <div className="flex pt-32 max-w-9xl mx-auto px-2 sm:px-4 xl:px-8 pb-8 flex-col md:flex-row">
       <main className="w-3/4 p-8">
         {/* Active filter chips */}
         <div className="mb-4 flex gap-2">
@@ -265,7 +265,7 @@ export default function PostsPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex pt-24">
+        <div className="flex pt-32">
           <main className="w-3/4 p-8">
             <div className="grid grid-cols-1 gap-4 w-full">
               {[1, 2, 3].map((i) => (

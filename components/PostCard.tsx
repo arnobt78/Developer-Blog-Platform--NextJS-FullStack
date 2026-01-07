@@ -20,7 +20,7 @@ import {
   useDeletePost,
 } from "@/hooks/use-posts";
 import { useAuth } from "@/hooks/use-auth";
-import { toast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { InputDialog } from "@/components/InputDialog";
 
@@ -34,7 +34,7 @@ interface PostCardProps {
 
 /**
  * PostCard Component
- * 
+ *
  * Displays a single post card with:
  * - Post content (title, description, image, code snippet)
  * - Author information
@@ -43,7 +43,7 @@ interface PostCardProps {
  * - Delete/Edit actions (for post owner)
  * - Comments section
  * - Share functionality
- * 
+ *
  * React Query Integration:
  * - Uses mutation hooks for all actions (like, helpful, save, delete)
  * - Optimistic updates provide instant UI feedback
@@ -57,6 +57,8 @@ const PostCard: React.FC<PostCardProps> = ({
   onDelete,
   onLikeHelpfulUpdate,
 }) => {
+  const { toast } = useToast();
+
   // Destructure post data
   const {
     id,
@@ -106,14 +108,14 @@ const PostCard: React.FC<PostCardProps> = ({
 
   /**
    * Handle like button click
-   * 
+   *
    * Flow:
    * 1. Stop event propagation (prevents card click)
    * 2. Check if user is logged in
    * 3. If not logged in, show login prompt
    * 4. If logged in, trigger mutation (optimistic update happens automatically)
    * 5. Notify parent component if callback provided
-   * 
+   *
    * e.stopPropagation() prevents the card's onClick from firing
    * when clicking buttons inside the card
    */
@@ -152,15 +154,15 @@ const PostCard: React.FC<PostCardProps> = ({
 
   /**
    * Handle share functionality
-   * 
+   *
    * Uses Web Share API if available (mobile devices, modern browsers)
    * Falls back to clipboard copy if Web Share API not supported
-   * 
+   *
    * Web Share API:
    * - Native share dialog on mobile devices
    * - Can share to any app (WhatsApp, Email, etc.)
    * - Better UX than manual copy-paste
-   * 
+   *
    * Fallback:
    * - Copy link to clipboard
    * - Show toast notification
@@ -207,7 +209,7 @@ const PostCard: React.FC<PostCardProps> = ({
 
   /**
    * Handle card click to navigate to post details
-   * 
+   *
    * Prevents navigation when clicking on interactive elements (buttons)
    * Uses event delegation to check if click target is a button
    */
@@ -224,7 +226,7 @@ const PostCard: React.FC<PostCardProps> = ({
 
   /**
    * Sync saved state with prop changes
-   * 
+   *
    * When savedProp changes (e.g., from parent component),
    * update local state to match
    */
@@ -234,10 +236,10 @@ const PostCard: React.FC<PostCardProps> = ({
 
   /**
    * Handle saving/unsaving the post
-   * 
+   *
    * Toggles between save and unsave based on current state
    * Uses different mutations for save vs unsave
-   * 
+   *
    * onSuccess callback:
    * - Calls parent's onUnsave callback if provided
    * - Useful for removing post from SavedPosts page immediately

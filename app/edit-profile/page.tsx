@@ -101,6 +101,7 @@ export default function EditProfile() {
               src={avatarUrl}
               alt="Avatar"
               fill
+              sizes="96px"
               className="rounded-full object-cover border"
             />
           </div>

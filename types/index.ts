@@ -49,5 +49,4 @@ export interface Notification {
   postId?: string;
   commentId?: string;
   type?: string;
-  fromUser?: User; // User who triggered the notification
 }

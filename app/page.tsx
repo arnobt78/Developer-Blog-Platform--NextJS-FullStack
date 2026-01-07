@@ -36,7 +36,7 @@ export default function Home() {
     .map(([tag]) => tag);
 
   return (
-    <div className="flex pt-24 pb-2">
+    <div className="flex pt-32 max-w-9xl mx-auto px-2 sm:px-4 xl:px-8 pb-8 flex-col md:flex-row">
       <main className="w-3/4 p-4">
         <section className="hero">
           <h1 className="text-4xl font-extrabold font-amatic text-pretty text-center mt-2 mb-4">
@@ -53,7 +53,10 @@ export default function Home() {
           <Image
             src="/assets/hero-1.png"
             alt="Hero"
-            className="w-full h-[400px]"
+            width={1200}
+            height={300}
+            className="w-full h-[300px] object-cover"
+            priority
           />
         </section>
 

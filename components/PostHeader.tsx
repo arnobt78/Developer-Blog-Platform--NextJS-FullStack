@@ -19,6 +19,7 @@ const PostHeader: React.FC<PostHeaderProps> = ({ author, createdAt }) => (
         }
         alt={author?.name || "User"}
         fill
+        sizes="48px"
         className="object-cover"
       />
     </div>

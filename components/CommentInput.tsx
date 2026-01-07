@@ -52,6 +52,7 @@ const CommentInput: React.FC<CommentInputProps> = ({
           src={imagePreview}
           alt="Preview"
           fill
+          sizes="(max-width: 768px) 100vw, 320px"
           className="object-cover rounded-lg"
         />
         {onRemoveImage && (

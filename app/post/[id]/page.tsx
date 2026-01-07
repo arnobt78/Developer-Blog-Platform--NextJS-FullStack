@@ -24,7 +24,7 @@ import {
   useDeletePost,
 } from "@/hooks/use-posts";
 import { useAuth } from "@/hooks/use-auth";
-import { toast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { InputDialog } from "@/components/InputDialog";
 
@@ -32,6 +32,7 @@ export default function PostDetails() {
   const params = useParams();
   const id = params?.id as string;
   const router = useRouter();
+  const { toast } = useToast();
 
   const [showDropdown, setShowDropdown] = useState(false);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
@@ -110,7 +111,7 @@ export default function PostDetails() {
           description: "Link copied to clipboard!",
           variant: "success",
         });
-      } catch (error) {
+      } catch {
         toast({
           title: "Error",
           description: "Failed to copy link to clipboard.",
@@ -205,7 +206,7 @@ export default function PostDetails() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto pt-24 max-w-3xl px-4">
+      <div className="mx-auto pt-32 max-w-9xl px-2 sm:px-4 xl:px-8 pb-8 flex flex-col min-h-screen">
         <div className="bg-white rounded-lg shadow-lg overflow-hidden">
           <Skeleton className="w-full h-64" />
           <div className="p-6 space-y-4">
@@ -229,7 +230,7 @@ export default function PostDetails() {
 
   if (!post) {
     return (
-      <div className="container mx-auto pt-24 max-w-3xl px-4">
+      <div className="mx-auto pt-32 max-w-9xl px-2 sm:px-4 xl:px-8 pb-8 flex flex-col min-h-screen">
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
           Post not found.
         </div>
@@ -238,7 +239,7 @@ export default function PostDetails() {
   }
 
   return (
-    <div className="container mx-auto pt-24 max-w-3xl px-4 pb-8">
+    <div className="mx-auto pt-32 max-w-9xl px-2 sm:px-4 xl:px-8 pb-8 flex flex-col min-h-screen">
       <div className="bg-white rounded-lg shadow-lg overflow-hidden">
         <div className="p-6">
           {/* Header */}

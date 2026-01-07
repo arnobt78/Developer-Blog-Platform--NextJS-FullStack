@@ -55,6 +55,7 @@ export default function Register() {
               src={URL.createObjectURL(avatar)}
               alt="avatar"
               fill
+              sizes="96px"
               className="object-cover"
             />
           ) : (

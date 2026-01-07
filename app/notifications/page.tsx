@@ -24,7 +24,7 @@ export default function Notifications() {
   }, []); // Empty dependency array - only run once on mount
 
   return (
-    <div className="max-w-2xl mx-auto mt-32 p-6 bg-white rounded shadow">
+    <div className="max-w-9xl mx-auto mt-32 p-6 bg-white rounded shadow">
       <h2 className="text-2xl font-bold mb-6">Notifications</h2>
       {isLoading ? (
         <div className="space-y-4">
@@ -49,23 +49,18 @@ export default function Notifications() {
                 n.isRead ? "bg-gray-50" : "bg-blue-50 border-blue-300"
               }`}
             >
-              {n.fromUser && (
+              {n.type === "comment" && (
                 <div className="relative w-10 h-10">
                   <Image
-                    src={
-                      n.fromUser.avatarUrl ||
-                      `https://robohash.org/${n.fromUser.name}.png?size=80x80`
-                    }
-                    alt={n.fromUser.name}
+                    src={`https://robohash.org/notification-${n.id}.png?size=80x80`}
+                    alt="Notification"
                     fill
+                    sizes="40px"
                     className="rounded-full object-cover border"
                   />
                 </div>
               )}
               <div className="flex-1">
-                <div className="font-semibold">
-                  {n.fromUser ? n.fromUser.name : "Someone"}
-                </div>
                 <div className="text-gray-700">{n.message}</div>
                 <div className="text-xs text-gray-400 mt-1">
                   {new Date(n.createdAt).toLocaleString()}

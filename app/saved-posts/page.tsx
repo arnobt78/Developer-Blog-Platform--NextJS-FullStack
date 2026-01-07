@@ -3,26 +3,26 @@
 import React from "react";
 import { PostCardSkeleton } from "@/components/ui/skeleton";
 import PostCard from "@/components/PostCard";
-import { useSavedPosts, useUnsavePost } from "@/hooks/use-posts";
+import { useSavedPosts, useSavePost } from "@/hooks/use-posts";
 import { useAuth } from "@/hooks/use-auth";
 
 export default function SavedPosts() {
   const { data: authData } = useAuth();
   const isAuthenticated = !!authData?.user;
-  
+
   // Only fetch saved posts if user is authenticated
   const { data: posts = [], isLoading } = useSavedPosts({
     enabled: isAuthenticated,
   });
-  const unsavePost = useUnsavePost();
+  const savePost = useSavePost();
 
   // Remove post from list when unsaved with optimistic update
   const handleUnsave = (postId: string) => {
-    unsavePost.mutate(postId);
+    savePost.mutate(postId);
   };
 
   return (
-    <div className="container mx-auto pt-24 px-4">
+    <div className="max-w-9xl mx-auto pt-32 px-2 sm:px-4 xl:px-8 pb-8 flex flex-col min-h-screen">
       <h1 className="text-2xl font-bold mb-4">Your Saved Posts</h1>
       {isLoading ? (
         <div className="grid grid-cols-1 gap-4 w-full">

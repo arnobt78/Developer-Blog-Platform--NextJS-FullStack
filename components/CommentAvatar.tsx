@@ -18,6 +18,7 @@ const CommentAvatar: React.FC<CommentAvatarProps> = ({ author }) => (
       }
       alt={author?.name || "User"}
       fill
+      sizes="40px"
       className="object-cover"
     />
   </div>

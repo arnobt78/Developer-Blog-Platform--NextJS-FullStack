@@ -95,7 +95,7 @@ export default function CreatePost() {
   };
 
   return (
-    <div className="container mx-auto pt-24 px-4 pb-4">
+    <div className="mx-auto pt-32 max-w-9xl px-2 sm:px-4 xl:px-8 pb-8 flex flex-col min-h-screen">
       <h1 className="text-2xl font-bold mb-4">Create a New Post</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
         <TagSelector onSelectTag={handleTagSelect} />
@@ -144,6 +144,7 @@ export default function CreatePost() {
                 src={imagePreview || imageUrl!}
                 alt="Preview"
                 fill
+                sizes="192px"
                 className="object-cover rounded"
               />
               <button

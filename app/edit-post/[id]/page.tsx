@@ -117,7 +117,7 @@ export default function EditPost() {
   // Show loading skeleton while fetching post data
   if (isLoadingPost) {
     return (
-      <div className="container mx-auto pt-24 px-4 pb-4">
+      <div className="mx-auto pt-32 max-w-9xl px-2 sm:px-4 xl:px-8 pb-8 flex flex-col min-h-screen">
         <Skeleton className="h-8 w-48 mb-4" />
         <div className="space-y-4">
           <Skeleton className="h-10 w-full" />
@@ -131,7 +131,7 @@ export default function EditPost() {
   }
 
   return (
-    <div className="container mx-auto pt-24 px-4 pb-4">
+    <div className="mx-auto pt-32 max-w-9xl px-2 sm:px-4 xl:px-8 pb-8 flex flex-col min-h-screen">
       <h1 className="text-2xl font-bold mb-4">Edit Post</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
         <TagSelector onSelectTag={handleTagSelect} />
@@ -180,6 +180,7 @@ export default function EditPost() {
                 src={imagePreview || imageUrl!}
                 alt="Preview"
                 fill
+                sizes="192px"
                 className="object-cover rounded"
               />
               <button
