@@ -14,22 +14,21 @@ import {
 /**
  * Test account credentials for development/testing
  * Maps role values to email and password credentials
+ *
+ * Available test accounts:
+ * - Test User: test@user.com / 12345678
+ * - Test Admin: test@admin.com / 12345678
  */
 const testAccounts = {
-  "admin-user": {
-    email: "admin@test.com",
-    password: "admin123",
-    label: "Admin User",
+  "test-user": {
+    email: "test@user.com",
+    password: "12345678",
+    label: "Test User",
   },
-  "regular-user": {
-    email: "user@test.com",
-    password: "user123",
-    label: "Regular User",
-  },
-  "guest-user": {
-    email: "guest@test.com",
-    password: "guest123",
-    label: "Guest User",
+  "test-admin": {
+    email: "test@admin.com",
+    password: "12345678",
+    label: "Test Admin",
   },
 } as const;
 
@@ -107,22 +106,16 @@ export default function Login() {
               </SelectItem>
             )}
             <SelectItem
-              value="admin-user"
+              value="test-user"
               className="cursor-pointer hover:bg-gray-100"
             >
-              {testAccounts["admin-user"].label}
+              {testAccounts["test-user"].label}
             </SelectItem>
             <SelectItem
-              value="regular-user"
+              value="test-admin"
               className="cursor-pointer hover:bg-gray-100"
             >
-              {testAccounts["regular-user"].label}
-            </SelectItem>
-            <SelectItem
-              value="guest-user"
-              className="cursor-pointer hover:bg-gray-100"
-            >
-              {testAccounts["guest-user"].label}
+              {testAccounts["test-admin"].label}
             </SelectItem>
           </SelectContent>
         </Select>
