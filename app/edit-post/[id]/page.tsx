@@ -8,6 +8,7 @@ import { usePost, useUpdatePost } from "@/hooks/use-posts";
 import { useAuth } from "@/hooks/use-auth";
 import TagSelector from "@/components/TagSelector";
 import { Skeleton } from "@/components/ui/skeleton";
+import { BsArrowLeft } from "react-icons/bs";
 
 /**
  * Edit Post Page - Edit existing post
@@ -133,6 +134,14 @@ export default function EditPost() {
 
   return (
     <div className="mx-auto pt-32 max-w-9xl px-2 sm:px-4 xl:px-8 pb-8">
+      {/* Back Navigation */}
+      <button
+        onClick={() => router.push("/posts")}
+        className="flex items-center gap-2 text-blue-600 hover:text-blue-800 mb-4 font-semibold transition-colors"
+      >
+        <BsArrowLeft className="w-5 h-5" />
+        Back to Posts
+      </button>
       <h1 className="text-2xl font-bold mb-4">Edit Post</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
         <TagSelector onSelectTag={handleTagSelect} />

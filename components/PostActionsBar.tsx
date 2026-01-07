@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { FiShare2 } from "react-icons/fi";
+import { ThumbsUp, Heart, MessageCircle, Share2 } from "lucide-react";
 
 interface PostActionsBarProps {
   liked: boolean;
@@ -26,7 +26,7 @@ const PostActionsBar: React.FC<PostActionsBarProps> = ({
   onComment,
   onShare,
 }) => (
-  <div className="flex items-center justify-between border-t border-b py-2 text-xl font-courier">
+  <div className="flex items-center justify-between border-t border-b py-2 text-sm font-courier">
     <button
       onClick={onLike}
       className={`flex-1 flex items-center justify-center gap-2 py-2 hover:bg-gray-100 rounded-lg transition-colors ${
@@ -34,7 +34,7 @@ const PostActionsBar: React.FC<PostActionsBarProps> = ({
       }`}
       type="button"
     >
-      <span className="w-6 h-6">{liked ? "👍" : "👍🏻"}</span>
+      <ThumbsUp className="w-6 h-6" fill={liked ? "currentColor" : "none"} />
       <span>{likeCount > 0 ? likeCount : ""} Like</span>
     </button>
     <button
@@ -44,7 +44,7 @@ const PostActionsBar: React.FC<PostActionsBarProps> = ({
       }`}
       type="button"
     >
-      <span className="w-6 h-6">{helpful ? "❤️" : "🤍"}</span>
+      <Heart className="w-6 h-6" fill={helpful ? "currentColor" : "none"} />
       <span>{helpfulCount > 0 ? helpfulCount : ""} Helpful</span>
     </button>
     <button
@@ -52,7 +52,7 @@ const PostActionsBar: React.FC<PostActionsBarProps> = ({
       className="flex-1 flex items-center justify-center gap-2 py-2 hover:bg-gray-100 rounded-lg text-gray-600 transition-colors"
       type="button"
     >
-      <span className="w-6 h-6">💬</span>
+      <MessageCircle className="w-6 h-6" />
       <span>{commentCount > 0 ? commentCount : ""} Comment</span>
     </button>
     <button
@@ -60,7 +60,7 @@ const PostActionsBar: React.FC<PostActionsBarProps> = ({
       className="flex-1 flex items-center justify-center gap-2 py-2 hover:bg-gray-100 rounded-lg text-gray-600 transition-colors"
       type="button"
     >
-      <FiShare2 className="w-6 h-6" />
+      <Share2 className="w-6 h-6" />
       Share
     </button>
   </div>

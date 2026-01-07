@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { ThumbsUp, Heart, MessageCircle, Share2 } from "lucide-react";
 
 interface CommentActionsBarProps {
   liked: boolean;
@@ -36,7 +37,7 @@ const CommentActionsBar: React.FC<CommentActionsBarProps> = ({
       type="button"
       aria-pressed={liked}
     >
-      <span className="w-4 h-4">{liked ? "👍" : "👍🏻"}</span>
+      <ThumbsUp className="w-4 h-4" fill={liked ? "currentColor" : "none"} />
       {likeCount > 0 && likeCount} Like
     </button>
     <button
@@ -49,21 +50,21 @@ const CommentActionsBar: React.FC<CommentActionsBarProps> = ({
       type="button"
       aria-pressed={helpful}
     >
-      <span className="w-4 h-4">{helpful ? "❤️" : "🤍"}</span>
+      <Heart className="w-4 h-4" fill={helpful ? "currentColor" : "none"} />
       {helpfulCount > 0 && helpfulCount} Helpful
     </button>
     <button
       onClick={onReply}
       className="flex items-center gap-1 text-gray-600 hover:text-green-600 transition-colors"
     >
-      <span className="w-4 h-4">💬</span>
+      <MessageCircle className="w-4 h-4" />
       Reply
     </button>
     <button
       onClick={onShare}
       className="flex items-center gap-1 text-gray-600 hover:text-purple-600 transition-colors"
     >
-      <span className="w-4 h-4">🔗</span>
+      <Share2 className="w-4 h-4" />
       Share
     </button>
     {showShareModal && (

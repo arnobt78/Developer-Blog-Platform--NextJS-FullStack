@@ -8,6 +8,7 @@ import { useCreatePost } from "@/hooks/use-posts";
 import { useAuth } from "@/hooks/use-auth";
 import TagSelector from "@/components/TagSelector";
 import { Skeleton } from "@/components/ui/skeleton";
+import { BsArrowLeft } from "react-icons/bs";
 
 /**
  * Create Post Page - Create or edit posts
@@ -114,6 +115,14 @@ export default function CreatePost() {
 
   return (
     <div className="mx-auto pt-32 max-w-9xl px-2 sm:px-4 xl:px-8 pb-8">
+      {/* Back Navigation */}
+      <button
+        onClick={() => router.push("/posts")}
+        className="flex items-center gap-2 text-blue-600 hover:text-blue-800 mb-4 font-semibold transition-colors"
+      >
+        <BsArrowLeft className="w-5 h-5" />
+        Back to Posts
+      </button>
       <h1 className="text-2xl font-bold mb-4">Create a New Post</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
         <TagSelector onSelectTag={handleTagSelect} />
@@ -192,13 +201,23 @@ export default function CreatePost() {
             className="w-full p-2 border border-gray-300 rounded"
           />
         </div>
-        <button
-          type="submit"
-          disabled={createPost.isPending || uploading}
-          className="bg-blue-500 text-white p-2 rounded disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {createPost.isPending ? "Creating..." : "Submit"}
-        </button>
+        <div className="flex gap-3">
+          <button
+            type="submit"
+            disabled={createPost.isPending || uploading}
+            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {createPost.isPending ? "Creating..." : "Create Post"}
+          </button>
+          <button
+            type="button"
+            onClick={() => router.push("/posts")}
+            disabled={createPost.isPending || uploading}
+            className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Cancel
+          </button>
+        </div>
       </form>
     </div>
   );

@@ -2,7 +2,7 @@
 
 import React from "react";
 import Image from "next/image";
-import { FiImage, FiX } from "react-icons/fi";
+import { ImagePlus, X } from "lucide-react";
 
 interface CommentInputProps {
   value: string;
@@ -34,11 +34,11 @@ const CommentInput: React.FC<CommentInputProps> = ({
       value={value}
       onChange={onChange}
       placeholder={placeholder}
-      className="w-full px-4 py-2 pr-10 border rounded-full resize-none bg-gray-100 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+      className="w-full px-4 py-2 pr-12 border rounded-full resize-none bg-gray-100 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
       rows={1}
     />
-    <label className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-gray-500 hover:text-gray-700">
-      <FiImage className="w-5 h-5" />
+    <label className="absolute right-3 top-2 cursor-pointer text-gray-500 hover:text-gray-700 transition-colors">
+      <ImagePlus className="w-5 h-5" />
       <input
         type="file"
         accept="image/*"
@@ -60,7 +60,7 @@ const CommentInput: React.FC<CommentInputProps> = ({
             onClick={onRemoveImage}
             className="absolute top-1 right-1 p-1 bg-gray-800 bg-opacity-50 rounded-full text-white hover:bg-opacity-70 z-10"
           >
-            <FiX className="w-4 h-4" />
+            <X className="w-4 h-4" />
           </button>
         )}
       </div>

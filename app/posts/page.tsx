@@ -25,6 +25,7 @@ import Sidebar from "@/components/Sidebar";
 import { useRouter, useSearchParams } from "next/navigation";
 import { usePosts, useSavedPosts } from "@/hooks/use-posts";
 import { useAuth } from "@/hooks/use-auth";
+import { Badge } from "@/components/ui/badge";
 
 /**
  * Posts content component that uses useSearchParams
@@ -134,7 +135,10 @@ function PostsContent() {
         {/* Active filter chips */}
         <div className="mb-4 flex gap-2">
           {selectedTag && (
-            <span className="inline-flex items-center bg-blue-100 text-blue-800 px-3 py-1 rounded-full font-semibold">
+            <Badge
+              variant="secondary"
+              className="inline-flex items-center bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm border-0"
+            >
               Tag: {selectedTag}
               <button
                 className="ml-2 text-blue-500 hover:text-blue-700"
@@ -148,10 +152,13 @@ function PostsContent() {
               >
                 ×
               </button>
-            </span>
+            </Badge>
           )}
           {searchQuery && (
-            <span className="inline-flex items-center bg-green-100 text-green-800 px-3 py-1 rounded-full font-semibold">
+            <Badge
+              variant="secondary"
+              className="inline-flex items-center bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm border-0"
+            >
               Search: {searchQuery}
               <button
                 className="ml-2 text-green-500 hover:text-green-700"
@@ -165,7 +172,7 @@ function PostsContent() {
               >
                 ×
               </button>
-            </span>
+            </Badge>
           )}
         </div>
 
@@ -182,12 +189,13 @@ function PostsContent() {
                 )
               ),
             ].map((tag) => (
-              <span
+              <Badge
                 key={tag}
-                className="inline-block bg-blue-200 text-blue-800 px-2 py-1 rounded-full text-xs mr-2"
+                variant="secondary"
+                className="inline-block bg-blue-200 text-blue-800 px-2 py-1 rounded-full text-sm mr-2 border-0"
               >
                 {tag}
-              </span>
+              </Badge>
             ))}
           </div>
         )}

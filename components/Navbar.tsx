@@ -19,6 +19,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
 
 const Navbar: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -113,7 +114,7 @@ const Navbar: React.FC = () => {
               <Link
                 key={link.name}
                 href={link.path}
-                className="text-slate-700 font-courier text-pretty font-bold text-xl hover:text-blue-500 hover:scale-110 transition-transform duration-300"
+                className="text-slate-700 font-courier text-pretty font-bold text-md hover:text-blue-500 hover:scale-110 transition-transform duration-300"
               >
                 {link.name}
               </Link>
@@ -122,13 +123,13 @@ const Navbar: React.FC = () => {
               <>
                 <Link
                   href="/login"
-                  className="text-slate-700 font-courier text-pretty font-bold text-xl hover:text-blue-500 hover:scale-110 transition-transform duration-300"
+                  className="text-slate-700 font-courier text-pretty font-bold text-md hover:text-blue-500 hover:scale-110 transition-transform duration-300"
                 >
                   Login
                 </Link>
                 <Link
                   href="/register"
-                  className="text-slate-700 font-courier text-pretty font-bold text-xl hover:text-blue-500 hover:scale-110 transition-transform duration-300"
+                  className="text-slate-700 font-courier text-pretty font-bold text-md hover:text-blue-500 hover:scale-110 transition-transform duration-300"
                 >
                   Register
                 </Link>
@@ -137,7 +138,7 @@ const Navbar: React.FC = () => {
             {user && (
               <DropdownMenu modal={false}>
                 <DropdownMenuTrigger asChild>
-                  <button className="flex items-center gap-2 focus:outline-none ml-4">
+                  <button className="flex items-center focus:outline-none ml-4 hover:opacity-80 transition-opacity">
                     <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-blue-400 bg-gray-200">
                       <Image
                         src={
@@ -155,34 +156,45 @@ const Navbar: React.FC = () => {
                         className="w-full h-full object-cover"
                       />
                     </div>
-                    <span className="text-slate-700 font-courier text-pretty font-bold text-xl hover:text-blue-500">
-                      Welcome, {user.name ? user.name.split(" ")[0] : "User"}
-                    </span>
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent
                   align="end"
-                  className="w-50 bg-slate-100 border border-gray-200 shadow-lg"
+                  className="w-64 bg-slate-100 border border-gray-200 shadow-lg"
                 >
+                  {/* User Info Section - No separator below */}
+                  <div className="px-4 py-3">
+                    <p className="font-courier font-bold text-slate-900 text-md">
+                      {user.name || "User"}
+                    </p>
+                    <p className="font-courier text-slate-600 text-sm">
+                      {user.email}
+                    </p>
+                  </div>
+                  <DropdownMenuSeparator className="bg-gray-300" />
                   <DropdownMenuItem asChild>
                     <Link
                       href="/notifications"
                       prefetch={false}
-                      className="w-full p-4 text-slate-700 font-courier text-pretty font-bold text-xl hover:bg-white hover:text-blue-500 cursor-pointer focus:bg-white focus:text-blue-500 relative flex items-center"
+                      className="w-full p-4 text-slate-700 font-courier text-pretty font-bold text-md hover:bg-white hover:text-blue-500 cursor-pointer focus:bg-white focus:text-blue-500 relative flex items-center"
                     >
                       <span className="flex-1">Notifications</span>
                       {unreadCount > 0 && (
-                        <span className="bg-red-500 text-white rounded-full px-2 py-0.5 text-xs font-bold ml-2">
+                        <Badge
+                          variant="destructive"
+                          className="bg-red-500 text-white rounded-full px-2 py-0.5 text-sm font-bold ml-2 border-0"
+                        >
                           {unreadCount}
-                        </span>
+                        </Badge>
                       )}
                     </Link>
                   </DropdownMenuItem>
+                  <DropdownMenuSeparator className="bg-gray-300" />
                   <DropdownMenuItem asChild>
                     <Link
                       href="/saved-posts"
                       prefetch={false}
-                      className="w-full p-4 text-slate-700 font-courier text-pretty font-bold text-xl hover:bg-white hover:text-blue-500 cursor-pointer focus:bg-white focus:text-blue-500"
+                      className="w-full p-4 text-slate-700 font-courier text-pretty font-bold text-md hover:bg-white hover:text-blue-500 cursor-pointer focus:bg-white focus:text-blue-500"
                     >
                       Saved Posts
                     </Link>
@@ -194,7 +206,7 @@ const Navbar: React.FC = () => {
                         <Link
                           href="/admin/reports"
                           prefetch={false}
-                          className="w-full p-4 text-slate-700 font-courier text-pretty font-bold text-xl hover:bg-white hover:text-blue-500 cursor-pointer focus:bg-white focus:text-blue-500"
+                          className="w-full p-4 text-slate-700 font-courier text-pretty font-bold text-md hover:bg-white hover:text-blue-500 cursor-pointer focus:bg-white focus:text-blue-500"
                         >
                           Admin Reports
                         </Link>
@@ -206,7 +218,7 @@ const Navbar: React.FC = () => {
                     <Link
                       href="/edit-profile"
                       prefetch={false}
-                      className="w-full p-4 text-slate-700 font-courier text-pretty font-bold text-xl hover:bg-white hover:text-blue-500 cursor-pointer focus:bg-white focus:text-blue-500"
+                      className="w-full p-4 text-slate-700 font-courier text-pretty font-bold text-md hover:bg-white hover:text-blue-500 cursor-pointer focus:bg-white focus:text-blue-500"
                     >
                       Edit Profile
                     </Link>
@@ -214,7 +226,7 @@ const Navbar: React.FC = () => {
                   <DropdownMenuSeparator className="bg-gray-300" />
                   <DropdownMenuItem
                     onClick={handleLogout}
-                    className="w-full p-4 text-slate-700 font-courier text-pretty font-bold text-xl hover:bg-white hover:text-blue-500 cursor-pointer focus:bg-white focus:text-blue-500"
+                    className="w-full p-4 text-red-600 font-courier text-pretty font-bold text-md hover:bg-red-50 hover:text-red-700 cursor-pointer focus:bg-red-50 focus:text-red-700"
                   >
                     Logout
                   </DropdownMenuItem>
@@ -304,9 +316,12 @@ const Navbar: React.FC = () => {
                 >
                   Notifications
                   {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full px-2 py-0.5 text-xs font-bold">
+                    <Badge
+                      variant="destructive"
+                      className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full px-2 py-0.5 text-sm font-bold border-0"
+                    >
                       {unreadCount}
-                    </span>
+                    </Badge>
                   )}
                 </Link>
                 <Link

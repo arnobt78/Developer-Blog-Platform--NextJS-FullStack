@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { Badge } from "@/components/ui/badge";
 
 const tags = [
   "JavaScript",
@@ -104,23 +105,23 @@ const TagSelector: React.FC<{ onSelectTag: (tag: string) => void }> = ({
       <h2 className="text-lg font-bold mb-2">Select Tags</h2>
       <div className="flex flex-wrap">
         {visibleTags.map((tag) => (
-          <button
+          <Badge
             key={tag}
-            type="button"
-            className="m-1 px-3 py-1 bg-blue-500 text-white rounded-2xl hover:bg-blue-600"
+            variant="default"
+            className="m-1 px-3 py-1 bg-blue-500 text-white text-sm rounded-2xl hover:bg-blue-600 cursor-pointer border-0"
             onClick={() => onSelectTag(tag)}
           >
             {tag}
-          </button>
+          </Badge>
         ))}
         {sortedTags.length > 20 && (
-          <button
-            type="button"
-            className="m-1 px-3 py-1 bg-gray-300 text-gray-800 rounded-2xl hover:bg-gray-400"
+          <Badge
+            variant="secondary"
+            className="m-1 px-3 py-1 bg-gray-300 text-gray-800 text-sm rounded-2xl hover:bg-gray-400 cursor-pointer border-0"
             onClick={() => setExpanded((e) => !e)}
           >
             {expanded ? "Show Less" : "Show All"}
-          </button>
+          </Badge>
         )}
       </div>
     </div>

@@ -2,10 +2,12 @@
 
 import React from "react";
 import Image from "next/image";
+import { Badge } from "@/components/ui/badge";
 
 interface PostContentProps {
   title: string;
   description: string;
+  content?: string;
   imageUrl?: string;
   codeSnippet?: string;
   tags: string[];
@@ -15,6 +17,7 @@ interface PostContentProps {
 const PostContent: React.FC<PostContentProps> = ({
   title,
   description,
+  content,
   imageUrl,
   codeSnippet,
   tags,
@@ -22,25 +25,33 @@ const PostContent: React.FC<PostContentProps> = ({
 }) => (
   <div className="mt-8">
     <h2
-      className={`font-courier text-2xl font-bold my-4 ${
+      className={`font-courier text-md font-bold my-4 ${
         onClick ? "hover:text-blue-600 cursor-pointer" : ""
       }`}
       onClick={onClick}
     >
       {title}
     </h2>
-    <p className="text-gray-700 text-xl font-courier text-pretty text-justify mb-12">
+    <p className="text-gray-700 text-sm font-courier text-pretty text-justify mb-12">
       {description}
     </p>
     {imageUrl && (
-      <div className="relative aspect-video mb-12">
+      <div className="relative w-full h-[500px] mb-12">
         <Image
           src={imageUrl}
           alt={title}
           fill
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
-          className="object-cover rounded-lg"
+          className="object-contain rounded-lg"
         />
+      </div>
+    )}
+    {content && (
+      <div className="mb-12">
+        <h3 className="font-courier text-md font-bold mb-2">Solution:</h3>
+        <p className="text-gray-700 text-sm font-courier text-pretty text-justify">
+          {content}
+        </p>
       </div>
     )}
     {codeSnippet && (
@@ -50,12 +61,13 @@ const PostContent: React.FC<PostContentProps> = ({
     )}
     <div className="flex flex-wrap gap-2 mb-12">
       {tags?.map((tag) => (
-        <span
+        <Badge
           key={tag}
-          className="bg-blue-100 text-blue-500 text-xl font-courier text-pretty text-justify px-3 py-1 rounded-full text-md hover:bg-blue-200 cursor-pointer"
+          variant="secondary"
+          className="bg-blue-100 text-blue-500 text-sm font-courier px-3 py-1 rounded-full hover:bg-blue-200 cursor-pointer border-0"
         >
           #{tag}
-        </span>
+        </Badge>
       ))}
     </div>
   </div>

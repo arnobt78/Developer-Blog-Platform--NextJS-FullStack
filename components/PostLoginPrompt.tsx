@@ -10,10 +10,10 @@ interface PostLoginPromptProps {
 const PostLoginPrompt: React.FC<PostLoginPromptProps> = ({ onClose }) => (
   <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
     <div className="bg-white p-12 rounded-lg shadow-xl max-w-sm w-full mx-4">
-      <h3 className="text-2xl font-courier text-pretty font-semibold mb-8">
+      <h3 className="text-md font-courier text-pretty font-semibold mb-8">
         Sign in required!
       </h3>
-      <p className="text-gray-600 text-xl font-courier text-pretty mb-8">
+      <p className="text-gray-600 text-sm font-courier text-pretty mb-8">
         Please{" "}
         <Link href="/login" className="text-blue-600 hover:underline">
           sign in

@@ -82,19 +82,56 @@ const CommentItem: React.FC<CommentItemProps> = ({
               className="w-full p-2 border rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               rows={3}
             />
-            <div className="flex gap-2 mt-2">
-              <button
-                onClick={onSaveEdit}
-                className="px-3 py-1 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-              >
-                Save
-              </button>
-              <button
-                onClick={onCancelEdit}
-                className="px-3 py-1 bg-gray-200 rounded-lg hover:bg-gray-300"
-              >
-                Cancel
-              </button>
+            <div className="flex justify-between items-center mt-2">
+              <div className="flex gap-4 text-sm">
+                {/* Actions remain visible on the left during edit */}
+                <button
+                  type="button"
+                  className="flex items-center gap-1 text-gray-400 cursor-not-allowed"
+                  disabled
+                >
+                  <span className="w-4 h-4">👍</span>
+                  Like
+                </button>
+                <button
+                  type="button"
+                  className="flex items-center gap-1 text-gray-400 cursor-not-allowed"
+                  disabled
+                >
+                  <span className="w-4 h-4">🤍</span>
+                  Helpful
+                </button>
+                <button
+                  type="button"
+                  className="flex items-center gap-1 text-gray-400 cursor-not-allowed"
+                  disabled
+                >
+                  <span className="w-4 h-4">💬</span>
+                  Reply
+                </button>
+                <button
+                  type="button"
+                  className="flex items-center gap-1 text-gray-400 cursor-not-allowed"
+                  disabled
+                >
+                  <span className="w-4 h-4">🔗</span>
+                  Share
+                </button>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={onSaveEdit}
+                  className="px-3 py-1 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                >
+                  Save
+                </button>
+                <button
+                  onClick={onCancelEdit}
+                  className="px-3 py-1 bg-gray-200 rounded-lg hover:bg-gray-300"
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           </div>
         ) : (

@@ -24,10 +24,10 @@ const PostHeader: React.FC<PostHeaderProps> = ({ author, createdAt }) => (
       />
     </div>
     <div>
-      <div className="font-semibold text-gray-900 font-courier text-xl">
+      <div className="font-semibold text-gray-900 font-courier text-md">
         {author?.name || "User"}
       </div>
-      <div className="font-courier text-md text-gray-500 flex items-center space-x-1">
+      <div className="font-courier text-sm text-gray-500 flex items-center space-x-1">
         <span>{new Date(createdAt).toLocaleString()}</span>
         {author?.country && (
           <>

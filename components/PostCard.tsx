@@ -63,6 +63,7 @@ const PostCard: React.FC<PostCardProps> = ({
     id,
     title,
     description,
+    content,
     createdAt,
     likes: _likes, // Prefixed with _ to indicate unused (we use post.likes directly)
     helpfulCount: _helpfulCount, // Same as above
@@ -336,7 +337,6 @@ const PostCard: React.FC<PostCardProps> = ({
           title={title}
           description={description}
           imageUrl={imageUrl}
-          codeSnippet={codeSnippet}
           tags={tags || []}
           onClick={onClick}
         />

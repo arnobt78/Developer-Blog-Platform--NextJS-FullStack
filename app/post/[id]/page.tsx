@@ -256,6 +256,7 @@ export default function PostDetails() {
           <PostContent
             title={post.title}
             description={post.description}
+            content={post.content}
             imageUrl={post.imageUrl}
             codeSnippet={post.codeSnippet}
             tags={post.tags || []}
