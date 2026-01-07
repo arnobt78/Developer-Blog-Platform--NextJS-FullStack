@@ -140,13 +140,23 @@ export default function EditProfile() {
         onChange={handleChange}
         className="w-full p-2 border"
       />
-      <button
-        type="submit"
-        disabled={updateProfile.isPending}
-        className="bg-blue-500 text-white px-4 py-2 rounded disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        {updateProfile.isPending ? "Updating..." : "Update Profile"}
-      </button>
+      <div className="flex gap-3">
+        <button
+          type="submit"
+          disabled={updateProfile.isPending}
+          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {updateProfile.isPending ? "Updating..." : "Update Profile"}
+        </button>
+        <button
+          type="button"
+          onClick={() => router.push("/")}
+          disabled={updateProfile.isPending}
+          className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          Cancel
+        </button>
+      </div>
     </form>
   );
 }

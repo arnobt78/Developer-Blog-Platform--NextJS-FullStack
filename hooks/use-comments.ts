@@ -225,7 +225,8 @@ export function useDeleteComment() {
           error.message || error.error || "Failed to delete comment"
         );
       }
-      return response.json();
+      // Return success for 204 No Content response (no body to parse)
+      return { success: true };
     },
     onMutate: async ({ id, postId }) => {
       // Cancel outgoing refetches to prevent race conditions

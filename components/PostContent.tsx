@@ -36,7 +36,7 @@ const PostContent: React.FC<PostContentProps> = ({
       {description}
     </p>
     {imageUrl && (
-      <div className="relative w-full h-[500px] mb-12">
+      <div className="relative w-full aspect-video mb-12">
         <Image
           src={imageUrl}
           alt={title}

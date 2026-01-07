@@ -9,6 +9,8 @@ import { useAuth } from "@/hooks/use-auth";
 import TagSelector from "@/components/TagSelector";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BsArrowLeft } from "react-icons/bs";
+import { Badge } from "@/components/ui/badge";
+import { X } from "lucide-react";
 
 /**
  * Edit Post Page - Edit existing post
@@ -58,6 +60,14 @@ export default function EditPost() {
     setTags((prev) =>
       prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
     );
+  };
+
+  /**
+   * Remove tag from selected tags
+   * @param tag - Tag to remove
+   */
+  const handleRemoveTag = (tag: string) => {
+    setTags((prev) => prev.filter((t) => t !== tag));
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -145,14 +155,20 @@ export default function EditPost() {
       <h1 className="text-2xl font-bold mb-4">Edit Post</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
         <TagSelector onSelectTag={handleTagSelect} />
+        {/* Selected tags with remove functionality */}
         <div className="flex flex-wrap gap-2">
           {tags.map((tag) => (
-            <span
+            <Badge
               key={tag}
-              className="bg-blue-200 text-blue-800 px-2 py-1 rounded"
+              variant="secondary"
+              className="bg-blue-200 text-blue-800 px-3 py-1 rounded text-sm border-0 flex items-center gap-1 cursor-pointer hover:bg-blue-300"
             >
               {tag}
-            </span>
+              <X
+                className="w-3 h-3 hover:text-red-600"
+                onClick={() => handleRemoveTag(tag)}
+              />
+            </Badge>
           ))}
         </div>
         <div>

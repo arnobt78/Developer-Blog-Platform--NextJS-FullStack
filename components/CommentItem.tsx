@@ -2,6 +2,7 @@
 
 import React from "react";
 import Image from "next/image";
+import { ThumbsUp, Heart, MessageCircle, Share2 } from "lucide-react";
 import CommentAvatar from "./CommentAvatar";
 import CommentHeader from "./CommentHeader";
 import CommentDropdownMenu from "./CommentDropdownMenu";
@@ -84,13 +85,13 @@ const CommentItem: React.FC<CommentItemProps> = ({
             />
             <div className="flex justify-between items-center mt-2">
               <div className="flex gap-4 text-sm">
-                {/* Actions remain visible on the left during edit */}
+                {/* Actions remain visible on the left during edit but disabled */}
                 <button
                   type="button"
                   className="flex items-center gap-1 text-gray-400 cursor-not-allowed"
                   disabled
                 >
-                  <span className="w-4 h-4">👍</span>
+                  <ThumbsUp className="w-4 h-4" />
                   Like
                 </button>
                 <button
@@ -98,7 +99,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
                   className="flex items-center gap-1 text-gray-400 cursor-not-allowed"
                   disabled
                 >
-                  <span className="w-4 h-4">🤍</span>
+                  <Heart className="w-4 h-4" />
                   Helpful
                 </button>
                 <button
@@ -106,7 +107,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
                   className="flex items-center gap-1 text-gray-400 cursor-not-allowed"
                   disabled
                 >
-                  <span className="w-4 h-4">💬</span>
+                  <MessageCircle className="w-4 h-4" />
                   Reply
                 </button>
                 <button
@@ -114,7 +115,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
                   className="flex items-center gap-1 text-gray-400 cursor-not-allowed"
                   disabled
                 >
-                  <span className="w-4 h-4">🔗</span>
+                  <Share2 className="w-4 h-4" />
                   Share
                 </button>
               </div>
@@ -150,17 +151,20 @@ const CommentItem: React.FC<CommentItemProps> = ({
             )}
           </>
         )}
-        <CommentActionsBar
-          liked={!!comment.liked}
-          helpful={!!comment.helpful}
-          likeCount={comment.likeCount}
-          helpfulCount={comment.helpfulCount}
-          onLike={onLike}
-          onHelpful={onHelpful}
-          onReply={onReply}
-          onShare={onShare}
-          showShareModal={showShareModal}
-        />
+        {/* Only show action bar when not editing */}
+        {!isEditing && (
+          <CommentActionsBar
+            liked={!!comment.liked}
+            helpful={!!comment.helpful}
+            likeCount={comment.likeCount}
+            helpfulCount={comment.helpfulCount}
+            onLike={onLike}
+            onHelpful={onHelpful}
+            onReply={onReply}
+            onShare={onShare}
+            showShareModal={showShareModal}
+          />
+        )}
         {/* Only show reply input when reply button is clicked */}
         {replyTo === comment.id && isLoggedIn && user && (
           <div className="mt-3">
@@ -175,18 +179,20 @@ const CommentItem: React.FC<CommentItemProps> = ({
                   rows={1}
                 />
                 {/* Image preview and upload for reply can be added here if needed */}
-                <div className="flex gap-2 mt-2">
+                <div className="flex gap-2 mt-2 justify-end">
+                  {newComment.trim().length > 0 && (
+                    <button
+                      onClick={onReplyCancel}
+                      className="px-4 py-1 bg-gray-200 rounded-full hover:bg-gray-300 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  )}
                   <button
                     onClick={onReplySubmit}
                     className="px-4 py-1 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-colors"
                   >
                     Reply
-                  </button>
-                  <button
-                    onClick={onReplyCancel}
-                    className="px-4 py-1 bg-gray-200 rounded-full hover:bg-gray-300"
-                  >
-                    Cancel
                   </button>
                 </div>
               </div>

@@ -9,6 +9,32 @@ import {
 import Link from "next/link";
 import Image from "next/image";
 
+/**
+ * Generate dynamic notification message based on type and fromUser
+ * Uses fromUser name instead of generic "Someone"
+ */
+const getNotificationMessage = (
+  type: string | undefined,
+  fromUserName: string | undefined
+): string => {
+  const userName = fromUserName || "Someone";
+
+  switch (type) {
+    case "like":
+      return `${userName} liked your post.`;
+    case "helpful":
+      return `${userName} marked your post as helpful.`;
+    case "comment":
+      return `${userName} commented on your post.`;
+    case "comment_like":
+      return `${userName} liked your comment.`;
+    case "comment_helpful":
+      return `${userName} marked your comment as helpful.`;
+    default:
+      return `${userName} interacted with your content.`;
+  }
+};
+
 export default function Notifications() {
   const { data: notifications = [], isLoading } = useNotifications();
   const markAllRead = useMarkAllNotificationsRead();
@@ -42,40 +68,51 @@ export default function Notifications() {
         <div className="text-gray-500">No notifications yet.</div>
       ) : (
         <ul className="space-y-4">
-          {notifications.map((n) => (
-            <li
-              key={n.id}
-              className={`flex items-center gap-4 p-4 rounded-lg border ${
-                n.isRead ? "bg-gray-50" : "bg-blue-50 border-blue-300"
-              }`}
-            >
-              {n.type === "comment" && (
-                <div className="relative w-10 h-10">
+          {notifications.map((n) => {
+            // Construct dynamic message using fromUser name
+            const message = getNotificationMessage(n.type, n.fromUser?.name);
+
+            // Determine avatar URL - use fromUser's avatar or fallback to RoboHash
+            const avatarUrl = n.fromUser?.avatarUrl
+              ? n.fromUser.avatarUrl
+              : `https://robohash.org/${
+                  n.fromUser?.name || n.fromUser?.id || n.id
+                }.png?size=80x80`;
+
+            return (
+              <li
+                key={n.id}
+                className={`flex items-center gap-4 p-4 rounded-lg border ${
+                  n.isRead ? "bg-gray-50" : "bg-blue-50 border-blue-300"
+                }`}
+              >
+                {/* User Avatar - Always display for all notification types */}
+                <div className="relative w-10 h-10 flex-shrink-0">
                   <Image
-                    src={`https://robohash.org/notification-${n.id}.png?size=80x80`}
-                    alt="Notification"
+                    src={avatarUrl}
+                    alt={n.fromUser?.name || "User"}
                     fill
                     sizes="40px"
                     className="rounded-full object-cover border"
                   />
                 </div>
-              )}
-              <div className="flex-1">
-                <div className="text-gray-700">{n.message}</div>
-                <div className="text-xs text-gray-400 mt-1">
-                  {new Date(n.createdAt).toLocaleString()}
+                <div className="flex-1">
+                  <div className="text-gray-700">{message}</div>
+                  <div className="text-xs text-gray-400 mt-1">
+                    {new Date(n.createdAt).toLocaleString()}
+                  </div>
                 </div>
-              </div>
-              {n.postId && (
-                <Link
-                  href={`/post/${n.postId}`}
-                  className="text-blue-600 underline text-sm"
-                >
-                  View Post
-                </Link>
-              )}
-            </li>
-          ))}
+                {n.postId && (
+                  <Link
+                    href={`/post/${n.postId}`}
+                    className="text-blue-600 underline text-sm hover:text-blue-800 transition-colors"
+                  >
+                    View Post
+                  </Link>
+                )}
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>

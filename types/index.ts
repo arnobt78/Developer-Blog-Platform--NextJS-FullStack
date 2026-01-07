@@ -49,4 +49,6 @@ export interface Notification {
   postId?: string;
   commentId?: string;
   type?: string;
+  fromUserId?: string;
+  fromUser?: User; // User who performed the action (liked, commented, etc.)
 }

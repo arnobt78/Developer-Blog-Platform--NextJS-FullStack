@@ -288,9 +288,19 @@ const PostCard: React.FC<PostCardProps> = ({
 
   const confirmReport = async (reason: string) => {
     try {
+      // Get token from localStorage for authentication
+      const token =
+        typeof window !== "undefined" ? localStorage.getItem("token") : null;
+      if (!token) {
+        throw new Error("Not authenticated");
+      }
+
       const response = await fetch(`/api/posts/${id}/report`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({ reason: reason || "" }),
       });
       if (!response.ok) {

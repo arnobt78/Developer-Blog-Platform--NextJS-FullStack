@@ -67,9 +67,9 @@ function PostCardSkeleton() {
           {/* Description line 1 - text-sm */}
           <Skeleton className="h-6 w-5/6" /> {/* Description line 2 */}
           <Skeleton className="h-6 w-4/5" /> {/* Description line 3 */}
-          {/* Image skeleton - fixed 500px height */}
-          <Skeleton className="w-full h-[500px] rounded-lg" />{" "}
-          {/* Image - h-[500px] */}
+          {/* Image skeleton - aspect-video for responsive 16:9 ratio */}
+          <Skeleton className="w-full aspect-video rounded-lg" />{" "}
+          {/* Image - aspect-video */}
           {/* Solution skeleton */}
           <div className="mb-4">
             <Skeleton className="h-6 w-24 mb-2" />{" "}

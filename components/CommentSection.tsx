@@ -315,6 +315,11 @@ const CommentSection: React.FC<CommentSectionProps> = ({
                 setImagePreview(null);
               }}
               onSubmit={() => handleAddComment()}
+              onCancel={() => {
+                setNewComment("");
+                setImage(null);
+                setImagePreview(null);
+              }}
             />
           </div>
         </div>

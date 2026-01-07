@@ -28,7 +28,33 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    return NextResponse.json(saved.map((s) => s.post));
+    // Add user-specific data (liked, helpful status) and counts to each post
+    const postsWithUserState = await Promise.all(
+      saved.map(async (s) => {
+        const post = s.post;
+        const liked = await prisma.postLike.findUnique({
+          where: { userId_postId: { userId, postId: post.id } },
+        });
+        const helpful = await prisma.postHelpful.findUnique({
+          where: { userId_postId: { userId, postId: post.id } },
+        });
+        const likes = await prisma.postLike.count({
+          where: { postId: post.id },
+        });
+        const helpfulCount = await prisma.postHelpful.count({
+          where: { postId: post.id },
+        });
+        return {
+          ...post,
+          liked: !!liked,
+          helpful: !!helpful,
+          likes,
+          helpfulCount,
+        };
+      })
+    );
+
+    return NextResponse.json(postsWithUserState);
   } catch (error) {
     console.error("Error fetching saved posts:", error);
     // Return empty array on error to prevent UI breaking

@@ -21,6 +21,7 @@ export async function GET(request: NextRequest) {
         id: user.id,
         name: user.name,
         email: user.email,
+        country: user.country,
         avatarUrl: user.avatarUrl,
       },
     });
