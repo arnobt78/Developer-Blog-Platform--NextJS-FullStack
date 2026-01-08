@@ -19,9 +19,19 @@ export function useReportPost() {
   const reportPost = async (postId: string, reason?: string) => {
     setIsReporting(true);
     try {
+      // Get token from localStorage for authentication
+      const token =
+        typeof window !== "undefined" ? localStorage.getItem("token") : null;
+      if (!token) {
+        throw new Error("Not authenticated");
+      }
+
       const response = await fetch(`/api/posts/${postId}/report`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({ reason: reason || "" }),
       });
       if (!response.ok) {
@@ -54,4 +64,3 @@ export function useReportPost() {
     reportReason,
   };
 }
-

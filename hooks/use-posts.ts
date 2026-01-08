@@ -107,13 +107,13 @@ export function usePost(id: string) {
  *                        Set to false to skip fetching when user is not authenticated
  */
 export function useSavedPosts(options?: { enabled?: boolean }) {
-  return useQuery({
-    queryKey: ["saved-posts"],
-    queryFn: async () => {
-      // Get token from localStorage for authentication
-      const token =
-        typeof window !== "undefined" ? localStorage.getItem("token") : null;
+  // Get token from localStorage for authentication
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
+  return useQuery({
+    queryKey: ["saved-posts", token],
+    queryFn: async () => {
       // If no token, return empty array (user not authenticated)
       if (!token) {
         return [];
@@ -182,11 +182,14 @@ export function useCreatePost() {
     onSettled: (data, error) => {
       // Add new post to cache immediately if successful
       if (data) {
-        const posts = queryClient.getQueryData<Post[]>(["posts"]);
-        if (posts) {
-          // Add new post at the beginning of the list
-          queryClient.setQueryData<Post[]>(["posts"], [data, ...posts]);
-        }
+        // Get token for cache key
+        const token =
+          typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
+        // Update all posts queries with prefix matching
+        queryClient.setQueriesData<Post[]>({ queryKey: ["posts"] }, (old) =>
+          old ? [data, ...old] : [data]
+        );
       }
     },
     onSuccess: () => {
@@ -257,28 +260,39 @@ export function useUpdatePost() {
       return response.json();
     },
     onMutate: async ({ id }) => {
+      // Get token for cache keys
+      const token =
+        typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
       // Cancel outgoing refetches to prevent race conditions
-      await queryClient.cancelQueries({ queryKey: ["post", id] });
+      await queryClient.cancelQueries({ queryKey: ["post", id, token] });
       await queryClient.cancelQueries({ queryKey: ["posts"] });
 
       // Snapshot previous values for rollback
-      const previousPost = queryClient.getQueryData<Post>(["post", id]);
-      const previousPosts = queryClient.getQueryData<Post[]>(["posts"]);
+      const previousPost = queryClient.getQueryData<Post>(["post", id, token]);
+      const previousPostsQueries = queryClient.getQueriesData<Post[]>({
+        queryKey: ["posts"],
+      });
 
       // Note: We can't read FormData here as it's already consumed
       // The optimistic update will be minimal - we'll just mark it as updating
       // The actual update will happen after server response via invalidateQueries
       // This prevents flicker by keeping the old data visible until new data arrives
 
-      return { previousPost, previousPosts };
+      return { previousPost, previousPostsQueries, token };
     },
     onError: (error, variables, context) => {
       // Rollback on error
-      if (context?.previousPost) {
-        queryClient.setQueryData(["post", variables.id], context.previousPost);
+      if (context?.previousPost && context?.token) {
+        queryClient.setQueryData(
+          ["post", variables.id, context.token],
+          context.previousPost
+        );
       }
-      if (context?.previousPosts) {
-        queryClient.setQueryData(["posts"], context.previousPosts);
+      if (context?.previousPostsQueries) {
+        context.previousPostsQueries.forEach(([key, data]) => {
+          queryClient.setQueryData(key, data);
+        });
       }
       toast({
         title: "Error",
@@ -290,26 +304,28 @@ export function useUpdatePost() {
       // onSettled runs after onSuccess/onError but before component re-renders
       // This ensures cache is fully updated before any navigation occurs
       if (data) {
-        // Update cache immediately with server response to prevent flicker
-        queryClient.setQueryData<Post>(["post", variables.id], data);
+        // Get token for cache keys
+        const token =
+          typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
-        // Update posts list cache with the new data
-        const posts = queryClient.getQueryData<Post[]>(["posts"]);
-        if (posts) {
-          queryClient.setQueryData<Post[]>(
-            ["posts"],
-            posts.map((post) => (post.id === variables.id ? data : post))
-          );
-        }
+        // Update cache immediately with server response to prevent flicker
+        queryClient.setQueryData<Post>(["post", variables.id, token], data);
+
+        // Update all posts list caches with the new data using prefix matching
+        queryClient.setQueriesData<Post[]>({ queryKey: ["posts"] }, (old) =>
+          old
+            ? old.map((post) => (post.id === variables.id ? data : post))
+            : old
+        );
 
         // Update saved posts cache if the post is in there
-        const savedPosts = queryClient.getQueryData<Post[]>(["saved-posts"]);
-        if (savedPosts) {
-          queryClient.setQueryData<Post[]>(
-            ["saved-posts"],
-            savedPosts.map((post) => (post.id === variables.id ? data : post))
-          );
-        }
+        queryClient.setQueriesData<Post[]>(
+          { queryKey: ["saved-posts"] },
+          (old) =>
+            old
+              ? old.map((post) => (post.id === variables.id ? data : post))
+              : old
+        );
       }
     },
     onSuccess: (data, variables) => {
@@ -376,35 +392,35 @@ export function useDeletePost() {
       await queryClient.cancelQueries({ queryKey: ["posts"] });
       await queryClient.cancelQueries({ queryKey: ["saved-posts"] });
 
-      // Snapshot previous values for rollback
-      const previousPosts = queryClient.getQueryData<Post[]>(["posts"]);
-      const previousSavedPosts = queryClient.getQueryData<Post[]>([
-        "saved-posts",
-      ]);
+      // Snapshot previous values for rollback (get all queries with prefix)
+      const previousPostsQueries = queryClient.getQueriesData<Post[]>({
+        queryKey: ["posts"],
+      });
+      const previousSavedPostsQueries = queryClient.getQueriesData<Post[]>({
+        queryKey: ["saved-posts"],
+      });
 
-      // Optimistically remove post from cache
-      if (previousPosts) {
-        queryClient.setQueryData<Post[]>(
-          ["posts"],
-          previousPosts.filter((post) => post.id !== id)
-        );
-      }
-      if (previousSavedPosts) {
-        queryClient.setQueryData<Post[]>(
-          ["saved-posts"],
-          previousSavedPosts.filter((post) => post.id !== id)
-        );
-      }
+      // Optimistically remove the post from all lists using prefix matching
+      queryClient.setQueriesData<Post[]>({ queryKey: ["posts"] }, (old) =>
+        old ? old.filter((post) => post.id !== id) : old
+      );
+      queryClient.setQueriesData<Post[]>({ queryKey: ["saved-posts"] }, (old) =>
+        old ? old.filter((post) => post.id !== id) : old
+      );
 
-      return { previousPosts, previousSavedPosts };
+      return { previousPostsQueries, previousSavedPostsQueries };
     },
     onError: (error, id, context) => {
       // Rollback on error
-      if (context?.previousPosts) {
-        queryClient.setQueryData(["posts"], context.previousPosts);
+      if (context?.previousPostsQueries) {
+        context.previousPostsQueries.forEach(([key, data]) => {
+          queryClient.setQueryData(key, data);
+        });
       }
-      if (context?.previousSavedPosts) {
-        queryClient.setQueryData(["saved-posts"], context.previousSavedPosts);
+      if (context?.previousSavedPostsQueries) {
+        context.previousSavedPostsQueries.forEach(([key, data]) => {
+          queryClient.setQueryData(key, data);
+        });
       }
       toast({
         title: "Error",
@@ -474,19 +490,26 @@ export function useLikePost() {
       return response.json();
     },
     onMutate: async (postId) => {
+      const token =
+        typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
       // Cancel outgoing refetches to prevent race conditions
-      await queryClient.cancelQueries({ queryKey: ["post", postId] });
+      await queryClient.cancelQueries({ queryKey: ["post", postId, token] });
       await queryClient.cancelQueries({ queryKey: ["posts"] });
 
       // Snapshot the current values for potential rollback
-      const previousPost = queryClient.getQueryData<Post>(["post", postId]);
+      const previousPost = queryClient.getQueryData<Post>([
+        "post",
+        postId,
+        token,
+      ]);
       const previousPostsQueries = queryClient.getQueriesData<Post[]>({
         queryKey: ["posts"],
       });
 
       // Optimistically update single post cache
       if (previousPost) {
-        queryClient.setQueryData<Post>(["post", postId], {
+        queryClient.setQueryData<Post>(["post", postId, token], {
           ...previousPost,
           likes: previousPost.liked
             ? Math.max(0, previousPost.likes - 1)
@@ -510,15 +533,15 @@ export function useLikePost() {
         )
       );
 
-      return { previousPost, previousPostsQueries };
+      return { previousPost, previousPostsQueries, token };
     },
-    onSuccess: (data, postId) => {
+    onSuccess: (data, postId, context) => {
       // Update cache with authoritative server response
       // This prevents flicker by not triggering a refetch
       const { liked, likes } = data;
 
       // Update single post cache
-      queryClient.setQueryData<Post>(["post", postId], (old) =>
+      queryClient.setQueryData<Post>(["post", postId, context?.token], (old) =>
         old ? { ...old, liked, likes } : old
       );
 
@@ -532,7 +555,10 @@ export function useLikePost() {
     onError: (err, postId, context) => {
       // If mutation fails, rollback to previous state
       if (context?.previousPost) {
-        queryClient.setQueryData(["post", postId], context.previousPost);
+        queryClient.setQueryData(
+          ["post", postId, context.token],
+          context.previousPost
+        );
       }
       // Rollback all posts queries
       if (context?.previousPostsQueries) {
@@ -575,19 +601,26 @@ export function useMarkHelpful() {
       return response.json();
     },
     onMutate: async (postId) => {
+      const token =
+        typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
       // Cancel outgoing refetches to prevent race conditions
-      await queryClient.cancelQueries({ queryKey: ["post", postId] });
+      await queryClient.cancelQueries({ queryKey: ["post", postId, token] });
       await queryClient.cancelQueries({ queryKey: ["posts"] });
 
       // Snapshot the current values for potential rollback
-      const previousPost = queryClient.getQueryData<Post>(["post", postId]);
+      const previousPost = queryClient.getQueryData<Post>([
+        "post",
+        postId,
+        token,
+      ]);
       const previousPostsQueries = queryClient.getQueriesData<Post[]>({
         queryKey: ["posts"],
       });
 
       // Optimistically update single post cache
       if (previousPost) {
-        queryClient.setQueryData<Post>(["post", postId], {
+        queryClient.setQueryData<Post>(["post", postId, token], {
           ...previousPost,
           helpfulCount: previousPost.helpful
             ? Math.max(0, previousPost.helpfulCount - 1)
@@ -611,15 +644,15 @@ export function useMarkHelpful() {
         )
       );
 
-      return { previousPost, previousPostsQueries };
+      return { previousPost, previousPostsQueries, token };
     },
-    onSuccess: (data, postId) => {
+    onSuccess: (data, postId, context) => {
       // Update cache with authoritative server response
       // This prevents flicker by not triggering a refetch
       const { helpful, helpfulCount } = data;
 
       // Update single post cache
-      queryClient.setQueryData<Post>(["post", postId], (old) =>
+      queryClient.setQueryData<Post>(["post", postId, context?.token], (old) =>
         old ? { ...old, helpful, helpfulCount } : old
       );
 
@@ -633,7 +666,10 @@ export function useMarkHelpful() {
     onError: (err, postId, context) => {
       // If mutation fails, rollback to previous state
       if (context?.previousPost) {
-        queryClient.setQueryData(["post", postId], context.previousPost);
+        queryClient.setQueryData(
+          ["post", postId, context.token],
+          context.previousPost
+        );
       }
       // Rollback all posts queries
       if (context?.previousPostsQueries) {

@@ -15,12 +15,12 @@ import type { Notification } from "@/types";
  * Only runs when token is available to prevent caching empty results
  */
 export function useNotifications() {
-  // Get token outside queryFn to use in enabled option
+  // Get token outside queryFn to use in enabled option and query key
   const token =
     typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
   return useQuery({
-    queryKey: ["notifications"],
+    queryKey: ["notifications", token], // Include token to refetch on auth change
     queryFn: async () => {
       // Token is guaranteed to exist here due to enabled option
       if (!token) {
@@ -78,18 +78,23 @@ export function useMarkNotificationRead() {
       return response.json();
     },
     onMutate: async (notificationId) => {
+      // Get token for cache key
+      const token =
+        typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
       // Cancel outgoing refetches
-      await queryClient.cancelQueries({ queryKey: ["notifications"] });
+      await queryClient.cancelQueries({ queryKey: ["notifications", token] });
 
       // Snapshot previous value
       const previousNotifications = queryClient.getQueryData<Notification[]>([
         "notifications",
+        token,
       ]);
 
       // Optimistically update
       if (previousNotifications) {
         queryClient.setQueryData<Notification[]>(
-          ["notifications"],
+          ["notifications", token],
           (old) =>
             old?.map((notification) =>
               notification.id === notificationId
@@ -99,13 +104,13 @@ export function useMarkNotificationRead() {
         );
       }
 
-      return { previousNotifications };
+      return { previousNotifications, token };
     },
     onError: (err, notificationId, context) => {
       // Rollback on error
-      if (context?.previousNotifications) {
+      if (context?.previousNotifications && context?.token) {
         queryClient.setQueryData(
-          ["notifications"],
+          ["notifications", context.token],
           context.previousNotifications
         );
       }
