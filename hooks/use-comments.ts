@@ -15,7 +15,11 @@ import type { Comment } from "@/types";
  */
 export function useComments(postId: string) {
   return useQuery({
-    queryKey: ["comments", postId],
+    queryKey: [
+      "comments",
+      postId,
+      typeof window !== "undefined" ? localStorage.getItem("token") : null,
+    ], // Include token to refetch on auth change
     queryFn: async () => {
       // Get token from localStorage for authentication
       const token =
@@ -330,19 +334,25 @@ export function useLikeComment() {
       return response.json();
     },
     onMutate: async ({ commentId, postId }) => {
+      const token =
+        typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
       // Cancel outgoing refetches to prevent race conditions
-      await queryClient.cancelQueries({ queryKey: ["comments", postId] });
+      await queryClient.cancelQueries({
+        queryKey: ["comments", postId, token],
+      });
 
       // Snapshot previous value for rollback on error
       const previousComments = queryClient.getQueryData<Comment[]>([
         "comments",
         postId,
+        token,
       ]);
 
       // Optimistically update - toggle liked state and adjust count
       if (previousComments) {
         queryClient.setQueryData<Comment[]>(
-          ["comments", postId],
+          ["comments", postId, token],
           (old) =>
             old?.map((comment) =>
               comment.id === commentId
@@ -358,14 +368,14 @@ export function useLikeComment() {
         );
       }
 
-      return { previousComments };
+      return { previousComments, token };
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (data, variables, context) => {
       // Update cache with authoritative server response
       // This prevents flicker by not triggering a refetch
       const { liked, likeCount } = data;
       queryClient.setQueryData<Comment[]>(
-        ["comments", variables.postId],
+        ["comments", variables.postId, context?.token],
         (old) =>
           old?.map((comment) =>
             comment.id === variables.commentId
@@ -378,7 +388,7 @@ export function useLikeComment() {
       // Rollback to previous state on error
       if (context?.previousComments) {
         queryClient.setQueryData(
-          ["comments", variables.postId],
+          ["comments", variables.postId, context.token],
           context.previousComments
         );
       }
@@ -424,19 +434,25 @@ export function useHelpfulComment() {
       return response.json();
     },
     onMutate: async ({ commentId, postId }) => {
+      const token =
+        typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
       // Cancel outgoing refetches to prevent race conditions
-      await queryClient.cancelQueries({ queryKey: ["comments", postId] });
+      await queryClient.cancelQueries({
+        queryKey: ["comments", postId, token],
+      });
 
       // Snapshot previous value for rollback on error
       const previousComments = queryClient.getQueryData<Comment[]>([
         "comments",
         postId,
+        token,
       ]);
 
       // Optimistically update - toggle helpful state and adjust count
       if (previousComments) {
         queryClient.setQueryData<Comment[]>(
-          ["comments", postId],
+          ["comments", postId, token],
           (old) =>
             old?.map((comment) =>
               comment.id === commentId
@@ -452,14 +468,14 @@ export function useHelpfulComment() {
         );
       }
 
-      return { previousComments };
+      return { previousComments, token };
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (data, variables, context) => {
       // Update cache with authoritative server response
       // This prevents flicker by not triggering a refetch
       const { helpful, helpfulCount } = data;
       queryClient.setQueryData<Comment[]>(
-        ["comments", variables.postId],
+        ["comments", variables.postId, context?.token],
         (old) =>
           old?.map((comment) =>
             comment.id === variables.commentId
@@ -472,7 +488,7 @@ export function useHelpfulComment() {
       // Rollback to previous state on error
       if (context?.previousComments) {
         queryClient.setQueryData(
-          ["comments", variables.postId],
+          ["comments", variables.postId, context.token],
           context.previousComments
         );
       }

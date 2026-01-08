@@ -37,7 +37,11 @@ export function usePosts(params?: {
   authorId?: string;
 }) {
   return useQuery({
-    queryKey: ["posts", params], // Cache key - changing params creates new cache entry
+    queryKey: [
+      "posts",
+      params,
+      typeof window !== "undefined" ? localStorage.getItem("token") : null,
+    ], // Include token in key to refetch on auth change
     queryFn: async () => {
       // Get token from localStorage for authentication
       const token =
@@ -71,7 +75,11 @@ export function usePosts(params?: {
  */
 export function usePost(id: string) {
   return useQuery({
-    queryKey: ["post", id],
+    queryKey: [
+      "post",
+      id,
+      typeof window !== "undefined" ? localStorage.getItem("token") : null,
+    ], // Include token to refetch on auth change
     queryFn: async () => {
       // Get token from localStorage for authentication
       const token =
