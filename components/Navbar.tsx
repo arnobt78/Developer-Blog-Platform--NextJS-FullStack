@@ -31,7 +31,7 @@ const Navbar: React.FC = () => {
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Use React Query hooks for auth and notifications
-  const { data: authData, isLoading } = useAuth();
+  const { data: authData, isLoading: isLoadingAuth } = useAuth();
   const user = authData?.user;
   const unreadCount = useUnreadCount();
   const logoutMutation = useLogout();
@@ -119,7 +119,7 @@ const Navbar: React.FC = () => {
                 {link.name}
               </Link>
             ))}
-            {!user && (
+            {!isLoadingAuth && !user && (
               <>
                 <Link
                   href="/login"
@@ -135,7 +135,7 @@ const Navbar: React.FC = () => {
                 </Link>
               </>
             )}
-            {user && (
+            {!isLoadingAuth && user && (
               <DropdownMenu modal={false}>
                 <DropdownMenuTrigger asChild>
                   <button className="flex items-center focus:outline-none ml-4 hover:opacity-80 transition-opacity">
@@ -288,7 +288,7 @@ const Navbar: React.FC = () => {
                 {link.name}
               </Link>
             ))}
-            {!user && (
+            {!isLoadingAuth && !user && (
               <>
                 <Link
                   href="/login"
@@ -306,7 +306,7 @@ const Navbar: React.FC = () => {
                 </Link>
               </>
             )}
-            {user && (
+            {!isLoadingAuth && user && (
               <div className="flex flex-col items-center space-y-2 mt-4">
                 <Link
                   href="/notifications"

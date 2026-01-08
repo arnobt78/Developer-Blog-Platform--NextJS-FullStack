@@ -14,6 +14,7 @@ export interface Post {
   // Add these optional fields for UI state
   liked?: boolean;
   helpful?: boolean;
+  saved?: boolean;
 }
 
 export interface Comment {
