@@ -13,6 +13,7 @@ import {
   useUpdateComment,
   useDeleteComment,
   useLikeComment,
+  useHelpfulComment,
 } from "@/hooks/use-comments";
 import { useImageUpload } from "@/hooks/use-image-upload";
 import { Comment } from "@/types";
@@ -69,6 +70,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({
   const updateCommentMutation = useUpdateComment(); // Edit existing comment
   const deleteCommentMutation = useDeleteComment(); // Delete comment
   const likeCommentMutation = useLikeComment(); // Like/unlike comment (optimistic update)
+  const helpfulCommentMutation = useHelpfulComment(); // Helpful/unhelpful comment (optimistic update)
   const { uploadImage, uploading: _uploading } = useImageUpload(); // Upload images
 
   /**
@@ -204,14 +206,11 @@ const CommentSection: React.FC<CommentSectionProps> = ({
   };
 
   /**
-   * Toggle comment helpful status
-   * Note: Currently uses same endpoint as like, adjust if separate endpoint exists
+   * Toggle comment helpful status with optimistic update
    */
   const handleHelpfulComment = async (commentId: string) => {
     if (!isLoggedIn) return;
-    // If there's a separate helpful endpoint, create useHelpfulComment hook
-    // For now, using like mutation as placeholder
-    likeCommentMutation.mutate({ commentId, postId });
+    helpfulCommentMutation.mutate({ commentId, postId });
   };
 
   /**

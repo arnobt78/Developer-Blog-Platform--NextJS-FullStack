@@ -33,9 +33,10 @@ const PostActionsBar: React.FC<PostActionsBarProps> = ({
         liked ? "text-blue-600 font-semibold" : "text-gray-600"
       }`}
       type="button"
+      aria-label={liked ? "Unlike this post" : "Like this post"}
     >
       <ThumbsUp className="w-6 h-6" fill={liked ? "currentColor" : "none"} />
-      <span>{likeCount > 0 ? likeCount : ""} Like</span>
+      <span>{liked ? "Unlike" : "Like"}</span>
     </button>
     <button
       onClick={onHelpful}
@@ -43,22 +44,25 @@ const PostActionsBar: React.FC<PostActionsBarProps> = ({
         helpful ? "text-pink-600 font-semibold" : "text-gray-600"
       }`}
       type="button"
+      aria-label={helpful ? "Mark as not helpful" : "Mark as helpful"}
     >
       <Heart className="w-6 h-6" fill={helpful ? "currentColor" : "none"} />
-      <span>{helpfulCount > 0 ? helpfulCount : ""} Helpful</span>
+      <span>{helpful ? "Unhelpful" : "Helpful"}</span>
     </button>
     <button
       onClick={onComment}
       className="flex-1 flex items-center justify-center gap-2 py-2 hover:bg-gray-100 rounded-lg text-gray-600 transition-colors"
       type="button"
+      aria-label="View comments"
     >
       <MessageCircle className="w-6 h-6" />
-      <span>{commentCount > 0 ? commentCount : ""} Comment</span>
+      <span>Comment</span>
     </button>
     <button
       onClick={onShare}
       className="flex-1 flex items-center justify-center gap-2 py-2 hover:bg-gray-100 rounded-lg text-gray-600 transition-colors"
       type="button"
+      aria-label="Share this post"
     >
       <Share2 className="w-6 h-6" />
       Share

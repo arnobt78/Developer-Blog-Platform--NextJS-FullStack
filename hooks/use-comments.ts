@@ -11,12 +11,24 @@ import type { Comment } from "@/types";
 
 /**
  * Fetch comments for a specific post
+ * Includes Authorization header to get user-specific liked/helpful status
  */
 export function useComments(postId: string) {
   return useQuery({
     queryKey: ["comments", postId],
     queryFn: async () => {
-      const response = await fetch(`/api/comments/post/${postId}`);
+      // Get token from localStorage for authentication
+      const token =
+        typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
+      const headers: HeadersInit = {};
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
+
+      const response = await fetch(`/api/comments/post/${postId}`, {
+        headers,
+      });
       if (!response.ok) throw new Error("Failed to fetch comments");
       return response.json() as Promise<Comment[]>;
     },
@@ -287,6 +299,8 @@ export function useDeleteComment() {
 
 /**
  * Like/unlike a comment with optimistic update
+ * Instantly toggles liked state and updates count in UI
+ * Uses server response data to prevent flicker and ensure accuracy
  */
 export function useLikeComment() {
   const queryClient = useQueryClient();
@@ -316,16 +330,16 @@ export function useLikeComment() {
       return response.json();
     },
     onMutate: async ({ commentId, postId }) => {
-      // Cancel outgoing refetches
+      // Cancel outgoing refetches to prevent race conditions
       await queryClient.cancelQueries({ queryKey: ["comments", postId] });
 
-      // Snapshot previous value
+      // Snapshot previous value for rollback on error
       const previousComments = queryClient.getQueryData<Comment[]>([
         "comments",
         postId,
       ]);
 
-      // Optimistically update
+      // Optimistically update - toggle liked state and adjust count
       if (previousComments) {
         queryClient.setQueryData<Comment[]>(
           ["comments", postId],
@@ -346,19 +360,126 @@ export function useLikeComment() {
 
       return { previousComments };
     },
+    onSuccess: (data, variables) => {
+      // Update cache with authoritative server response
+      // This prevents flicker by not triggering a refetch
+      const { liked, likeCount } = data;
+      queryClient.setQueryData<Comment[]>(
+        ["comments", variables.postId],
+        (old) =>
+          old?.map((comment) =>
+            comment.id === variables.commentId
+              ? { ...comment, liked, likeCount }
+              : comment
+          ) || []
+      );
+    },
     onError: (err, variables, context) => {
-      // Rollback on error
+      // Rollback to previous state on error
       if (context?.previousComments) {
         queryClient.setQueryData(
           ["comments", variables.postId],
           context.previousComments
         );
       }
+      toast({
+        title: "Error",
+        description: err.message || "Failed to like comment",
+        variant: "destructive",
+      });
     },
-    onSettled: (data, error, variables) => {
-      // Always refetch after error or success
-      queryClient.invalidateQueries({
-        queryKey: ["comments", variables.postId],
+  });
+}
+
+/**
+ * Mark comment as helpful/unhelpful with optimistic update
+ * Instantly toggles helpful state and updates count in UI
+ * Uses server response data to prevent flicker and ensure accuracy
+ */
+export function useHelpfulComment() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      commentId,
+      postId: _postId,
+    }: {
+      commentId: string;
+      postId: string;
+    }) => {
+      // Get token from localStorage for authentication
+      const token =
+        typeof window !== "undefined" ? localStorage.getItem("token") : null;
+      if (!token) {
+        throw new Error("Not authenticated");
+      }
+
+      const response = await fetch(`/api/comments/${commentId}/helpful`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (!response.ok) throw new Error("Failed to mark comment as helpful");
+      return response.json();
+    },
+    onMutate: async ({ commentId, postId }) => {
+      // Cancel outgoing refetches to prevent race conditions
+      await queryClient.cancelQueries({ queryKey: ["comments", postId] });
+
+      // Snapshot previous value for rollback on error
+      const previousComments = queryClient.getQueryData<Comment[]>([
+        "comments",
+        postId,
+      ]);
+
+      // Optimistically update - toggle helpful state and adjust count
+      if (previousComments) {
+        queryClient.setQueryData<Comment[]>(
+          ["comments", postId],
+          (old) =>
+            old?.map((comment) =>
+              comment.id === commentId
+                ? {
+                    ...comment,
+                    helpfulCount: comment.helpful
+                      ? Math.max(0, comment.helpfulCount - 1)
+                      : comment.helpfulCount + 1,
+                    helpful: !comment.helpful,
+                  }
+                : comment
+            ) || []
+        );
+      }
+
+      return { previousComments };
+    },
+    onSuccess: (data, variables) => {
+      // Update cache with authoritative server response
+      // This prevents flicker by not triggering a refetch
+      const { helpful, helpfulCount } = data;
+      queryClient.setQueryData<Comment[]>(
+        ["comments", variables.postId],
+        (old) =>
+          old?.map((comment) =>
+            comment.id === variables.commentId
+              ? { ...comment, helpful, helpfulCount }
+              : comment
+          ) || []
+      );
+    },
+    onError: (err, variables, context) => {
+      // Rollback to previous state on error
+      if (context?.previousComments) {
+        queryClient.setQueryData(
+          ["comments", variables.postId],
+          context.previousComments
+        );
+      }
+      toast({
+        title: "Error",
+        description: err.message || "Failed to mark comment as helpful",
+        variant: "destructive",
       });
     },
   });

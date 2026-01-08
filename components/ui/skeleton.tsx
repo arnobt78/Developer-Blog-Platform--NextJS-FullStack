@@ -114,20 +114,41 @@ function PostCardSkeleton() {
 }
 
 /**
- * Comment skeleton with exact dimensions
+ * Comment skeleton with exact dimensions matching CommentItem structure
+ * Includes: Avatar, Header, Content, Stats, Actions
+ * Prevents layout shift during loading
  */
 function CommentSkeleton() {
   return (
-    <div className="flex gap-4 p-4">
-      <Skeleton className="h-10 w-10 rounded-full flex-shrink-0" />{" "}
-      {/* Avatar */}
-      <div className="flex-1 space-y-2">
-        <Skeleton className="h-4 w-32" /> {/* Username */}
-        <Skeleton className="h-4 w-full" /> {/* Comment line 1 */}
-        <Skeleton className="h-4 w-4/5" /> {/* Comment line 2 */}
-        <div className="flex gap-4 mt-2">
-          <Skeleton className="h-6 w-16" /> {/* Like */}
-          <Skeleton className="h-6 w-16" /> {/* Reply */}
+    <div className="bg-white rounded-lg shadow p-4">
+      <div className="flex gap-3">
+        <Skeleton className="h-10 w-10 rounded-full flex-shrink-0" />{" "}
+        {/* Avatar - matches CommentAvatar */}
+        <div className="flex-1 space-y-2">
+          {/* Header skeleton - matches CommentHeader */}
+          <div className="flex items-start justify-between">
+            <div>
+              <Skeleton className="h-4 w-32 mb-1" /> {/* Author name */}
+              <Skeleton className="h-3 w-24" /> {/* Date */}
+            </div>
+            <Skeleton className="h-6 w-6 rounded" /> {/* Dropdown menu */}
+          </div>
+          {/* Content skeleton */}
+          <Skeleton className="h-4 w-full mt-2" /> {/* Comment line 1 */}
+          <Skeleton className="h-4 w-4/5" /> {/* Comment line 2 */}
+          <Skeleton className="h-4 w-3/5" /> {/* Comment line 3 */}
+          {/* Stats skeleton - matches CommentStats */}
+          <div className="flex items-center gap-4 mt-2">
+            <Skeleton className="h-4 w-16" /> {/* Like count */}
+            <Skeleton className="h-4 w-20" /> {/* Helpful count */}
+          </div>
+          {/* Actions skeleton - matches CommentActionsBar */}
+          <div className="flex gap-4 mt-2">
+            <Skeleton className="h-6 w-16" /> {/* Like/Unlike */}
+            <Skeleton className="h-6 w-20" /> {/* Helpful/Unhelpful */}
+            <Skeleton className="h-6 w-14" /> {/* Reply */}
+            <Skeleton className="h-6 w-14" /> {/* Share */}
+          </div>
         </div>
       </div>
     </div>

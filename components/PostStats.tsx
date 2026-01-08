@@ -18,17 +18,19 @@ const PostStats: React.FC<PostStatsProps> = ({
   helpful,
 }) => (
   <div className="flex items-center justify-between text-lg font-courier text-pretty text-justify text-gray-500 mb-8">
-    <div className="flex items-center space-x-2">
+    <div className="flex items-center space-x-4">
       {(likeCount > 0 || helpfulCount > 0) && (
         <>
-          <div className="flex items-center gap-1">
-            {liked && <span className="text-blue-600">👍</span>}
-            <span>{likeCount} likes</span>
-          </div>
-          <div className="flex items-center gap-1">
-            {helpful && <span className="text-pink-600">❤️</span>}
-            <span>{helpfulCount} helpful</span>
-          </div>
+          {likeCount > 0 && (
+            <span className={liked ? "font-semibold text-blue-600" : ""}>
+              {likeCount} {likeCount === 1 ? "like" : "likes"}
+            </span>
+          )}
+          {helpfulCount > 0 && (
+            <span className={helpful ? "font-semibold text-pink-600" : ""}>
+              {helpfulCount} {helpfulCount === 1 ? "helpful" : "helpful"}
+            </span>
+          )}
         </>
       )}
     </div>

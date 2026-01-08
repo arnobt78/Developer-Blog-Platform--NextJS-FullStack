@@ -6,6 +6,7 @@ import { ThumbsUp, Heart, MessageCircle, Share2 } from "lucide-react";
 import CommentAvatar from "./CommentAvatar";
 import CommentHeader from "./CommentHeader";
 import CommentDropdownMenu from "./CommentDropdownMenu";
+import CommentStats from "./CommentStats";
 import CommentActionsBar from "./CommentActionsBar";
 import { Comment, User } from "@/types";
 
@@ -150,6 +151,15 @@ const CommentItem: React.FC<CommentItemProps> = ({
               </div>
             )}
           </>
+        )}
+        {/* Comment Stats - Display like and helpful counts */}
+        {!isEditing && (
+          <CommentStats
+            likeCount={comment.likeCount}
+            helpfulCount={comment.helpfulCount}
+            liked={!!comment.liked}
+            helpful={!!comment.helpful}
+          />
         )}
         {/* Only show action bar when not editing */}
         {!isEditing && (

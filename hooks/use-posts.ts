@@ -39,6 +39,15 @@ export function usePosts(params?: {
   return useQuery({
     queryKey: ["posts", params], // Cache key - changing params creates new cache entry
     queryFn: async () => {
+      // Get token from localStorage for authentication
+      const token =
+        typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
+      const headers: HeadersInit = {};
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
+
       // Build query string from optional parameters
       const searchParams = new URLSearchParams();
       if (params?.tag) searchParams.set("tag", params.tag);
@@ -48,7 +57,7 @@ export function usePosts(params?: {
       const url = `/api/posts${
         searchParams.toString() ? `?${searchParams}` : ""
       }`;
-      const response = await fetch(url);
+      const response = await fetch(url, { headers });
       if (!response.ok) throw new Error("Failed to fetch posts");
       return response.json() as Promise<Post[]>;
     },
@@ -58,12 +67,22 @@ export function usePosts(params?: {
 
 /**
  * Fetch a single post by ID
+ * Includes Authorization header to get user-specific liked/helpful status
  */
 export function usePost(id: string) {
   return useQuery({
     queryKey: ["post", id],
     queryFn: async () => {
-      const response = await fetch(`/api/posts/${id}`);
+      // Get token from localStorage for authentication
+      const token =
+        typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
+      const headers: HeadersInit = {};
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
+
+      const response = await fetch(`/api/posts/${id}`, { headers });
       if (!response.ok) throw new Error("Failed to fetch post");
       return response.json() as Promise<Post>;
     },
@@ -447,48 +466,60 @@ export function useLikePost() {
       return response.json();
     },
     onMutate: async (postId) => {
-      // Step 1: Cancel any outgoing refetches to prevent race conditions
-      // This ensures our optimistic update doesn't get overwritten
+      // Cancel outgoing refetches to prevent race conditions
       await queryClient.cancelQueries({ queryKey: ["post", postId] });
 
-      // Step 2: Snapshot the current value for potential rollback
-      // If the mutation fails, we'll restore this value
+      // Snapshot the current value for potential rollback
       const previousPost = queryClient.getQueryData<Post>(["post", postId]);
 
-      // Step 3: Optimistically update the cache
-      // UI updates instantly, user sees immediate feedback
+      // Optimistically update the cache - UI updates instantly
       if (previousPost) {
         queryClient.setQueryData<Post>(["post", postId], {
           ...previousPost,
           // Toggle like count: increment if not liked, decrement if liked
           likes: previousPost.liked
-            ? Math.max(0, previousPost.likes - 1) // Prevent negative counts
+            ? Math.max(0, previousPost.likes - 1)
             : previousPost.likes + 1,
-          liked: !previousPost.liked, // Toggle liked state
+          liked: !previousPost.liked,
         });
       }
 
-      // Return context for error handling
       return { previousPost };
+    },
+    onSuccess: (data, postId) => {
+      // Update cache with authoritative server response
+      // This prevents flicker by not triggering a refetch
+      const { liked, likes } = data;
+
+      // Update single post cache
+      queryClient.setQueryData<Post>(["post", postId], (old) =>
+        old ? { ...old, liked, likes } : old
+      );
+
+      // Update ALL posts queries (regardless of params) with matching postId
+      queryClient.setQueriesData<Post[]>({ queryKey: ["posts"] }, (old) =>
+        old?.map((post) =>
+          post.id === postId ? { ...post, liked, likes } : post
+        )
+      );
     },
     onError: (err, postId, context) => {
       // If mutation fails, rollback to previous state
-      // This ensures UI always reflects actual server state
       if (context?.previousPost) {
         queryClient.setQueryData(["post", postId], context.previousPost);
       }
-    },
-    onSettled: (data, error, postId) => {
-      // Always refetch after mutation completes (success or error)
-      // This ensures we're in sync with the server
-      queryClient.invalidateQueries({ queryKey: ["post", postId] });
-      queryClient.invalidateQueries({ queryKey: ["posts"] }); // Also update posts list
+      toast({
+        title: "Error",
+        description: err.message || "Failed to like post",
+        variant: "destructive",
+      });
     },
   });
 }
 
 /**
  * Mark post as helpful with optimistic update
+ * Uses server response to prevent flicker and ensure accuracy
  */
 export function useMarkHelpful() {
   const queryClient = useQueryClient();
@@ -512,9 +543,13 @@ export function useMarkHelpful() {
       return response.json();
     },
     onMutate: async (postId) => {
+      // Cancel outgoing refetches to prevent race conditions
       await queryClient.cancelQueries({ queryKey: ["post", postId] });
+
+      // Snapshot the current value for potential rollback
       const previousPost = queryClient.getQueryData<Post>(["post", postId]);
 
+      // Optimistically update the cache - UI updates instantly
       if (previousPost) {
         queryClient.setQueryData<Post>(["post", postId], {
           ...previousPost,
@@ -527,14 +562,33 @@ export function useMarkHelpful() {
 
       return { previousPost };
     },
+    onSuccess: (data, postId) => {
+      // Update cache with authoritative server response
+      // This prevents flicker by not triggering a refetch
+      const { helpful, helpfulCount } = data;
+
+      // Update single post cache
+      queryClient.setQueryData<Post>(["post", postId], (old) =>
+        old ? { ...old, helpful, helpfulCount } : old
+      );
+
+      // Update ALL posts queries (regardless of params) with matching postId
+      queryClient.setQueriesData<Post[]>({ queryKey: ["posts"] }, (old) =>
+        old?.map((post) =>
+          post.id === postId ? { ...post, helpful, helpfulCount } : post
+        )
+      );
+    },
     onError: (err, postId, context) => {
+      // If mutation fails, rollback to previous state
       if (context?.previousPost) {
         queryClient.setQueryData(["post", postId], context.previousPost);
       }
-    },
-    onSettled: (data, error, postId) => {
-      queryClient.invalidateQueries({ queryKey: ["post", postId] });
-      queryClient.invalidateQueries({ queryKey: ["posts"] });
+      toast({
+        title: "Error",
+        description: err.message || "Failed to mark as helpful",
+        variant: "destructive",
+      });
     },
   });
 }
