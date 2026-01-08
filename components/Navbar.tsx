@@ -119,7 +119,7 @@ const Navbar: React.FC = () => {
                 {link.name}
               </Link>
             ))}
-            {!isLoadingAuth && !user && (
+            {!user && (
               <>
                 <Link
                   href="/login"
@@ -135,26 +135,30 @@ const Navbar: React.FC = () => {
                 </Link>
               </>
             )}
-            {!isLoadingAuth && user && (
+            {user && (
               <DropdownMenu modal={false}>
                 <DropdownMenuTrigger asChild>
                   <button className="flex items-center focus:outline-none ml-4 hover:opacity-80 transition-opacity">
                     <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-blue-400 bg-gray-200">
-                      <Image
-                        src={
-                          // Priority: Use uploaded image if available, otherwise use avatar fallback
-                          // Check for both null/undefined and empty string
-                          user.avatarUrl && user.avatarUrl.trim() !== ""
-                            ? user.avatarUrl
-                            : `https://robohash.org/${
-                                user.name || "user"
-                              }.png?size=80x80`
-                        }
-                        alt="avatar"
-                        fill
-                        sizes="40px"
-                        className="w-full h-full object-cover"
-                      />
+                      {isLoadingAuth ? (
+                        <div className="w-full h-full bg-gray-300 animate-pulse" />
+                      ) : (
+                        <Image
+                          src={
+                            // Priority: Use uploaded image if available, otherwise use avatar fallback
+                            // Check for both null/undefined and empty string
+                            user.avatarUrl && user.avatarUrl.trim() !== ""
+                              ? user.avatarUrl
+                              : `https://robohash.org/${
+                                  user.name || "user"
+                                }.png?size=80x80`
+                          }
+                          alt="avatar"
+                          fill
+                          sizes="40px"
+                          className="w-full h-full object-cover"
+                        />
+                      )}
                     </div>
                   </button>
                 </DropdownMenuTrigger>
@@ -288,7 +292,7 @@ const Navbar: React.FC = () => {
                 {link.name}
               </Link>
             ))}
-            {!isLoadingAuth && !user && (
+            {!user && (
               <>
                 <Link
                   href="/login"
@@ -306,7 +310,7 @@ const Navbar: React.FC = () => {
                 </Link>
               </>
             )}
-            {!isLoadingAuth && user && (
+            {user && (
               <div className="flex flex-col items-center space-y-2 mt-4">
                 <Link
                   href="/notifications"
