@@ -468,15 +468,18 @@ export function useLikePost() {
     onMutate: async (postId) => {
       // Cancel outgoing refetches to prevent race conditions
       await queryClient.cancelQueries({ queryKey: ["post", postId] });
+      await queryClient.cancelQueries({ queryKey: ["posts"] });
 
-      // Snapshot the current value for potential rollback
+      // Snapshot the current values for potential rollback
       const previousPost = queryClient.getQueryData<Post>(["post", postId]);
+      const previousPostsQueries = queryClient.getQueriesData<Post[]>({
+        queryKey: ["posts"],
+      });
 
-      // Optimistically update the cache - UI updates instantly
+      // Optimistically update single post cache
       if (previousPost) {
         queryClient.setQueryData<Post>(["post", postId], {
           ...previousPost,
-          // Toggle like count: increment if not liked, decrement if liked
           likes: previousPost.liked
             ? Math.max(0, previousPost.likes - 1)
             : previousPost.likes + 1,
@@ -484,7 +487,22 @@ export function useLikePost() {
         });
       }
 
-      return { previousPost };
+      // Optimistically update ALL posts list queries instantly
+      queryClient.setQueriesData<Post[]>({ queryKey: ["posts"] }, (old) =>
+        old?.map((post) =>
+          post.id === postId
+            ? {
+                ...post,
+                likes: post.liked
+                  ? Math.max(0, post.likes - 1)
+                  : post.likes + 1,
+                liked: !post.liked,
+              }
+            : post
+        )
+      );
+
+      return { previousPost, previousPostsQueries };
     },
     onSuccess: (data, postId) => {
       // Update cache with authoritative server response
@@ -507,6 +525,12 @@ export function useLikePost() {
       // If mutation fails, rollback to previous state
       if (context?.previousPost) {
         queryClient.setQueryData(["post", postId], context.previousPost);
+      }
+      // Rollback all posts queries
+      if (context?.previousPostsQueries) {
+        context.previousPostsQueries.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
       }
       toast({
         title: "Error",
@@ -545,11 +569,15 @@ export function useMarkHelpful() {
     onMutate: async (postId) => {
       // Cancel outgoing refetches to prevent race conditions
       await queryClient.cancelQueries({ queryKey: ["post", postId] });
+      await queryClient.cancelQueries({ queryKey: ["posts"] });
 
-      // Snapshot the current value for potential rollback
+      // Snapshot the current values for potential rollback
       const previousPost = queryClient.getQueryData<Post>(["post", postId]);
+      const previousPostsQueries = queryClient.getQueriesData<Post[]>({
+        queryKey: ["posts"],
+      });
 
-      // Optimistically update the cache - UI updates instantly
+      // Optimistically update single post cache
       if (previousPost) {
         queryClient.setQueryData<Post>(["post", postId], {
           ...previousPost,
@@ -560,7 +588,22 @@ export function useMarkHelpful() {
         });
       }
 
-      return { previousPost };
+      // Optimistically update ALL posts list queries instantly
+      queryClient.setQueriesData<Post[]>({ queryKey: ["posts"] }, (old) =>
+        old?.map((post) =>
+          post.id === postId
+            ? {
+                ...post,
+                helpfulCount: post.helpful
+                  ? Math.max(0, post.helpfulCount - 1)
+                  : post.helpfulCount + 1,
+                helpful: !post.helpful,
+              }
+            : post
+        )
+      );
+
+      return { previousPost, previousPostsQueries };
     },
     onSuccess: (data, postId) => {
       // Update cache with authoritative server response
@@ -583,6 +626,12 @@ export function useMarkHelpful() {
       // If mutation fails, rollback to previous state
       if (context?.previousPost) {
         queryClient.setQueryData(["post", postId], context.previousPost);
+      }
+      // Rollback all posts queries
+      if (context?.previousPostsQueries) {
+        context.previousPostsQueries.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
       }
       toast({
         title: "Error",
