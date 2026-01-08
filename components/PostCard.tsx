@@ -67,7 +67,7 @@ const PostCard: React.FC<PostCardProps> = ({
     createdAt,
     likes: _likes, // Prefixed with _ to indicate unused (we use post.likes directly)
     helpfulCount: _helpfulCount, // Same as above
-    comments,
+    comments = [], // Default to empty array if undefined
     imageUrl,
     author,
     tags,

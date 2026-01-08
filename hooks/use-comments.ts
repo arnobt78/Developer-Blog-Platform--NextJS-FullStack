@@ -381,20 +381,20 @@ export function useLikeComment() {
 
       // Optimistically update - toggle liked state and adjust count
       if (previousComments) {
+        const updatedComments = previousComments.map((comment) =>
+          comment.id === commentId
+            ? {
+                ...comment,
+                likeCount: comment.liked
+                  ? Math.max(0, comment.likeCount - 1)
+                  : comment.likeCount + 1,
+                liked: !comment.liked,
+              }
+            : comment
+        );
         queryClient.setQueryData<Comment[]>(
           ["comments", postId, token],
-          (old) =>
-            old?.map((comment) =>
-              comment.id === commentId
-                ? {
-                    ...comment,
-                    likeCount: comment.liked
-                      ? Math.max(0, comment.likeCount - 1)
-                      : comment.likeCount + 1,
-                    liked: !comment.liked,
-                  }
-                : comment
-            ) || []
+          updatedComments
         );
       }
 
@@ -481,20 +481,20 @@ export function useHelpfulComment() {
 
       // Optimistically update - toggle helpful state and adjust count
       if (previousComments) {
+        const updatedComments = previousComments.map((comment) =>
+          comment.id === commentId
+            ? {
+                ...comment,
+                helpfulCount: comment.helpful
+                  ? Math.max(0, comment.helpfulCount - 1)
+                  : comment.helpfulCount + 1,
+                helpful: !comment.helpful,
+              }
+            : comment
+        );
         queryClient.setQueryData<Comment[]>(
           ["comments", postId, token],
-          (old) =>
-            old?.map((comment) =>
-              comment.id === commentId
-                ? {
-                    ...comment,
-                    helpfulCount: comment.helpful
-                      ? Math.max(0, comment.helpfulCount - 1)
-                      : comment.helpfulCount + 1,
-                    helpful: !comment.helpful,
-                  }
-                : comment
-            ) || []
+          updatedComments
         );
       }
 

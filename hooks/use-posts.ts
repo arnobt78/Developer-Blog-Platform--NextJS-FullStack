@@ -496,6 +496,7 @@ export function useLikePost() {
       // Cancel outgoing refetches to prevent race conditions
       await queryClient.cancelQueries({ queryKey: ["post", postId, token] });
       await queryClient.cancelQueries({ queryKey: ["posts"] });
+      await queryClient.cancelQueries({ queryKey: ["saved-posts"] });
 
       // Snapshot the current values for potential rollback
       const previousPost = queryClient.getQueryData<Post>([
@@ -505,6 +506,9 @@ export function useLikePost() {
       ]);
       const previousPostsQueries = queryClient.getQueriesData<Post[]>({
         queryKey: ["posts"],
+      });
+      const previousSavedPostsQueries = queryClient.getQueriesData<Post[]>({
+        queryKey: ["saved-posts"],
       });
 
       // Optimistically update single post cache
@@ -533,7 +537,27 @@ export function useLikePost() {
         )
       );
 
-      return { previousPost, previousPostsQueries, token };
+      // Optimistically update ALL saved-posts queries instantly
+      queryClient.setQueriesData<Post[]>({ queryKey: ["saved-posts"] }, (old) =>
+        old?.map((post) =>
+          post.id === postId
+            ? {
+                ...post,
+                likes: post.liked
+                  ? Math.max(0, post.likes - 1)
+                  : post.likes + 1,
+                liked: !post.liked,
+              }
+            : post
+        )
+      );
+
+      return {
+        previousPost,
+        previousPostsQueries,
+        previousSavedPostsQueries,
+        token,
+      };
     },
     onSuccess: (data, postId, context) => {
       // Update cache with authoritative server response
@@ -551,6 +575,13 @@ export function useLikePost() {
           post.id === postId ? { ...post, liked, likes } : post
         )
       );
+
+      // Update ALL saved-posts queries with matching postId
+      queryClient.setQueriesData<Post[]>({ queryKey: ["saved-posts"] }, (old) =>
+        old?.map((post) =>
+          post.id === postId ? { ...post, liked, likes } : post
+        )
+      );
     },
     onError: (err, postId, context) => {
       // If mutation fails, rollback to previous state
@@ -563,6 +594,12 @@ export function useLikePost() {
       // Rollback all posts queries
       if (context?.previousPostsQueries) {
         context.previousPostsQueries.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
+      }
+      // Rollback all saved-posts queries
+      if (context?.previousSavedPostsQueries) {
+        context.previousSavedPostsQueries.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data);
         });
       }
@@ -607,6 +644,7 @@ export function useMarkHelpful() {
       // Cancel outgoing refetches to prevent race conditions
       await queryClient.cancelQueries({ queryKey: ["post", postId, token] });
       await queryClient.cancelQueries({ queryKey: ["posts"] });
+      await queryClient.cancelQueries({ queryKey: ["saved-posts"] });
 
       // Snapshot the current values for potential rollback
       const previousPost = queryClient.getQueryData<Post>([
@@ -616,6 +654,9 @@ export function useMarkHelpful() {
       ]);
       const previousPostsQueries = queryClient.getQueriesData<Post[]>({
         queryKey: ["posts"],
+      });
+      const previousSavedPostsQueries = queryClient.getQueriesData<Post[]>({
+        queryKey: ["saved-posts"],
       });
 
       // Optimistically update single post cache
@@ -644,7 +685,27 @@ export function useMarkHelpful() {
         )
       );
 
-      return { previousPost, previousPostsQueries, token };
+      // Optimistically update ALL saved-posts queries instantly
+      queryClient.setQueriesData<Post[]>({ queryKey: ["saved-posts"] }, (old) =>
+        old?.map((post) =>
+          post.id === postId
+            ? {
+                ...post,
+                helpfulCount: post.helpful
+                  ? Math.max(0, post.helpfulCount - 1)
+                  : post.helpfulCount + 1,
+                helpful: !post.helpful,
+              }
+            : post
+        )
+      );
+
+      return {
+        previousPost,
+        previousPostsQueries,
+        previousSavedPostsQueries,
+        token,
+      };
     },
     onSuccess: (data, postId, context) => {
       // Update cache with authoritative server response
@@ -658,6 +719,13 @@ export function useMarkHelpful() {
 
       // Update ALL posts queries (regardless of params) with matching postId
       queryClient.setQueriesData<Post[]>({ queryKey: ["posts"] }, (old) =>
+        old?.map((post) =>
+          post.id === postId ? { ...post, helpful, helpfulCount } : post
+        )
+      );
+
+      // Update ALL saved-posts queries with matching postId
+      queryClient.setQueriesData<Post[]>({ queryKey: ["saved-posts"] }, (old) =>
         old?.map((post) =>
           post.id === postId ? { ...post, helpful, helpfulCount } : post
         )
@@ -677,6 +745,12 @@ export function useMarkHelpful() {
           queryClient.setQueryData(queryKey, data);
         });
       }
+      // Rollback all saved-posts queries
+      if (context?.previousSavedPostsQueries) {
+        context.previousSavedPostsQueries.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
+      }
       toast({
         title: "Error",
         description: err.message || "Failed to mark as helpful",
@@ -687,7 +761,7 @@ export function useMarkHelpful() {
 }
 
 /**
- * Save a post
+ * Save a post with optimistic update
  */
 export function useSavePost() {
   const queryClient = useQueryClient();
@@ -710,16 +784,120 @@ export function useSavePost() {
       if (!response.ok) throw new Error("Failed to save post");
       return response.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["saved-posts"] });
-      queryClient.invalidateQueries({ queryKey: ["posts"] });
+    onMutate: async (postId) => {
+      const token =
+        typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
+      // Cancel outgoing refetches to prevent race conditions
+      await queryClient.cancelQueries({ queryKey: ["post", postId, token] });
+      await queryClient.cancelQueries({ queryKey: ["posts"] });
+      await queryClient.cancelQueries({ queryKey: ["saved-posts", token] });
+
+      // Snapshot the current values for potential rollback
+      const previousPost = queryClient.getQueryData<Post>([
+        "post",
+        postId,
+        token,
+      ]);
+      const previousPostsQueries = queryClient.getQueriesData<Post[]>({
+        queryKey: ["posts"],
+      });
+      const previousSavedPosts = queryClient.getQueryData<Post[]>([
+        "saved-posts",
+        token,
+      ]);
+
+      // Optimistically update single post cache - mark as saved
+      if (previousPost) {
+        queryClient.setQueryData<Post>(["post", postId, token], {
+          ...previousPost,
+          saved: true,
+        });
+      }
+
+      // Optimistically update ALL posts queries - mark as saved
+      queryClient.setQueriesData<Post[]>({ queryKey: ["posts"] }, (old) =>
+        old?.map((post) =>
+          post.id === postId ? { ...post, saved: true } : post
+        )
+      );
+
+      // Optimistically add to saved-posts cache if not already there
+      const postToAdd =
+        previousPost ||
+        previousPostsQueries
+          .flatMap(([, data]) => data || [])
+          .find((p) => p.id === postId);
+
+      if (postToAdd) {
+        queryClient.setQueryData<Post[]>(["saved-posts", token], (old) => {
+          const exists = old?.some((p) => p.id === postId);
+          if (exists) return old;
+          return old
+            ? [{ ...postToAdd, saved: true }, ...old]
+            : [{ ...postToAdd, saved: true }];
+        });
+      }
+
+      return {
+        previousPost,
+        previousPostsQueries,
+        previousSavedPosts,
+        token,
+      };
+    },
+    onSuccess: (data, postId, context) => {
+      // Update with server response if available
+      if (data && context?.token) {
+        queryClient.setQueryData<Post>(["post", postId, context.token], (old) =>
+          old ? { ...old, saved: data.saved } : old
+        );
+
+        queryClient.setQueriesData<Post[]>({ queryKey: ["posts"] }, (old) =>
+          old?.map((post) =>
+            post.id === postId ? { ...post, saved: data.saved } : post
+          )
+        );
+      }
+
+      // Background refetch for consistency
+      queryClient.invalidateQueries({
+        queryKey: ["saved-posts"],
+        refetchType: "none",
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["posts"],
+        refetchType: "none",
+      });
+      queryClient.refetchQueries({ queryKey: ["saved-posts"] });
+      queryClient.refetchQueries({ queryKey: ["posts"] });
+
       toast({
         title: "Success",
         description: "Post saved successfully",
         variant: "success",
       });
     },
-    onError: (error: Error) => {
+    onError: (error: Error, postId, context) => {
+      // Rollback on error
+      if (context?.previousPost && context?.token) {
+        queryClient.setQueryData(
+          ["post", postId, context.token],
+          context.previousPost
+        );
+      }
+      if (context?.previousPostsQueries) {
+        context.previousPostsQueries.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
+      }
+      if (context?.previousSavedPosts && context?.token) {
+        queryClient.setQueryData(
+          ["saved-posts", context.token],
+          context.previousSavedPosts
+        );
+      }
+
       toast({
         title: "Error",
         description: error.message,
@@ -730,7 +908,7 @@ export function useSavePost() {
 }
 
 /**
- * Unsave a post
+ * Unsave a post with optimistic update
  */
 export function useUnsavePost() {
   const queryClient = useQueryClient();
@@ -753,16 +931,108 @@ export function useUnsavePost() {
       if (!response.ok) throw new Error("Failed to unsave post");
       return response.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["saved-posts"] });
-      queryClient.invalidateQueries({ queryKey: ["posts"] });
+    onMutate: async (postId) => {
+      const token =
+        typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
+      // Cancel outgoing refetches to prevent race conditions
+      await queryClient.cancelQueries({ queryKey: ["post", postId, token] });
+      await queryClient.cancelQueries({ queryKey: ["posts"] });
+      await queryClient.cancelQueries({ queryKey: ["saved-posts", token] });
+
+      // Snapshot the current values for potential rollback
+      const previousPost = queryClient.getQueryData<Post>([
+        "post",
+        postId,
+        token,
+      ]);
+      const previousPostsQueries = queryClient.getQueriesData<Post[]>({
+        queryKey: ["posts"],
+      });
+      const previousSavedPosts = queryClient.getQueryData<Post[]>([
+        "saved-posts",
+        token,
+      ]);
+
+      // Optimistically update single post cache - mark as unsaved
+      if (previousPost) {
+        queryClient.setQueryData<Post>(["post", postId, token], {
+          ...previousPost,
+          saved: false,
+        });
+      }
+
+      // Optimistically update ALL posts queries - mark as unsaved
+      queryClient.setQueriesData<Post[]>({ queryKey: ["posts"] }, (old) =>
+        old?.map((post) =>
+          post.id === postId ? { ...post, saved: false } : post
+        )
+      );
+
+      // Optimistically remove from saved-posts cache
+      queryClient.setQueryData<Post[]>(["saved-posts", token], (old) =>
+        old?.filter((post) => post.id !== postId)
+      );
+
+      return {
+        previousPost,
+        previousPostsQueries,
+        previousSavedPosts,
+        token,
+      };
+    },
+    onSuccess: (data, postId, context) => {
+      // Update with server response if available
+      if (data && context?.token) {
+        queryClient.setQueryData<Post>(["post", postId, context.token], (old) =>
+          old ? { ...old, saved: data.saved } : old
+        );
+
+        queryClient.setQueriesData<Post[]>({ queryKey: ["posts"] }, (old) =>
+          old?.map((post) =>
+            post.id === postId ? { ...post, saved: data.saved } : post
+          )
+        );
+      }
+
+      // Background refetch for consistency
+      queryClient.invalidateQueries({
+        queryKey: ["saved-posts"],
+        refetchType: "none",
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["posts"],
+        refetchType: "none",
+      });
+      queryClient.refetchQueries({ queryKey: ["saved-posts"] });
+      queryClient.refetchQueries({ queryKey: ["posts"] });
+
       toast({
         title: "Success",
         description: "Post unsaved successfully",
         variant: "success",
       });
     },
-    onError: (error: Error) => {
+    onError: (error: Error, postId, context) => {
+      // Rollback on error
+      if (context?.previousPost && context?.token) {
+        queryClient.setQueryData(
+          ["post", postId, context.token],
+          context.previousPost
+        );
+      }
+      if (context?.previousPostsQueries) {
+        context.previousPostsQueries.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
+      }
+      if (context?.previousSavedPosts && context?.token) {
+        queryClient.setQueryData(
+          ["saved-posts", context.token],
+          context.previousSavedPosts
+        );
+      }
+
       toast({
         title: "Error",
         description: error.message,
