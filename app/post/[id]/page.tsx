@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useParams, useRouter } from "next/navigation";
 
@@ -23,7 +23,7 @@ import {
   useUnsavePost,
   useDeletePost,
 } from "@/hooks/use-posts";
-import { useAuth } from "@/hooks/use-auth";
+import { useSession } from "next-auth/react";
 import { useToast } from "@/hooks/use-toast";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { InputDialog } from "@/components/InputDialog";
@@ -41,8 +41,8 @@ export default function PostDetails() {
 
   // React Query hooks
   const { data: post, isLoading } = usePost(id || "");
-  const { data: authData } = useAuth();
-  const isAuthenticated = !!authData?.user;
+  const { data: session } = useSession();
+  const isAuthenticated = !!session?.user;
   // Only fetch saved posts if user is authenticated (optimization)
   const { data: savedPosts = [] } = useSavedPosts({
     enabled: isAuthenticated,
@@ -53,7 +53,7 @@ export default function PostDetails() {
   const unsavePost = useUnsavePost();
   const deletePost = useDeletePost();
 
-  const currentUser = authData?.user || null;
+  const currentUser = session?.user || null;
   const isLoggedIn = !!currentUser;
   const saved = savedPosts.some((p) => p.id === id);
 

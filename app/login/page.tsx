@@ -2,7 +2,9 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { useLogin } from "@/hooks/use-auth";
+import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { useToast } from "@/hooks/use-toast";
 import {
   Select,
   SelectContent,
@@ -40,7 +42,9 @@ const testAccounts = {
 export default function Login() {
   const [form, setForm] = useState({ email: "", password: "" });
   const [selectedRole, setSelectedRole] = useState<string>("");
-  const login = useLogin();
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
+  const { toast } = useToast();
 
   /**
    * Handle input field changes
@@ -74,11 +78,43 @@ export default function Login() {
 
   /**
    * Handle form submission
-   * Prevents default form behavior and triggers React Query mutation
+   * Uses NextAuth signIn with credentials provider
    */
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    login.mutate(form);
+    setIsLoading(true);
+
+    try {
+      const result = await signIn("credentials", {
+        email: form.email,
+        password: form.password,
+        redirect: false,
+      });
+
+      if (result?.error) {
+        toast({
+          title: "Login Failed",
+          description: result.error,
+          variant: "destructive",
+        });
+      } else if (result?.ok) {
+        toast({
+          title: "Success",
+          description: "Logged in successfully",
+          variant: "success",
+        });
+        router.push("/posts");
+        router.refresh();
+      }
+    } catch {
+      toast({
+        title: "Error",
+        description: "Something went wrong",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -150,10 +186,10 @@ export default function Login() {
       </div>
       <button
         type="submit"
-        disabled={login.isPending}
+        disabled={isLoading}
         className="bg-blue-500 text-white px-4 py-2 rounded disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        {login.isPending ? "Logging in..." : "Login"}
+        {isLoading ? "Logging in..." : "Login"}
       </button>
       <div className="mt-4 text-center">
         <span>Don't have an account? </span>

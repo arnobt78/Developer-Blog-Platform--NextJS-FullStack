@@ -119,10 +119,14 @@ export function useLogin() {
       return response.json(); // Returns { token, user }
     },
     onSuccess: (data) => {
-      // Store authentication data in localStorage
-      // This persists across page refreshes and browser sessions
+      // Store authentication data in localStorage AND cookies
+      // Cookies allow server-side detection, localStorage for compatibility
       if (typeof window !== "undefined" && data.token) {
         localStorage.setItem("token", data.token);
+        localStorage.setItem("isLoggedIn", "true");
+        // Set cookie for server-side access
+        document.cookie = `token=${data.token}; path=/; max-age=2592000; SameSite=Lax`;
+        document.cookie = `isLoggedIn=true; path=/; max-age=2592000; SameSite=Lax`;
         if (data.user) {
           // Store user data for quick access (avoid refetch on every page)
           localStorage.setItem("user", JSON.stringify(data.user));
@@ -201,6 +205,10 @@ export function useLogout() {
       if (typeof window !== "undefined") {
         localStorage.removeItem("token");
         localStorage.removeItem("user");
+        localStorage.removeItem("isLoggedIn");
+        // Clear cookies
+        document.cookie = "token=; path=/; max-age=0";
+        document.cookie = "isLoggedIn=; path=/; max-age=0";
       }
       // Note: No server-side logout endpoint needed
       // Token-based auth doesn't require server-side session cleanup
@@ -223,6 +231,10 @@ export function useLogout() {
       if (typeof window !== "undefined") {
         localStorage.removeItem("token");
         localStorage.removeItem("user");
+        localStorage.removeItem("isLoggedIn");
+        // Clear cookies
+        document.cookie = "token=; path=/; max-age=0";
+        document.cookie = "isLoggedIn=; path=/; max-age=0";
       }
       router.push("/login");
       toast({

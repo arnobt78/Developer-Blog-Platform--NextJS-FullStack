@@ -2,10 +2,10 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import Image from "next/image";
 import { useImageUpload } from "@/hooks/use-image-upload";
 import { useCreatePost } from "@/hooks/use-posts";
-import { useAuth } from "@/hooks/use-auth";
 import TagSelector from "@/components/TagSelector";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BsArrowLeft } from "react-icons/bs";
@@ -18,15 +18,14 @@ import { X } from "lucide-react";
  */
 export default function CreatePost() {
   const router = useRouter();
-  const { data: authData, isLoading: isLoadingAuth } = useAuth();
-  const isLoggedIn = !!authData?.user;
+  const { status } = useSession();
 
   // Redirect if not logged in
   useEffect(() => {
-    if (!isLoggedIn && authData !== undefined) {
-      router.push("/login");
+    if (status === "unauthenticated") {
+      router.push("/login?callbackUrl=/create-post");
     }
-  }, [isLoggedIn, authData, router]);
+  }, [status, router]);
 
   const [headline, setHeadline] = useState("");
   const [errorDescription, setErrorDescription] = useState("");
@@ -108,7 +107,7 @@ export default function CreatePost() {
 
   // Show loading skeleton while checking auth
   // This prevents white screen flash during navigation
-  if (isLoadingAuth) {
+  if (status === "loading") {
     return (
       <div className="mx-auto pt-32 max-w-9xl px-2 sm:px-4 xl:px-8">
         <Skeleton className="h-8 w-48 mb-4" />

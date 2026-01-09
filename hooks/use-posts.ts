@@ -179,11 +179,11 @@ export function useCreatePost() {
       }
       return response.json();
     },
-    onSettled: (data, error) => {
+    onSettled: (data, _error) => {
       // Add new post to cache immediately if successful
       if (data) {
         // Get token for cache key
-        const token =
+        const _token =
           typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
         // Update all posts queries with prefix matching

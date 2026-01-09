@@ -6,7 +6,6 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { toast } from "@/hooks/use-toast";
 
 interface ConfirmOptions {
   title?: string;
@@ -66,15 +65,11 @@ export function useConfirm() {
 export function useSimpleConfirm() {
   // This hook is kept for backward compatibility but should not be used
   // Use ConfirmDialog component instead
-  return useCallback(
-    (message: string, onConfirm: () => void) => {
-      // Fallback to window.confirm only if absolutely necessary
-      // Prefer using ConfirmDialog component for better UX
-      if (typeof window !== "undefined" && window.confirm(message)) {
-        onConfirm();
-      }
-    },
-    []
-  );
+  return useCallback((message: string, onConfirm: () => void) => {
+    // Fallback to window.confirm only if absolutely necessary
+    // Prefer using ConfirmDialog component for better UX
+    if (typeof window !== "undefined" && window.confirm(message)) {
+      onConfirm();
+    }
+  }, []);
 }
-

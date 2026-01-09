@@ -4,6 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import TagSelector from "./TagSelector";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Tooltip,
   TooltipContent,
@@ -15,12 +16,14 @@ interface SidebarProps {
   onTagSelect?: (tag: string) => void;
   recentPosts?: { id: string; title: string }[];
   popularTopics?: string[];
+  isLoading?: boolean;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
   onTagSelect,
   recentPosts = [],
   popularTopics = [],
+  isLoading = false,
 }) => {
   const router = useRouter();
 
@@ -42,43 +45,65 @@ const Sidebar: React.FC<SidebarProps> = ({
         <div className="mb-6">
           <h2 className="text-lg font-bold">Recent Posts</h2>
           <ul>
-            {recentPosts.map((post) => (
-              <li className="py-2" key={post.id}>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Link
-                      href={`/post/${post.id}`}
-                      className="text-blue-600 hover:underline line-clamp-2 block overflow-hidden"
-                      style={{
-                        display: "-webkit-box",
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: "vertical",
-                      }}
-                    >
-                      {post.title}
-                    </Link>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p className="max-w-xs">{post.title}</p>
-                  </TooltipContent>
-                </Tooltip>
-              </li>
-            ))}
+            {isLoading ? (
+              // Show 5 skeleton lines matching text-sm height during loading
+              <>
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <li className="py-2" key={i}>
+                    <Skeleton className="h-5 w-full bg-gray-300" />
+                  </li>
+                ))}
+              </>
+            ) : (
+              recentPosts.map((post) => (
+                <li className="py-2" key={post.id}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Link
+                        href={`/post/${post.id}`}
+                        className="text-blue-600 hover:underline line-clamp-2 block overflow-hidden text-sm"
+                        style={{
+                          display: "-webkit-box",
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: "vertical",
+                        }}
+                      >
+                        {post.title}
+                      </Link>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="max-w-xs">{post.title}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </li>
+              ))
+            )}
           </ul>
         </div>
         <div>
           <h2 className="text-lg font-bold">Popular Topics</h2>
           <ul>
-            {popularTopics.map((topic) => (
-              <li className="py-2" key={topic}>
-                <button
-                  className="text-blue-600 hover:underline bg-transparent border-none p-0 m-0"
-                  onClick={() => handleTagClick(topic)}
-                >
-                  {topic}
-                </button>
-              </li>
-            ))}
+            {isLoading ? (
+              // Show 5 skeleton lines matching text-sm height during loading
+              <>
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <li className="py-2" key={i}>
+                    <Skeleton className="h-5 w-3/4 bg-gray-300" />
+                  </li>
+                ))}
+              </>
+            ) : (
+              popularTopics.map((topic) => (
+                <li className="py-2" key={topic}>
+                  <button
+                    className="text-blue-600 hover:underline bg-transparent border-none p-0 m-0 text-sm"
+                    onClick={() => handleTagClick(topic)}
+                  >
+                    {topic}
+                  </button>
+                </li>
+              ))
+            )}
           </ul>
         </div>
       </TooltipProvider>

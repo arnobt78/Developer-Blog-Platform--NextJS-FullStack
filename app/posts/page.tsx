@@ -24,7 +24,7 @@ import { PostCardSkeleton } from "@/components/ui/skeleton";
 import Sidebar from "@/components/Sidebar";
 import { useRouter, useSearchParams } from "next/navigation";
 import { usePosts, useSavedPosts } from "@/hooks/use-posts";
-import { useAuth } from "@/hooks/use-auth";
+import { useSession } from "next-auth/react";
 import { Badge } from "@/components/ui/badge";
 
 /**
@@ -41,8 +41,8 @@ function PostsContent() {
   const searchQuery = searchParams.get("search")?.toLowerCase() || null;
 
   // Check if user is authenticated
-  const { data: authData } = useAuth();
-  const isAuthenticated = !!authData?.user;
+  const { data: session } = useSession();
+  const isAuthenticated = !!session?.user;
 
   /**
    * React Query hooks
@@ -262,6 +262,7 @@ function PostsContent() {
         onTagSelect={setSelectedTag}
         recentPosts={recentPosts}
         popularTopics={popularTopics}
+        isLoading={isLoading}
       />
     </div>
   );
@@ -283,7 +284,12 @@ export default function PostsPage() {
               ))}
             </div>
           </main>
-          <Sidebar onTagSelect={() => {}} recentPosts={[]} popularTopics={[]} />
+          <Sidebar
+            onTagSelect={() => {}}
+            recentPosts={[]}
+            popularTopics={[]}
+            isLoading={true}
+          />
         </div>
       }
     >

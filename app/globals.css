@@ -82,8 +82,6 @@
   font-family: "Amatic", cursive;
 }
 
-
-
 @layer base {
   * {
     @apply border-border;
@@ -91,4 +89,19 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Navbar styles - prevent any appearance animation or movement */
+nav {
+  /* Lock navbar position - no transform or animation */
+  transform: none !important;
+  animation: none !important;
+  /* Ensure immediate visibility without fade */
+  opacity: 1 !important;
+  visibility: visible !important;
+  /* Prevent any layout shift */
+  will-change: auto !important;
+  /* Fixed height to prevent collapse/expand during hydration */
+  min-height: 96px !important;
+  height: auto !important;
 }

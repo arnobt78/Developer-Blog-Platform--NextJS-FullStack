@@ -2,10 +2,10 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
+import { useSession } from "next-auth/react";
 import Image from "next/image";
 import { useImageUpload } from "@/hooks/use-image-upload";
 import { usePost, useUpdatePost } from "@/hooks/use-posts";
-import { useAuth } from "@/hooks/use-auth";
 import TagSelector from "@/components/TagSelector";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BsArrowLeft } from "react-icons/bs";
@@ -20,15 +20,15 @@ export default function EditPost() {
   const params = useParams();
   const id = params?.id as string;
   const router = useRouter();
-  const { data: authData, isLoading: isLoadingAuth } = useAuth();
-  const isLoggedIn = !!authData?.user;
+  const { data: session, status } = useSession();
+  const isLoadingAuth = status === "loading";
 
   // Redirect if not logged in
   useEffect(() => {
-    if (!isLoggedIn && authData !== undefined) {
-      router.push("/login");
+    if (status === "unauthenticated") {
+      router.push("/login?callbackUrl=/edit-post/" + id);
     }
-  }, [isLoggedIn, authData, router]);
+  }, [status, router, id]);
 
   const [headline, setHeadline] = useState("");
   const [errorDescription, setErrorDescription] = useState("");

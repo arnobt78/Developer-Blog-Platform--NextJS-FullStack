@@ -18,7 +18,7 @@ import {
   useUnsavePost,
   useDeletePost,
 } from "@/hooks/use-posts";
-import { useAuth } from "@/hooks/use-auth";
+import { useSession } from "next-auth/react";
 import { useToast } from "@/hooks/use-toast";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { InputDialog } from "@/components/InputDialog";
@@ -63,7 +63,7 @@ const PostCard: React.FC<PostCardProps> = ({
     id,
     title,
     description,
-    content,
+    content: _content,
     createdAt,
     likes: _likes, // Prefixed with _ to indicate unused (we use post.likes directly)
     helpfulCount: _helpfulCount, // Same as above
@@ -72,7 +72,7 @@ const PostCard: React.FC<PostCardProps> = ({
     author,
     tags,
     onClick,
-    codeSnippet,
+    codeSnippet: _codeSnippet,
   } = post;
 
   // Local UI state (not synced with server)
@@ -92,10 +92,10 @@ const PostCard: React.FC<PostCardProps> = ({
   const savePost = useSavePost(); // Save post mutation
   const unsavePost = useUnsavePost(); // Unsave post mutation
   const deletePost = useDeletePost(); // Delete post mutation
-  const { data: authData } = useAuth(); // Get current user authentication state
+  const { data: session } = useSession(); // Get current user authentication state
 
   // Extract user data from auth query
-  const currentUser = authData?.user || null;
+  const currentUser = session?.user || null;
   const isLoggedIn = !!currentUser; // Boolean check for login status
 
   // Use post data directly from props (React Query will handle updates)
@@ -212,7 +212,7 @@ const PostCard: React.FC<PostCardProps> = ({
    * Prevents navigation when clicking on interactive elements (buttons)
    * Uses event delegation to check if click target is a button
    */
-  const handleCardClick = (e: React.MouseEvent) => {
+  const _handleCardClick = (e: React.MouseEvent) => {
     // Don't navigate if clicking on a button or button's child element
     if (
       (e.target as HTMLElement).closest("button") ||

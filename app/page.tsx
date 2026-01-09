@@ -8,7 +8,6 @@ import React from "react";
 import Image from "next/image";
 import Sidebar from "@/components/Sidebar";
 import { usePosts } from "@/hooks/use-posts";
-import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Home() {
   // Use React Query hook for cached data fetching
@@ -97,6 +96,7 @@ export default function Home() {
       <Sidebar
         recentPosts={isLoading ? [] : recentPosts}
         popularTopics={isLoading ? [] : popularTopics}
+        isLoading={isLoading}
       />
     </div>
   );

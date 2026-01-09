@@ -18,9 +18,9 @@ interface PostActionsBarProps {
 const PostActionsBar: React.FC<PostActionsBarProps> = ({
   liked,
   helpful,
-  likeCount,
-  helpfulCount,
-  commentCount,
+  likeCount: _likeCount,
+  helpfulCount: _helpfulCount,
+  commentCount: _commentCount,
   onLike,
   onHelpful,
   onComment,

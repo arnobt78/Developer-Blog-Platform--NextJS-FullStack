@@ -10,7 +10,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter, usePathname } from "next/navigation";
 import { FiSearch, FiMenu, FiX } from "react-icons/fi";
-import { useAuth, useLogout } from "@/hooks/use-auth";
+import { useSession, signOut } from "next-auth/react";
 import { useUnreadCount } from "@/hooks/use-notifications";
 import {
   DropdownMenu,
@@ -30,23 +30,22 @@ const Navbar: React.FC = () => {
   const [search, setSearch] = useState("");
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  // Use React Query hooks for auth and notifications
-  const { data: authData, isLoading: isLoadingAuth } = useAuth();
-  const user = authData?.user;
+  // Use NextAuth session - server-rendered, no flash!
+  const { data: session } = useSession();
+  const user = session?.user;
   const unreadCount = useUnreadCount();
-  const logoutMutation = useLogout();
 
   const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL;
   const isAdmin = user && user.email === adminEmail;
 
-  const handleLogout = () => {
-    logoutMutation.mutate();
+  const handleLogout = async () => {
+    await signOut({ redirect: true, callbackUrl: "/login" });
   };
 
+  // Static navLinks - same on server and client
   const navLinks = [
     { name: "Home", path: "/" },
     { name: "Posts", path: "/posts" },
-    ...(user ? [{ name: "Create Post", path: "/create-post" }] : []),
   ];
 
   useEffect(() => {
@@ -65,8 +64,20 @@ const Navbar: React.FC = () => {
 
   return (
     <>
-      <nav className="bg-slate-200 shadow-xl fixed top-0 left-0 w-full z-50 px-2 sm:px-4 xl:px-8">
-        <div className="max-w-9xl mx-auto flex items-center justify-between md:flex-row">
+      <nav
+        className="bg-slate-200 shadow-xl fixed top-0 left-0 right-0 w-full z-50 px-2 sm:px-4 xl:px-8"
+        style={{
+          transform: "none",
+          opacity: 1,
+          visibility: "visible",
+          minHeight: "96px",
+          height: "auto",
+        }}
+      >
+        <div
+          className="max-w-9xl mx-auto flex items-center justify-between md:flex-row"
+          style={{ minHeight: "96px" }}
+        >
           {/* Logo */}
           <div className="flex items-start">
             <Link href="/" className="flex items-center">
@@ -76,7 +87,7 @@ const Navbar: React.FC = () => {
                 width={96}
                 height={96}
                 className="h-24 w-auto hover:scale-105 transition-transform duration-300"
-                style={{ height: "auto" }}
+                priority
               />
             </Link>
           </div>
@@ -109,7 +120,10 @@ const Navbar: React.FC = () => {
           </div>
 
           {/* Navigation Links */}
-          <div className="hidden md:flex items-center justify-center gap-8">
+          <div
+            className="hidden md:flex items-center justify-center gap-8"
+            suppressHydrationWarning
+          >
             {navLinks.map((link) => (
               <Link
                 key={link.name}
@@ -119,6 +133,14 @@ const Navbar: React.FC = () => {
                 {link.name}
               </Link>
             ))}
+            {user && (
+              <Link
+                href="/create-post"
+                className="text-slate-700 font-courier text-pretty font-bold text-md hover:text-blue-500 hover:scale-110 transition-transform duration-300"
+              >
+                Create Post
+              </Link>
+            )}
             {!user && (
               <>
                 <Link
@@ -140,25 +162,21 @@ const Navbar: React.FC = () => {
                 <DropdownMenuTrigger asChild>
                   <button className="flex items-center focus:outline-none ml-4 hover:opacity-80 transition-opacity">
                     <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-blue-400 bg-gray-200">
-                      {isLoadingAuth ? (
-                        <div className="w-full h-full bg-gray-300 animate-pulse" />
-                      ) : (
-                        <Image
-                          src={
-                            // Priority: Use uploaded image if available, otherwise use avatar fallback
-                            // Check for both null/undefined and empty string
-                            user.avatarUrl && user.avatarUrl.trim() !== ""
-                              ? user.avatarUrl
-                              : `https://robohash.org/${
-                                  user.name || "user"
-                                }.png?size=80x80`
-                          }
-                          alt="avatar"
-                          fill
-                          sizes="40px"
-                          className="w-full h-full object-cover"
-                        />
-                      )}
+                      <Image
+                        src={
+                          // Priority: Use uploaded image if available, otherwise use avatar fallback
+                          // Check for both null/undefined and empty string
+                          user?.avatarUrl && user.avatarUrl.trim() !== ""
+                            ? user.avatarUrl
+                            : `https://robohash.org/${
+                                user?.name || "user"
+                              }.png?size=80x80`
+                        }
+                        alt="avatar"
+                        fill
+                        sizes="40px"
+                        className="w-full h-full object-cover"
+                      />
                     </div>
                   </button>
                 </DropdownMenuTrigger>
@@ -169,10 +187,10 @@ const Navbar: React.FC = () => {
                   {/* User Info Section - No separator below */}
                   <div className="px-4 py-3">
                     <p className="font-courier font-bold text-slate-900 text-md">
-                      {user.name || "User"}
+                      {user?.name || "User"}
                     </p>
                     <p className="font-courier text-slate-600 text-sm">
-                      {user.email}
+                      {user?.email}
                     </p>
                   </div>
                   <DropdownMenuSeparator className="bg-gray-300" />
@@ -292,6 +310,15 @@ const Navbar: React.FC = () => {
                 {link.name}
               </Link>
             ))}
+            {user && (
+              <Link
+                href="/create-post"
+                className="text-lg uppercase font-medium hover:text-blue-500 hover:scale-105 transition-transform duration-300"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Create Post
+              </Link>
+            )}
             {!user && (
               <>
                 <Link

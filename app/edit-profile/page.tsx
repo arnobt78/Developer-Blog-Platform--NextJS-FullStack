@@ -3,8 +3,9 @@
 import React, { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import Image from "next/image";
-import { useAuth, useUpdateProfile } from "@/hooks/use-auth";
+import { useUpdateProfile } from "@/hooks/use-auth";
 
 /**
  * Edit Profile Page - Update user profile
@@ -12,7 +13,7 @@ import { useAuth, useUpdateProfile } from "@/hooks/use-auth";
  */
 export default function EditProfile() {
   const router = useRouter();
-  const { data: authData, isLoading: isLoadingAuth } = useAuth();
+  const { data: session, status } = useSession();
   const updateProfile = useUpdateProfile();
 
   const [form, setForm] = useState({
@@ -26,23 +27,23 @@ export default function EditProfile() {
 
   // Redirect if not logged in
   useEffect(() => {
-    if (!isLoadingAuth && !authData?.user) {
-      router.push("/login");
+    if (status === "unauthenticated") {
+      router.push("/login?callbackUrl=/edit-profile");
     }
-  }, [authData, isLoadingAuth, router]);
+  }, [status, router]);
 
   // Pre-fill form when user data loads
   useEffect(() => {
-    if (authData?.user) {
+    if (session?.user) {
       setForm({
-        name: authData.user.name || "",
-        email: authData.user.email || "",
-        country: authData.user.country || "",
+        name: session.user.name || "",
+        email: session.user.email || "",
+        country: session.user.country || "",
         password: "",
       });
-      setAvatarUrl(authData.user.avatarUrl || null);
+      setAvatarUrl(session.user.avatarUrl || null);
     }
-  }, [authData]);
+  }, [session]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -75,7 +76,7 @@ export default function EditProfile() {
     });
   };
 
-  if (isLoadingAuth) {
+  if (status === "loading") {
     return (
       <div className="space-y-4 max-w-9xl mx-auto m-36">
         <Skeleton className="h-32 w-32 rounded-full mx-auto" />

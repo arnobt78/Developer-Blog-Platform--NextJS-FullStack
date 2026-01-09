@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { QueryProvider } from "@/components/providers/query-provider";
+import { AuthProvider } from "@/components/providers/auth-provider";
 import { Toaster } from "@/components/ui/toaster";
+import { auth } from "@/lib/auth";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -107,11 +109,14 @@ export const metadata: Metadata = {
   category: "Technology",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  // Get server-side session to prevent navbar flickering on hydration
+  const session = await auth();
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "WebSite",
@@ -164,12 +169,14 @@ export default function RootLayout({
         />
       </head>
       <body suppressHydrationWarning className="flex flex-col min-h-screen">
-        <QueryProvider>
-          <Navbar />
-          <main className="flex-1">{children}</main>
-          <Footer />
-          <Toaster />
-        </QueryProvider>
+        <AuthProvider session={session}>
+          <QueryProvider>
+            <Navbar />
+            <main className="flex-1">{children}</main>
+            <Footer />
+            <Toaster />
+          </QueryProvider>
+        </AuthProvider>
       </body>
     </html>
   );
