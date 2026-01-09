@@ -36,29 +36,42 @@ export async function getUserIdFromRequest(
 ): Promise<string | null> {
   // First, try to get session from NextAuth using getToken
   try {
+    // Explicitly specify cookie name based on environment
+    const cookieName = process.env.NODE_ENV === "production"
+      ? "__Secure-authjs.session-token"
+      : "authjs.session-token";
+    
     const token = await getToken({
       req: request as any,
       secret: process.env.NEXTAUTH_SECRET,
+      cookieName,
     });
 
     if (token?.id) {
       return token.id as string;
     }
   } catch (error) {
-    console.log("NextAuth getToken error:", error);
+    console.error("NextAuth getToken error:", error);
   }
 
   // Fallback: Check for legacy JWT token in Authorization header
   const authHeader = request.headers.get("authorization");
-  if (!authHeader) return null;
+  if (!authHeader) {
+    console.log("No auth header found");
+    return null;
+  }
 
   const jwtToken = authHeader.split(" ")[1];
-  if (!jwtToken) return null;
+  if (!jwtToken) {
+    console.log("No JWT token in auth header");
+    return null;
+  }
 
   try {
     const decoded = verifyToken(jwtToken);
     return decoded.id;
-  } catch {
+  } catch (error) {
+    console.error("JWT verification failed:", error);
     return null;
   }
 }
@@ -155,5 +168,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
   },
   secret: process.env.NEXTAUTH_SECRET,
+  trustHost: true, // Required for Vercel production
   debug: process.env.NODE_ENV === "development",
 });
