@@ -22,6 +22,8 @@ import CommentItem from "./CommentItem";
 import CommentInput from "./CommentInput";
 import CommentAvatar from "./CommentAvatar";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { useSession } from "next-auth/react";
+import { useSession } from "next-auth/react";
 
 interface CommentSectionProps {
   postId: string;
@@ -74,6 +76,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({
   const likeCommentMutation = useLikeComment(); // Like/unlike comment (optimistic update)
   const helpfulCommentMutation = useHelpfulComment(); // Helpful/unhelpful comment (optimistic update)
   const { uploadImage, uploading: _uploading } = useImageUpload(); // Upload images
+  const { data: session, status } = useSession(); // Get current user authentication state
 
   /**
    * Filter comments by parentId for nested structure
@@ -90,13 +93,10 @@ const CommentSection: React.FC<CommentSectionProps> = ({
     parentId ? c.parentId === parentId : !c.parentId
   );
 
-  // Check if user is logged in
-  const user =
-    typeof window !== "undefined" && localStorage.getItem("user")
-      ? JSON.parse(localStorage.getItem("user")!)
-      : null;
-  const isLoggedIn =
-    typeof window !== "undefined" && !!localStorage.getItem("token");
+  // Check if user is logged in via NextAuth session
+  const user = session?.user || null;
+  const isLoadingAuth = status === "loading";
+  const isLoggedIn = !!user && !isLoadingAuth;
 
   /**
    * Handle adding a new comment with optimistic update

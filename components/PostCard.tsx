@@ -92,11 +92,12 @@ const PostCard: React.FC<PostCardProps> = ({
   const savePost = useSavePost(); // Save post mutation
   const unsavePost = useUnsavePost(); // Unsave post mutation
   const deletePost = useDeletePost(); // Delete post mutation
-  const { data: session } = useSession(); // Get current user authentication state
+  const { data: session, status } = useSession(); // Get current user authentication state
 
   // Extract user data from auth query
   const currentUser = session?.user || null;
-  const isLoggedIn = !!currentUser; // Boolean check for login status
+  const isLoadingAuth = status === "loading";
+  const isLoggedIn = !!currentUser && !isLoadingAuth; // Boolean check for login status
 
   // Use post data directly from props (React Query will handle updates)
   // These values come from the server and are kept in sync via React Query cache

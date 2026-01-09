@@ -41,8 +41,9 @@ function PostsContent() {
   const searchQuery = searchParams.get("search")?.toLowerCase() || null;
 
   // Check if user is authenticated
-  const { data: session } = useSession();
-  const isAuthenticated = !!session?.user;
+  const { data: session, status } = useSession();
+  const isLoadingAuth = status === "loading";
+  const isAuthenticated = !!session?.user && !isLoadingAuth;
 
   /**
    * React Query hooks

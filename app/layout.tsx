@@ -5,7 +5,66 @@ import { QueryProvider } from "@/components/providers/query-provider";
 import { AuthProvider } from "@/components/providers/auth-provider";
 import { Toaster } from "@/components/ui/toaster";
 import { auth } from "@/lib/auth";
+import {
+  Prosto_One,
+  Syne_Mono,
+  Courier_Prime,
+  Limelight,
+  Indie_Flower,
+  Amatic_SC,
+  Gloria_Hallelujah,
+} from "next/font/google";
 import "./globals.css";
+
+// Initialize Google Fonts
+const prostoOne = Prosto_One({
+  weight: "400",
+  subsets: ["latin"],
+  variable: "--font-prosto",
+  display: "swap",
+});
+
+const syneMono = Syne_Mono({
+  weight: "400",
+  subsets: ["latin"],
+  variable: "--font-syne",
+  display: "swap",
+});
+
+const courierPrime = Courier_Prime({
+  weight: ["400", "700"],
+  subsets: ["latin"],
+  variable: "--font-courier",
+  display: "swap",
+});
+
+const limelight = Limelight({
+  weight: "400",
+  subsets: ["latin"],
+  variable: "--font-limelight",
+  display: "swap",
+});
+
+const indieFlower = Indie_Flower({
+  weight: "400",
+  subsets: ["latin"],
+  variable: "--font-indie",
+  display: "swap",
+});
+
+const amaticSC = Amatic_SC({
+  weight: ["400", "700"],
+  subsets: ["latin"],
+  variable: "--font-amatic",
+  display: "swap",
+});
+
+const gloriaHallelujah = Gloria_Hallelujah({
+  weight: "400",
+  subsets: ["latin"],
+  variable: "--font-gloria",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: {
@@ -168,7 +227,10 @@ export default async function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
-      <body suppressHydrationWarning className="flex flex-col min-h-screen">
+      <body
+        suppressHydrationWarning
+        className={`flex flex-col min-h-screen ${prostoOne.variable} ${syneMono.variable} ${courierPrime.variable} ${limelight.variable} ${indieFlower.variable} ${amaticSC.variable} ${gloriaHallelujah.variable}`}
+      >
         <AuthProvider session={session}>
           <QueryProvider>
             <Navbar />

@@ -61,27 +61,6 @@
   }
 }
 
-/* Custom fonts */
-@font-face {
-  font-family: "Gloria";
-  font-style: normal;
-  font-weight: normal;
-}
-
-@font-face {
-  font-family: "Amatic";
-  font-style: normal;
-  font-weight: normal;
-}
-
-.font-gloria {
-  font-family: "Gloria", cursive;
-}
-
-.font-amatic {
-  font-family: "Amatic", cursive;
-}
-
 @layer base {
   * {
     @apply border-border;

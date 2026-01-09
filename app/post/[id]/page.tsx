@@ -41,8 +41,9 @@ export default function PostDetails() {
 
   // React Query hooks
   const { data: post, isLoading } = usePost(id || "");
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const isAuthenticated = !!session?.user;
+  const isLoadingAuth = status === "loading";
   // Only fetch saved posts if user is authenticated (optimization)
   const { data: savedPosts = [] } = useSavedPosts({
     enabled: isAuthenticated,
@@ -54,7 +55,7 @@ export default function PostDetails() {
   const deletePost = useDeletePost();
 
   const currentUser = session?.user || null;
-  const isLoggedIn = !!currentUser;
+  const isLoggedIn = !!currentUser && !isLoadingAuth;
   const saved = savedPosts.some((p) => p.id === id);
 
   // Handle Like
