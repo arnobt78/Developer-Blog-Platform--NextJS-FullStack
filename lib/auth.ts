@@ -1,6 +1,5 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { getToken } from "next-auth/jwt";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
@@ -32,43 +31,38 @@ export function verifyToken(token: string): JWTPayload {
  * Supports both authentication methods for backward compatibility
  */
 export async function getUserIdFromRequest(
-  request: NextRequest
+  request?: NextRequest
 ): Promise<string | null> {
-  // First, try to get session from NextAuth using getToken
+  // First, try to get session from NextAuth directly (like feedback-widget)
   try {
-    const token = await getToken({
-      req: request as any,
-      secret: process.env.AUTH_SECRET,
-    });
-
-    if (token?.id) {
-      return token.id as string;
+    const session = await auth();
+    if (session?.user?.id) {
+      return session.user.id;
     }
   } catch (error) {
-    console.error("NextAuth getToken error:", error);
+    console.error("NextAuth auth() error:", error);
   }
 
-  // Fallback: Check for legacy JWT token in Authorization header
-  const authHeader = request.headers.get("authorization");
-  if (!authHeader) {
-    return null;
+  // Fallback: Check for legacy JWT token in Authorization header (only if request provided)
+  if (request) {
+    const authHeader = request.headers.get("authorization");
+    if (authHeader) {
+      const jwtToken = authHeader.split(" ")[1];
+      if (jwtToken) {
+        try {
+          const decoded = verifyToken(jwtToken);
+          return decoded.id;
+        } catch (error) {
+          console.error("JWT verification failed:", error);
+        }
+      }
+    }
   }
 
-  const jwtToken = authHeader.split(" ")[1];
-  if (!jwtToken) {
-    return null;
-  }
-
-  try {
-    const decoded = verifyToken(jwtToken);
-    return decoded.id;
-  } catch (error) {
-    console.error("JWT verification failed:", error);
-    return null;
-  }
+  return null;
 }
 
-export async function requireAuth(request: NextRequest): Promise<string> {
+export async function requireAuth(request?: NextRequest): Promise<string> {
   const userId = await getUserIdFromRequest(request);
   if (!userId) {
     throw new Error("Unauthorized");
