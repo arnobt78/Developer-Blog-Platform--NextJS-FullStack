@@ -8,7 +8,7 @@ export async function POST(
 ) {
   try {
     const { id } = await params;
-    const userId = await requireAuth(request);
+    const userId = await requireAuth();
 
     // Check if already saved
     const existing = await prisma.savedPost.findUnique({

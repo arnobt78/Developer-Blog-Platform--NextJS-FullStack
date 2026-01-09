@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
  */
 export async function PUT(request: NextRequest) {
   try {
-    const userId = await requireAuth(request);
+    const userId = await requireAuth();
 
     const formData = await request.formData();
     const name = formData.get("name") as string | null;

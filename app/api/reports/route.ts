@@ -5,7 +5,7 @@ import { requireAuth } from "@/lib/auth";
 // User reports a post
 export async function POST(request: NextRequest) {
   try {
-    const userId = await requireAuth(request);
+    const userId = await requireAuth();
     const { postId, reason } = await request.json();
 
     // Prevent duplicate reports by same user for same post
@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
 // Admin: get all reports
 export async function GET(request: NextRequest) {
   try {
-    await requireAuth(request);
+    await requireAuth();
     // You can add admin check here if needed
 
     const reports = await prisma.report.findMany({

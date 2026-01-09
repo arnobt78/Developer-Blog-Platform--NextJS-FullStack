@@ -35,12 +35,25 @@ export async function getUserIdFromRequest(
   return null;
 }
 
-export async function requireAuth(request?: NextRequest): Promise<string> {
-  const userId = await getUserIdFromRequest(request);
-  if (!userId) {
+/**
+ * Require authentication - throws error if not authenticated
+ * NOTE: This should be called directly in API route handlers
+ * because NextAuth v5's auth() needs to be in the right context
+ */
+export async function requireAuth(): Promise<string> {
+  const session = await auth();
+  console.log(
+    "[AUTH DEBUG] requireAuth - session:",
+    JSON.stringify(session, null, 2)
+  );
+  
+  if (!session?.user?.id) {
+    console.log("[AUTH DEBUG] ❌ requireAuth failed - no user ID");
     throw new Error("Unauthorized");
   }
-  return userId;
+  
+  console.log("[AUTH DEBUG] ✅ requireAuth success - user ID:", session.user.id);
+  return session.user.id;
 }
 
 // NextAuth v5 configuration

@@ -8,7 +8,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireAuth(request);
+    await requireAuth();
     const { id } = await params;
     const { status } = await request.json();
 

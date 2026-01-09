@@ -73,7 +73,7 @@ export async function GET(request: NextRequest) {
 // Create new post
 export async function POST(request: NextRequest) {
   try {
-    const userId = await requireAuth(request);
+    const userId = await requireAuth();
 
     const formData = await request.formData();
     const headline = formData.get("headline") as string;

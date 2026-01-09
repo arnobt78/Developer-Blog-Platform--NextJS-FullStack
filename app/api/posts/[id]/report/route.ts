@@ -12,7 +12,7 @@ export async function POST(
 ) {
   try {
     const { id: postId } = await params;
-    const userId = await requireAuth(request);
+    const userId = await requireAuth();
     const { reason } = await request.json();
 
     // Prevent duplicate reports by same user for same post

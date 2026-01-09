@@ -8,7 +8,7 @@ export async function POST(
 ) {
   try {
     const { id } = await params;
-    const userId = await requireAuth(request);
+    const userId = await requireAuth();
 
     await prisma.savedPost.deleteMany({
       where: { userId, postId: id },

@@ -58,7 +58,7 @@ export async function POST(
 ) {
   try {
     const { postId } = await params;
-    const userId = await requireAuth(request);
+    const userId = await requireAuth();
 
     const formData = await request.formData();
     const content = formData.get("content") as string;

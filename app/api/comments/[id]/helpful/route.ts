@@ -9,7 +9,7 @@ export async function POST(
 ) {
   try {
     const { id: commentId } = await params;
-    const userId = await requireAuth(request);
+    const userId = await requireAuth();
 
     const existing = await prisma.commentHelpful.findUnique({
       where: { userId_commentId: { userId, commentId } },

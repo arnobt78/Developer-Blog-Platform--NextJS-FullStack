@@ -10,7 +10,7 @@ export async function PUT(
 ) {
   try {
     const { id } = await params;
-    const userId = await requireAuth(request);
+    const userId = await requireAuth();
     const { content } = await request.json();
 
     // Check if user owns the comment
@@ -67,7 +67,7 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
-    const userId = await requireAuth(request);
+    const userId = await requireAuth();
 
     // Check if user owns the comment
     const comment = await prisma.comment.findUnique({

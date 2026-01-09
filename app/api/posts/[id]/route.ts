@@ -66,7 +66,7 @@ export async function PUT(
 ) {
   try {
     const { id } = await params;
-    const userId = await requireAuth(request);
+    const userId = await requireAuth();
 
     // Only allow the author to edit
     const post = await prisma.post.findUnique({ where: { id } });
@@ -139,7 +139,7 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
-    const userId = await requireAuth(request);
+    const userId = await requireAuth();
 
     const post = await prisma.post.findUnique({ where: { id } });
     if (!post) {
