@@ -5,7 +5,7 @@ import { getUserIdFromRequest } from "@/lib/auth";
 // Mark all notifications as read
 export async function POST(request: NextRequest) {
   try {
-    const userId = getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequest(request);
 
     // Return success if user is not authenticated (no-op)
     if (!userId) {

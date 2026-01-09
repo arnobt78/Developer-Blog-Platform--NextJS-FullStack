@@ -9,13 +9,10 @@ import { handleFileUpload } from "@/lib/upload";
  */
 export async function GET(request: NextRequest) {
   try {
-    const userId = getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequest(request);
 
     if (!userId) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const user = await prisma.user.findUnique({
@@ -30,10 +27,7 @@ export async function GET(request: NextRequest) {
     });
 
     if (!user) {
-      return NextResponse.json(
-        { error: "User not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     return NextResponse.json(user);
@@ -108,10 +102,7 @@ export async function PUT(request: NextRequest) {
         },
       });
       if (!currentUser) {
-        return NextResponse.json(
-          { error: "User not found" },
-          { status: 404 }
-        );
+        return NextResponse.json({ error: "User not found" }, { status: 404 });
       }
       return NextResponse.json(currentUser);
     }
@@ -136,9 +127,9 @@ export async function PUT(request: NextRequest) {
       console.error("Error stack:", error.stack);
     }
     return NextResponse.json(
-      { 
+      {
         error: "Profile update failed",
-        message: error instanceof Error ? error.message : "Unknown error"
+        message: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 500 }
     );

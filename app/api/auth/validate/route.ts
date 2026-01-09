@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 
 export async function GET(request: NextRequest) {
   try {
-    const userId = getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequest(request);
 
     if (!userId) {
       return NextResponse.json({ valid: false }, { status: 200 });

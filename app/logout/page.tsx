@@ -1,18 +1,16 @@
 "use client";
 
 import { useEffect } from "react";
-import { useLogout } from "@/hooks/use-auth";
+import { signOut } from "next-auth/react";
 
 /**
  * Logout Page - Handle user logout
- * Uses React Query mutation for logout with cache clearing
+ * Uses NextAuth signOut for proper session cleanup
  */
 export default function Logout() {
-  const logout = useLogout();
-
   useEffect(() => {
-    logout.mutate();
-  }, [logout]);
+    signOut({ redirect: true, callbackUrl: "/login" });
+  }, []);
 
   return null;
 }

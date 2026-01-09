@@ -11,7 +11,7 @@ export async function GET(
 ) {
   try {
     const { postId } = await params;
-    const userId = getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequest(request);
 
     const comments = await prisma.comment.findMany({
       where: { postId },

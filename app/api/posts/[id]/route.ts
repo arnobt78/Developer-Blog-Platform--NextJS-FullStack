@@ -11,7 +11,7 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const userId = getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequest(request);
 
     const post = await prisma.post.findUnique({
       where: { id },

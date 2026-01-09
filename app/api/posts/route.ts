@@ -6,7 +6,7 @@ import { handleFileUpload } from "@/lib/upload";
 // GET all posts
 export async function GET(request: NextRequest) {
   try {
-    const userId = getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequest(request);
 
     const posts = await prisma.post.findMany({
       include: {

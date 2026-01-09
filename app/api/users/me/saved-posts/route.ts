@@ -8,7 +8,7 @@ import { prisma } from "@/lib/prisma";
  */
 export async function GET(request: NextRequest) {
   try {
-    const userId = getUserIdFromRequest(request);
+    const userId = await getUserIdFromRequest(request);
 
     // If user is not authenticated, return empty array instead of error
     // This allows the UI to work even when user is not logged in

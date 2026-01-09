@@ -26,7 +26,25 @@ export function verifyToken(token: string): JWTPayload {
   }
 }
 
-export function getUserIdFromRequest(request: NextRequest): string | null {
+/**
+ * Get user ID from NextAuth session or legacy JWT token
+ * Supports both authentication methods for backward compatibility
+ */
+export async function getUserIdFromRequest(
+  request: NextRequest
+): Promise<string | null> {
+  // First, try to get session from NextAuth (cookies)
+  try {
+    const session = await auth();
+    if (session?.user?.id) {
+      return session.user.id;
+    }
+  } catch (error) {
+    // If NextAuth fails, try legacy JWT token
+    console.log("NextAuth session not found, trying legacy token");
+  }
+
+  // Fallback: Check for legacy JWT token in Authorization header
   const authHeader = request.headers.get("authorization");
   if (!authHeader) return null;
 
@@ -42,7 +60,7 @@ export function getUserIdFromRequest(request: NextRequest): string | null {
 }
 
 export async function requireAuth(request: NextRequest): Promise<string> {
-  const userId = getUserIdFromRequest(request);
+  const userId = await getUserIdFromRequest(request);
   if (!userId) {
     throw new Error("Unauthorized");
   }

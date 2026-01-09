@@ -3,37 +3,23 @@ import { Post, Comment, Notification } from "@/types";
 
 /**
  * Create axios instance for API calls
- * 
+ *
  * In Next.js, we use relative URLs since API routes are in the same app
  * This works in both development and production without hardcoding URLs
- * 
+ *
  * For client-side requests, we use relative paths which automatically
  * resolve to the current domain (localhost in dev, vercel.app in production)
  */
 export const api = axios.create({
   baseURL: "/api", // Relative URL - works in dev and production
-  withCredentials: true,
+  withCredentials: true, // Important: This sends NextAuth session cookies
   headers: {
     "Content-Type": "application/json",
     Accept: "application/json",
   },
 });
 
-// Add request interceptor to add auth token
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("token");
-    if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
-
-// Add response interceptor for debugging
+// Add response interceptor for error handling
 api.interceptors.response.use(
   (response) => response,
   (error) => {
