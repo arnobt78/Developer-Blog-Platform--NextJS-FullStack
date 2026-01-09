@@ -16,8 +16,6 @@ import type { Notification } from "@/types";
  */
 export function useNotifications() {
   // Get token outside queryFn to use in enabled option and query key
-  const token =
-    typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
   return useQuery({
     queryKey: ["notifications", token], // Include token to refetch on auth change
@@ -58,20 +56,12 @@ export function useMarkNotificationRead() {
 
   return useMutation({
     mutationFn: async (notificationId: string) => {
-      // Get token from localStorage for authentication
-      const token =
-        typeof window !== "undefined" ? localStorage.getItem("token") : null;
-      if (!token) {
-        throw new Error("Not authenticated");
-      }
-
+      // NextAuth cookies are sent automatically
       const response = await fetch(
         `/api/notifications/${notificationId}/mark-read`,
         {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          method: "PATCH",
+          credentials: "include",
         }
       );
       if (!response.ok) throw new Error("Failed to mark notification as read");
@@ -79,8 +69,6 @@ export function useMarkNotificationRead() {
     },
     onMutate: async (notificationId) => {
       // Get token for cache key
-      const token =
-        typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
       // Cancel outgoing refetches
       await queryClient.cancelQueries({ queryKey: ["notifications", token] });
@@ -130,18 +118,10 @@ export function useMarkAllNotificationsRead() {
 
   return useMutation({
     mutationFn: async () => {
-      // Get token from localStorage for authentication
-      const token =
-        typeof window !== "undefined" ? localStorage.getItem("token") : null;
-      if (!token) {
-        throw new Error("Not authenticated");
-      }
-
+      // NextAuth cookies are sent automatically
       const response = await fetch("/api/notifications/mark-all-read", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        method: "PATCH",
+        credentials: "include",
       });
       if (!response.ok) throw new Error("Failed to mark all as read");
       return response.json();
@@ -173,18 +153,10 @@ export function useDeleteNotification() {
 
   return useMutation({
     mutationFn: async (notificationId: string) => {
-      // Get token from localStorage for authentication
-      const token =
-        typeof window !== "undefined" ? localStorage.getItem("token") : null;
-      if (!token) {
-        throw new Error("Not authenticated");
-      }
-
+      // NextAuth cookies are sent automatically
       const response = await fetch(`/api/notifications/${notificationId}`, {
         method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        credentials: "include",
       });
       if (!response.ok) throw new Error("Failed to delete notification");
       return response.json();
@@ -216,18 +188,10 @@ export function useClearAllNotifications() {
 
   return useMutation({
     mutationFn: async () => {
-      // Get token from localStorage for authentication
-      const token =
-        typeof window !== "undefined" ? localStorage.getItem("token") : null;
-      if (!token) {
-        throw new Error("Not authenticated");
-      }
-
+      // NextAuth cookies are sent automatically
       const response = await fetch("/api/notifications", {
         method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        credentials: "include",
       });
       if (!response.ok) throw new Error("Failed to clear notifications");
       return response.json();

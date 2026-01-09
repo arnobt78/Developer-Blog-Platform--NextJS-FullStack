@@ -46,13 +46,16 @@ export async function requireAuth(): Promise<string> {
     "[AUTH DEBUG] requireAuth - session:",
     JSON.stringify(session, null, 2)
   );
-  
+
   if (!session?.user?.id) {
     console.log("[AUTH DEBUG] ❌ requireAuth failed - no user ID");
     throw new Error("Unauthorized");
   }
-  
-  console.log("[AUTH DEBUG] ✅ requireAuth success - user ID:", session.user.id);
+
+  console.log(
+    "[AUTH DEBUG] ✅ requireAuth success - user ID:",
+    session.user.id
+  );
   return session.user.id;
 }
 

@@ -36,8 +36,6 @@ export function useAuth() {
     queryKey: ["auth"], // Single cache key for auth state
     queryFn: async () => {
       // Check for token in localStorage (only available in browser)
-      const token =
-        typeof window !== "undefined" ? localStorage.getItem("token") : null;
       if (!token) {
         // No token = not authenticated
         return { valid: false, user: null };
@@ -65,8 +63,6 @@ export function useUser(userId?: string) {
     queryFn: async () => {
       // Always use /api/auth/me for current user profile
       // This endpoint returns the full user object
-      const token =
-        typeof window !== "undefined" ? localStorage.getItem("token") : null;
       const response = await fetch("/api/auth/me", {
         method: "GET",
         headers: token
@@ -255,8 +251,6 @@ export function useUpdateProfile() {
   return useMutation({
     mutationFn: async (formData: FormData) => {
       // Get token from localStorage for authentication
-      const token =
-        typeof window !== "undefined" ? localStorage.getItem("token") : null;
       if (!token) {
         throw new Error("Not authenticated");
       }

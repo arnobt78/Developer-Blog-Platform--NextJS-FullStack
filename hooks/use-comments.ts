@@ -15,22 +15,12 @@ import type { Comment } from "@/types";
  */
 export function useComments(postId: string) {
   return useQuery({
-    queryKey: [
-      "comments",
-      postId,
-      typeof window !== "undefined" ? localStorage.getItem("token") : null,
-    ], // Include token to refetch on auth change
+    queryKey: ["comments", postId],
     queryFn: async () => {
-      // Get token from localStorage for authentication
-      const token =
-        typeof window !== "undefined" ? localStorage.getItem("token") : null;
-
-      const headers: HeadersInit = {};
-      if (token) {
-        headers.Authorization = `Bearer ${token}`;
-      }
-
+      // NextAuth cookies are sent automatically
       const response = await fetch(`/api/comments/post/${postId}`, {
+        credentials: "include",
+      });
         headers,
       });
       if (!response.ok) throw new Error("Failed to fetch comments");
@@ -55,13 +45,7 @@ export function useCreateComment() {
       imageUrl?: string;
       fileId?: string;
     }) => {
-      // Get token from localStorage for authentication
-      const token =
-        typeof window !== "undefined" ? localStorage.getItem("token") : null;
-      if (!token) {
-        throw new Error("Not authenticated");
-      }
-
+      // NextAuth cookies are sent automatically
       // Create FormData for file upload support
       const formData = new FormData();
       formData.append("content", data.content);
@@ -71,9 +55,7 @@ export function useCreateComment() {
 
       const response = await fetch(`/api/comments/post/${data.postId}`, {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        credentials: "include",
         body: formData,
       });
       if (!response.ok) {
@@ -85,8 +67,6 @@ export function useCreateComment() {
       return response.json();
     },
     onSettled: (data, error, variables) => {
-      const token =
-        typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
       // Update cache immediately with new comment if successful
       if (data) {
@@ -97,31 +77,29 @@ export function useCreateComment() {
         ]);
         if (comments) {
           queryClient.setQueryData<Comment[]>(
-            ["comments", variables.postId, token],
+            ["comments", variables.postId],
             [...comments, data]
           );
         }
       }
     },
     onSuccess: (data, variables) => {
-      const token =
-        typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
       // Cache already updated in onSettled, now invalidate for background refetch
       queryClient.invalidateQueries({
-        queryKey: ["comments", variables.postId, token],
+        queryKey: ["comments", variables.postId],
         refetchType: "none",
       });
       queryClient.invalidateQueries({
-        queryKey: ["post", variables.postId, token],
+        queryKey: ["post", variables.postId],
         refetchType: "none",
       });
       // Background refetch (non-blocking)
       queryClient.refetchQueries({
-        queryKey: ["comments", variables.postId, token],
+        queryKey: ["comments", variables.postId],
       });
       queryClient.refetchQueries({
-        queryKey: ["post", variables.postId, token],
+        queryKey: ["post", variables.postId],
       });
       toast({
         title: "Success",
@@ -155,19 +133,13 @@ export function useUpdateComment() {
       content: string;
       postId: string;
     }) => {
-      // Get token from localStorage for authentication
-      const token =
-        typeof window !== "undefined" ? localStorage.getItem("token") : null;
-      if (!token) {
-        throw new Error("Not authenticated");
-      }
-
+      // NextAuth cookies are sent automatically
       const response = await fetch(`/api/comments/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
+        credentials: "include",
         body: JSON.stringify({ content }),
       });
       if (!response.ok) {
@@ -181,8 +153,6 @@ export function useUpdateComment() {
     onSettled: (data, error, variables) => {
       // Update cache immediately with updated comment if successful
       if (data) {
-        const token =
-          typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
         const comments = queryClient.getQueryData<Comment[]>([
           "comments",
@@ -191,7 +161,7 @@ export function useUpdateComment() {
         ]);
         if (comments) {
           queryClient.setQueryData<Comment[]>(
-            ["comments", variables.postId, token],
+            ["comments", variables.postId],
             comments.map((comment) =>
               comment.id === variables.id ? data : comment
             )
@@ -200,17 +170,15 @@ export function useUpdateComment() {
       }
     },
     onSuccess: (data, variables) => {
-      const token =
-        typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
       // Invalidate for background refetch
       queryClient.invalidateQueries({
-        queryKey: ["comments", variables.postId, token],
+        queryKey: ["comments", variables.postId],
         refetchType: "none",
       });
       // Background refetch (non-blocking)
       queryClient.refetchQueries({
-        queryKey: ["comments", variables.postId, token],
+        queryKey: ["comments", variables.postId],
       });
       toast({
         title: "Success",
@@ -243,8 +211,6 @@ export function useDeleteComment() {
       postId: string;
     }) => {
       // Get token from localStorage for authentication
-      const token =
-        typeof window !== "undefined" ? localStorage.getItem("token") : null;
       if (!token) {
         throw new Error("Not authenticated");
       }
@@ -265,12 +231,10 @@ export function useDeleteComment() {
       return { success: true };
     },
     onMutate: async ({ id, postId }) => {
-      const token =
-        typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
       // Cancel outgoing refetches to prevent race conditions
       await queryClient.cancelQueries({
-        queryKey: ["comments", postId, token],
+        queryKey: ["comments", postId],
       });
 
       // Snapshot previous value for rollback
@@ -283,12 +247,12 @@ export function useDeleteComment() {
       // Optimistically remove comment from cache
       if (previousComments) {
         queryClient.setQueryData<Comment[]>(
-          ["comments", postId, token],
+          ["comments", postId],
           previousComments.filter((comment) => comment.id !== id)
         );
       }
 
-      return { previousComments, token };
+      return { previousComments };
     },
     onError: (error, variables, context) => {
       // Rollback on error
@@ -348,8 +312,6 @@ export function useLikeComment() {
       postId: string;
     }) => {
       // Get token from localStorage for authentication
-      const token =
-        typeof window !== "undefined" ? localStorage.getItem("token") : null;
       if (!token) {
         throw new Error("Not authenticated");
       }
@@ -364,12 +326,10 @@ export function useLikeComment() {
       return response.json();
     },
     onMutate: async ({ commentId, postId }) => {
-      const token =
-        typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
       // Cancel outgoing refetches to prevent race conditions
       await queryClient.cancelQueries({
-        queryKey: ["comments", postId, token],
+        queryKey: ["comments", postId],
       });
 
       // Snapshot previous value for rollback on error
@@ -393,12 +353,12 @@ export function useLikeComment() {
             : comment
         );
         queryClient.setQueryData<Comment[]>(
-          ["comments", postId, token],
+          ["comments", postId],
           updatedComments
         );
       }
 
-      return { previousComments, token };
+      return { previousComments };
     },
     onSuccess: (data, variables, context) => {
       // Update cache with authoritative server response
@@ -448,8 +408,6 @@ export function useHelpfulComment() {
       postId: string;
     }) => {
       // Get token from localStorage for authentication
-      const token =
-        typeof window !== "undefined" ? localStorage.getItem("token") : null;
       if (!token) {
         throw new Error("Not authenticated");
       }
@@ -464,12 +422,10 @@ export function useHelpfulComment() {
       return response.json();
     },
     onMutate: async ({ commentId, postId }) => {
-      const token =
-        typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
       // Cancel outgoing refetches to prevent race conditions
       await queryClient.cancelQueries({
-        queryKey: ["comments", postId, token],
+        queryKey: ["comments", postId],
       });
 
       // Snapshot previous value for rollback on error
@@ -493,12 +449,12 @@ export function useHelpfulComment() {
             : comment
         );
         queryClient.setQueryData<Comment[]>(
-          ["comments", postId, token],
+          ["comments", postId],
           updatedComments
         );
       }
 
-      return { previousComments, token };
+      return { previousComments };
     },
     onSuccess: (data, variables, context) => {
       // Update cache with authoritative server response
