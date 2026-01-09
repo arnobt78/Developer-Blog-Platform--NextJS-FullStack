@@ -26,6 +26,7 @@ import { ConfirmDialog } from "@/components/ConfirmDialog";
 interface CommentSectionProps {
   postId: string;
   parentId?: string;
+  onShowLoginPrompt?: () => void;
 }
 
 /**
@@ -46,6 +47,7 @@ interface CommentSectionProps {
 const CommentSection: React.FC<CommentSectionProps> = ({
   postId,
   parentId, // If provided, shows only replies to this comment
+  onShowLoginPrompt, // Callback to show login prompt dialog
 }) => {
   // Form state for new comment
   const [newComment, setNewComment] = useState(""); // Comment text
@@ -201,7 +203,10 @@ const CommentSection: React.FC<CommentSectionProps> = ({
    * Toggle comment like with optimistic update
    */
   const handleLikeComment = async (commentId: string) => {
-    if (!isLoggedIn) return;
+    if (!isLoggedIn) {
+      onShowLoginPrompt?.();
+      return;
+    }
     likeCommentMutation.mutate({ commentId, postId });
   };
 
@@ -209,7 +214,10 @@ const CommentSection: React.FC<CommentSectionProps> = ({
    * Toggle comment helpful status with optimistic update
    */
   const handleHelpfulComment = async (commentId: string) => {
-    if (!isLoggedIn) return;
+    if (!isLoggedIn) {
+      onShowLoginPrompt?.();
+      return;
+    }
     helpfulCommentMutation.mutate({ commentId, postId });
   };
 
@@ -235,7 +243,10 @@ const CommentSection: React.FC<CommentSectionProps> = ({
         setTimeout(() => setShowShareModal(null), 2000);
       }
     } catch (error) {
-      console.error("Error sharing comment:", error);
+      // Ignore AbortError (user cancelled share)
+      if (error instanceof Error && error.name !== "AbortError") {
+        console.error("Error sharing comment:", error);
+      }
     }
   };
 
@@ -262,7 +273,13 @@ const CommentSection: React.FC<CommentSectionProps> = ({
             onDelete={() => handleDeleteComment(comment.id)}
             onLike={() => handleLikeComment(comment.id)}
             onHelpful={() => handleHelpfulComment(comment.id)}
-            onReply={() => setReplyTo(comment.id)}
+            onReply={() => {
+              if (!isLoggedIn) {
+                onShowLoginPrompt?.();
+                return;
+              }
+              setReplyTo(comment.id);
+            }}
             onShare={() => handleShare(comment.id)}
             showShareModal={showShareModal === comment.id}
             isEditing={editingComment === comment.id}
@@ -293,7 +310,11 @@ const CommentSection: React.FC<CommentSectionProps> = ({
           >
             {/* Nested comments - recursive rendering */}
             <div className="ml-8 mt-4">
-              <CommentSection postId={postId} parentId={comment.id} />
+              <CommentSection
+                postId={postId}
+                parentId={comment.id}
+                onShowLoginPrompt={onShowLoginPrompt}
+              />
             </div>
           </CommentItem>
         ))}

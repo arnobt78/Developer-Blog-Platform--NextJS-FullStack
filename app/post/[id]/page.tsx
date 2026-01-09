@@ -58,7 +58,8 @@ export default function PostDetails() {
   const saved = savedPosts.some((p) => p.id === id);
 
   // Handle Like
-  const handleLike = () => {
+  const handleLike = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
     if (!isLoggedIn) {
       setShowLoginPrompt(true);
       return;
@@ -68,7 +69,8 @@ export default function PostDetails() {
   };
 
   // Handle Helpful
-  const handleHelpful = () => {
+  const handleHelpful = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
     if (!isLoggedIn) {
       setShowLoginPrompt(true);
       return;
@@ -292,7 +294,10 @@ export default function PostDetails() {
 
           {/* Comments Section */}
           <div className="mt-6">
-            <CommentSection postId={post.id} />
+            <CommentSection
+              postId={post.id}
+              onShowLoginPrompt={() => setShowLoginPrompt(true)}
+            />
           </div>
         </div>
       </div>

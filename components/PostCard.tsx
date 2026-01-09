@@ -383,7 +383,10 @@ const PostCard: React.FC<PostCardProps> = ({
         {/* Comments Section */}
         {showComments && (
           <div className="mt-4">
-            <CommentSection postId={id} />
+            <CommentSection
+              postId={id}
+              onShowLoginPrompt={() => setShowLoginPrompt(true)}
+            />
           </div>
         )}
       </div>
