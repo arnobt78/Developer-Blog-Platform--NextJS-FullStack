@@ -17,7 +17,7 @@ import type { User } from "@/types";
  */
 export function useAuth() {
   const { data: session, status } = useSession();
-  
+
   return {
     data: {
       valid: status === "authenticated",
@@ -56,7 +56,8 @@ export function useUser(userId?: string) {
  * 2. Server validates and returns token + user data
  * Note: Login is now handled by NextAuth signIn() in the login page
  * No need for useLogin hook anymore
- */xport function useRegister() {
+ */
+export function useRegister() {
   const queryClient = useQueryClient();
   const router = useRouter();
 
