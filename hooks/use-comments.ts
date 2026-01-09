@@ -65,13 +65,11 @@ export function useCreateComment() {
       return response.json();
     },
     onSettled: (data, error, variables) => {
-
       // Update cache immediately with new comment if successful
       if (data) {
         const comments = queryClient.getQueryData<Comment[]>([
           "comments",
           variables.postId,
-          token,
         ]);
         if (comments) {
           queryClient.setQueryData<Comment[]>(
@@ -82,7 +80,6 @@ export function useCreateComment() {
       }
     },
     onSuccess: (data, variables) => {
-
       // Cache already updated in onSettled, now invalidate for background refetch
       queryClient.invalidateQueries({
         queryKey: ["comments", variables.postId],
@@ -151,11 +148,9 @@ export function useUpdateComment() {
     onSettled: (data, error, variables) => {
       // Update cache immediately with updated comment if successful
       if (data) {
-
         const comments = queryClient.getQueryData<Comment[]>([
           "comments",
           variables.postId,
-          token,
         ]);
         if (comments) {
           queryClient.setQueryData<Comment[]>(
@@ -168,7 +163,6 @@ export function useUpdateComment() {
       }
     },
     onSuccess: (data, variables) => {
-
       // Invalidate for background refetch
       queryClient.invalidateQueries({
         queryKey: ["comments", variables.postId],
@@ -208,15 +202,10 @@ export function useDeleteComment() {
       id: string;
       postId: string;
     }) => {
-      if (!token) {
-        throw new Error("Not authenticated");
-      }
-
+      // NextAuth cookies are sent automatically
       const response = await fetch(`/api/comments/${id}`, {
         method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        credentials: "include",
       });
       if (!response.ok) {
         const error = await response.json();
@@ -228,7 +217,6 @@ export function useDeleteComment() {
       return { success: true };
     },
     onMutate: async ({ id, postId }) => {
-
       // Cancel outgoing refetches to prevent race conditions
       await queryClient.cancelQueries({
         queryKey: ["comments", postId],
@@ -238,7 +226,6 @@ export function useDeleteComment() {
       const previousComments = queryClient.getQueryData<Comment[]>([
         "comments",
         postId,
-        token,
       ]);
 
       // Optimistically remove comment from cache
@@ -255,7 +242,7 @@ export function useDeleteComment() {
       // Rollback on error
       if (context?.previousComments) {
         queryClient.setQueryData(
-          ["comments", variables.postId, context.token],
+          ["comments", variables.postId],
           context.previousComments
         );
       }
@@ -265,23 +252,23 @@ export function useDeleteComment() {
         variant: "destructive",
       });
     },
-    onSuccess: (data, variables, context) => {
+    onSuccess: (data, variables) => {
       // Cache already updated optimistically in onMutate
       // Now invalidate for background refetch to ensure consistency
       queryClient.invalidateQueries({
-        queryKey: ["comments", variables.postId, context?.token],
+        queryKey: ["comments", variables.postId],
         refetchType: "none",
       });
       queryClient.invalidateQueries({
-        queryKey: ["post", variables.postId, context?.token],
+        queryKey: ["post", variables.postId],
         refetchType: "none",
       });
       // Background refetch (non-blocking)
       queryClient.refetchQueries({
-        queryKey: ["comments", variables.postId, context?.token],
+        queryKey: ["comments", variables.postId],
       });
       queryClient.refetchQueries({
-        queryKey: ["post", variables.postId, context?.token],
+        queryKey: ["post", variables.postId],
       });
       toast({
         title: "Success",
@@ -308,21 +295,15 @@ export function useLikeComment() {
       commentId: string;
       postId: string;
     }) => {
-      if (!token) {
-        throw new Error("Not authenticated");
-      }
-
+      // NextAuth cookies are sent automatically
       const response = await fetch(`/api/comments/${commentId}/like`, {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        credentials: "include",
       });
       if (!response.ok) throw new Error("Failed to like comment");
       return response.json();
     },
     onMutate: async ({ commentId, postId }) => {
-
       // Cancel outgoing refetches to prevent race conditions
       await queryClient.cancelQueries({
         queryKey: ["comments", postId],
@@ -332,7 +313,6 @@ export function useLikeComment() {
       const previousComments = queryClient.getQueryData<Comment[]>([
         "comments",
         postId,
-        token,
       ]);
 
       // Optimistically update - toggle liked state and adjust count
@@ -356,12 +336,12 @@ export function useLikeComment() {
 
       return { previousComments };
     },
-    onSuccess: (data, variables, context) => {
+    onSuccess: (data, variables) => {
       // Update cache with authoritative server response
       // This prevents flicker by not triggering a refetch
       const { liked, likeCount } = data;
       queryClient.setQueryData<Comment[]>(
-        ["comments", variables.postId, context?.token],
+        ["comments", variables.postId],
         (old) =>
           old?.map((comment) =>
             comment.id === variables.commentId
@@ -374,7 +354,7 @@ export function useLikeComment() {
       // Rollback to previous state on error
       if (context?.previousComments) {
         queryClient.setQueryData(
-          ["comments", variables.postId, context.token],
+          ["comments", variables.postId],
           context.previousComments
         );
       }
@@ -403,21 +383,15 @@ export function useHelpfulComment() {
       commentId: string;
       postId: string;
     }) => {
-      if (!token) {
-        throw new Error("Not authenticated");
-      }
-
+      // NextAuth cookies are sent automatically
       const response = await fetch(`/api/comments/${commentId}/helpful`, {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        credentials: "include",
       });
       if (!response.ok) throw new Error("Failed to mark comment as helpful");
       return response.json();
     },
     onMutate: async ({ commentId, postId }) => {
-
       // Cancel outgoing refetches to prevent race conditions
       await queryClient.cancelQueries({
         queryKey: ["comments", postId],
@@ -427,7 +401,6 @@ export function useHelpfulComment() {
       const previousComments = queryClient.getQueryData<Comment[]>([
         "comments",
         postId,
-        token,
       ]);
 
       // Optimistically update - toggle helpful state and adjust count
@@ -451,12 +424,12 @@ export function useHelpfulComment() {
 
       return { previousComments };
     },
-    onSuccess: (data, variables, context) => {
+    onSuccess: (data, variables) => {
       // Update cache with authoritative server response
       // This prevents flicker by not triggering a refetch
       const { helpful, helpfulCount } = data;
       queryClient.setQueryData<Comment[]>(
-        ["comments", variables.postId, context?.token],
+        ["comments", variables.postId],
         (old) =>
           old?.map((comment) =>
             comment.id === variables.commentId
@@ -469,7 +442,7 @@ export function useHelpfulComment() {
       // Rollback to previous state on error
       if (context?.previousComments) {
         queryClient.setQueryData(
-          ["comments", variables.postId, context.token],
+          ["comments", variables.postId],
           context.previousComments
         );
       }

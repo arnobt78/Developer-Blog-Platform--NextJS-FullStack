@@ -5,7 +5,7 @@
 
 "use client";
 
-import { useSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { toast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
@@ -43,19 +43,14 @@ export function useUser(userId?: string) {
       const data = await response.json();
       return data as User;
     },
-    enabled: !!userId || false,
+    enabled: !!userId,
     staleTime: 5 * 60 * 1000,
   });
 }
 
 /**
- * Login mutation
- *
- * Login Flow:
- * 1. Send credentials to server
- * 2. Server validates and returns token + user data
- * Note: Login is now handled by NextAuth signIn() in the login page
- * No need for useLogin hook anymore
+ * Register new user
+ * Note: Login is handled by NextAuth signIn() in the login page
  */
 export function useRegister() {
   const queryClient = useQueryClient();
@@ -98,7 +93,6 @@ export function useRegister() {
 export function useLogout() {
   const queryClient = useQueryClient();
   const router = useRouter();
-  const { signOut } = require("next-auth/react");
 
   return useMutation({
     mutationFn: async () => {

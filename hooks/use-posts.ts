@@ -37,17 +37,9 @@ export function usePosts(params?: {
   authorId?: string;
 }) {
   return useQuery({
-    queryKey: [
-      "posts",
-      params,
-    ], // Include token in key to refetch on auth change
+    queryKey: ["posts", params],
     queryFn: async () => {
-
-      const headers: HeadersInit = {};
-      if (token) {
-        headers.Authorization = `Bearer ${token}`;
-      }
-
+      // NextAuth cookies are sent automatically
       // Build query string from optional parameters
       const searchParams = new URLSearchParams();
       if (params?.tag) searchParams.set("tag", params.tag);
@@ -57,7 +49,7 @@ export function usePosts(params?: {
       const url = `/api/posts${
         searchParams.toString() ? `?${searchParams}` : ""
       }`;
-      const response = await fetch(url, { headers });
+      const response = await fetch(url, { credentials: "include" });
       if (!response.ok) throw new Error("Failed to fetch posts");
       return response.json() as Promise<Post[]>;
     },
@@ -71,18 +63,12 @@ export function usePosts(params?: {
  */
 export function usePost(id: string) {
   return useQuery({
-    queryKey: [
-      "post",
-      id,
-    ], // Include token to refetch on auth change
+    queryKey: ["post", id],
     queryFn: async () => {
-
-      const headers: HeadersInit = {};
-      if (token) {
-        headers.Authorization = `Bearer ${token}`;
-      }
-
-      const response = await fetch(`/api/posts/${id}`, { headers });
+      // NextAuth cookies are sent automatically
+      const response = await fetch(`/api/posts/${id}`, {
+        credentials: "include",
+      });
       if (!response.ok) throw new Error("Failed to fetch post");
       return response.json() as Promise<Post>;
     },
@@ -99,19 +85,12 @@ export function usePost(id: string) {
  *                        Set to false to skip fetching when user is not authenticated
  */
 export function useSavedPosts(options?: { enabled?: boolean }) {
-
   return useQuery({
     queryKey: ["saved-posts"],
     queryFn: async () => {
-      // If no token, return empty array (user not authenticated)
-      if (!token) {
-        return [];
-      }
-
+      // NextAuth cookies are sent automatically
       const response = await fetch("/api/users/me/saved-posts", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        credentials: "include",
       });
       if (!response.ok) {
         // Return empty array if not authenticated or error
@@ -164,11 +143,10 @@ export function useCreatePost() {
       if (data) {
         // Get token for cache key
         const _token =
-
-        // Update all posts queries with prefix matching
-        queryClient.setQueriesData<Post[]>({ queryKey: ["posts"] }, (old) =>
-          old ? [data, ...old] : [data]
-        );
+          // Update all posts queries with prefix matching
+          queryClient.setQueriesData<Post[]>({ queryKey: ["posts"] }, (old) =>
+            old ? [data, ...old] : [data]
+          );
       }
     },
     onSuccess: () => {
@@ -231,8 +209,6 @@ export function useUpdatePost() {
       return response.json();
     },
     onMutate: async ({ id }) => {
-      // Get token for cache keys
-
       // Cancel outgoing refetches to prevent race conditions
       await queryClient.cancelQueries({ queryKey: ["post", id] });
       await queryClient.cancelQueries({ queryKey: ["posts"] });
@@ -252,11 +228,8 @@ export function useUpdatePost() {
     },
     onError: (error, variables, context) => {
       // Rollback on error
-      if (context?.previousPost && context?.token) {
-        queryClient.setQueryData(
-          ["post", variables.id, context.token],
-          context.previousPost
-        );
+      if (context?.previousPost) {
+        queryClient.setQueryData(["post", variables.id], context.previousPost);
       }
       if (context?.previousPostsQueries) {
         context.previousPostsQueries.forEach(([key, data]) => {
@@ -273,8 +246,6 @@ export function useUpdatePost() {
       // onSettled runs after onSuccess/onError but before component re-renders
       // This ensures cache is fully updated before any navigation occurs
       if (data) {
-        // Get token for cache keys
-
         // Update cache immediately with server response to prevent flicker
         queryClient.setQueryData<Post>(["post", variables.id], data);
 
@@ -440,18 +411,13 @@ export function useLikePost() {
       return response.json();
     },
     onMutate: async (postId) => {
-
       // Cancel outgoing refetches to prevent race conditions
       await queryClient.cancelQueries({ queryKey: ["post", postId] });
       await queryClient.cancelQueries({ queryKey: ["posts"] });
       await queryClient.cancelQueries({ queryKey: ["saved-posts"] });
 
       // Snapshot the current values for potential rollback
-      const previousPost = queryClient.getQueryData<Post>([
-        "post",
-        postId,
-        token,
-      ]);
+      const previousPost = queryClient.getQueryData<Post>(["post", postId]);
       const previousPostsQueries = queryClient.getQueriesData<Post[]>({
         queryKey: ["posts"],
       });
@@ -504,16 +470,15 @@ export function useLikePost() {
         previousPost,
         previousPostsQueries,
         previousSavedPostsQueries,
-        token,
       };
     },
-    onSuccess: (data, postId, context) => {
+    onSuccess: (data, postId, _context) => {
       // Update cache with authoritative server response
       // This prevents flicker by not triggering a refetch
       const { liked, likes } = data;
 
       // Update single post cache
-      queryClient.setQueryData<Post>(["post", postId, context?.token], (old) =>
+      queryClient.setQueryData<Post>(["post", postId], (old) =>
         old ? { ...old, liked, likes } : old
       );
 
@@ -534,10 +499,7 @@ export function useLikePost() {
     onError: (err, postId, context) => {
       // If mutation fails, rollback to previous state
       if (context?.previousPost) {
-        queryClient.setQueryData(
-          ["post", postId, context.token],
-          context.previousPost
-        );
+        queryClient.setQueryData(["post", postId], context.previousPost);
       }
       // Rollback all posts queries
       if (context?.previousPostsQueries) {
@@ -578,18 +540,13 @@ export function useMarkHelpful() {
       return response.json();
     },
     onMutate: async (postId) => {
-
       // Cancel outgoing refetches to prevent race conditions
       await queryClient.cancelQueries({ queryKey: ["post", postId] });
       await queryClient.cancelQueries({ queryKey: ["posts"] });
       await queryClient.cancelQueries({ queryKey: ["saved-posts"] });
 
       // Snapshot the current values for potential rollback
-      const previousPost = queryClient.getQueryData<Post>([
-        "post",
-        postId,
-        token,
-      ]);
+      const previousPost = queryClient.getQueryData<Post>(["post", postId]);
       const previousPostsQueries = queryClient.getQueriesData<Post[]>({
         queryKey: ["posts"],
       });
@@ -642,16 +599,15 @@ export function useMarkHelpful() {
         previousPost,
         previousPostsQueries,
         previousSavedPostsQueries,
-        token,
       };
     },
-    onSuccess: (data, postId, context) => {
+    onSuccess: (data, postId, _context) => {
       // Update cache with authoritative server response
       // This prevents flicker by not triggering a refetch
       const { helpful, helpfulCount } = data;
 
       // Update single post cache
-      queryClient.setQueryData<Post>(["post", postId, context?.token], (old) =>
+      queryClient.setQueryData<Post>(["post", postId], (old) =>
         old ? { ...old, helpful, helpfulCount } : old
       );
 
@@ -672,10 +628,7 @@ export function useMarkHelpful() {
     onError: (err, postId, context) => {
       // If mutation fails, rollback to previous state
       if (context?.previousPost) {
-        queryClient.setQueryData(
-          ["post", postId, context.token],
-          context.previousPost
-        );
+        queryClient.setQueryData(["post", postId], context.previousPost);
       }
       // Rollback all posts queries
       if (context?.previousPostsQueries) {
@@ -715,24 +668,18 @@ export function useSavePost() {
       return response.json();
     },
     onMutate: async (postId) => {
-
       // Cancel outgoing refetches to prevent race conditions
       await queryClient.cancelQueries({ queryKey: ["post", postId] });
       await queryClient.cancelQueries({ queryKey: ["posts"] });
       await queryClient.cancelQueries({ queryKey: ["saved-posts"] });
 
       // Snapshot the current values for potential rollback
-      const previousPost = queryClient.getQueryData<Post>([
-        "post",
-        postId,
-        token,
-      ]);
+      const previousPost = queryClient.getQueryData<Post>(["post", postId]);
       const previousPostsQueries = queryClient.getQueriesData<Post[]>({
         queryKey: ["posts"],
       });
       const previousSavedPosts = queryClient.getQueryData<Post[]>([
         "saved-posts",
-        token,
       ]);
 
       // Optimistically update single post cache - mark as saved
@@ -771,13 +718,12 @@ export function useSavePost() {
         previousPost,
         previousPostsQueries,
         previousSavedPosts,
-        token,
       };
     },
-    onSuccess: (data, postId, context) => {
+    onSuccess: (data, postId, _context) => {
       // Update with server response if available
-      if (data && context?.token) {
-        queryClient.setQueryData<Post>(["post", postId, context.token], (old) =>
+      if (data) {
+        queryClient.setQueryData<Post>(["post", postId], (old) =>
           old ? { ...old, saved: data.saved } : old
         );
 
@@ -808,22 +754,16 @@ export function useSavePost() {
     },
     onError: (error: Error, postId, context) => {
       // Rollback on error
-      if (context?.previousPost && context?.token) {
-        queryClient.setQueryData(
-          ["post", postId, context.token],
-          context.previousPost
-        );
+      if (context?.previousPost) {
+        queryClient.setQueryData(["post", postId], context.previousPost);
       }
       if (context?.previousPostsQueries) {
         context.previousPostsQueries.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data);
         });
       }
-      if (context?.previousSavedPosts && context?.token) {
-        queryClient.setQueryData(
-          ["saved-posts", context.token],
-          context.previousSavedPosts
-        );
+      if (context?.previousSavedPosts) {
+        queryClient.setQueryData(["saved-posts"], context.previousSavedPosts);
       }
 
       toast({
@@ -852,24 +792,18 @@ export function useUnsavePost() {
       return response.json();
     },
     onMutate: async (postId) => {
-
       // Cancel outgoing refetches to prevent race conditions
       await queryClient.cancelQueries({ queryKey: ["post", postId] });
       await queryClient.cancelQueries({ queryKey: ["posts"] });
       await queryClient.cancelQueries({ queryKey: ["saved-posts"] });
 
       // Snapshot the current values for potential rollback
-      const previousPost = queryClient.getQueryData<Post>([
-        "post",
-        postId,
-        token,
-      ]);
+      const previousPost = queryClient.getQueryData<Post>(["post", postId]);
       const previousPostsQueries = queryClient.getQueriesData<Post[]>({
         queryKey: ["posts"],
       });
       const previousSavedPosts = queryClient.getQueryData<Post[]>([
         "saved-posts",
-        token,
       ]);
 
       // Optimistically update single post cache - mark as unsaved
@@ -896,13 +830,12 @@ export function useUnsavePost() {
         previousPost,
         previousPostsQueries,
         previousSavedPosts,
-        token,
       };
     },
-    onSuccess: (data, postId, context) => {
+    onSuccess: (data, postId, _context) => {
       // Update with server response if available
-      if (data && context?.token) {
-        queryClient.setQueryData<Post>(["post", postId, context.token], (old) =>
+      if (data) {
+        queryClient.setQueryData<Post>(["post", postId], (old) =>
           old ? { ...old, saved: data.saved } : old
         );
 
@@ -933,22 +866,16 @@ export function useUnsavePost() {
     },
     onError: (error: Error, postId, context) => {
       // Rollback on error
-      if (context?.previousPost && context?.token) {
-        queryClient.setQueryData(
-          ["post", postId, context.token],
-          context.previousPost
-        );
+      if (context?.previousPost) {
+        queryClient.setQueryData(["post", postId], context.previousPost);
       }
       if (context?.previousPostsQueries) {
         context.previousPostsQueries.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data);
         });
       }
-      if (context?.previousSavedPosts && context?.token) {
-        queryClient.setQueryData(
-          ["saved-posts", context.token],
-          context.previousSavedPosts
-        );
+      if (context?.previousSavedPosts) {
+        queryClient.setQueryData(["saved-posts"], context.previousSavedPosts);
       }
 
       toast({

@@ -11,29 +11,19 @@ import type { Notification } from "@/types";
 
 /**
  * Fetch all notifications for current user
- * Requires authentication - sends JWT token in Authorization header
- * Only runs when token is available to prevent caching empty results
+ * Requires authentication - NextAuth cookies are sent automatically
  */
 export function useNotifications() {
-  // Get token outside queryFn to use in enabled option and query key
-
   return useQuery({
-    queryKey: ["notifications", token], // Include token to refetch on auth change
+    queryKey: ["notifications"],
     queryFn: async () => {
-      // Token is guaranteed to exist here due to enabled option
-      if (!token) {
-        return [];
-      }
-
+      // NextAuth cookies are sent automatically
       const response = await fetch("/api/notifications", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        credentials: "include",
       });
       if (!response.ok) throw new Error("Failed to fetch notifications");
       return response.json() as Promise<Notification[]>;
     },
-    enabled: !!token, // Only fetch when token exists - prevents caching empty array
     staleTime: 1 * 60 * 1000, // 1 minute
     refetchInterval: 2 * 60 * 1000, // Refetch every 2 minutes for real-time updates
   });
@@ -49,7 +39,7 @@ export function useUnreadCount() {
 
 /**
  * Mark notification as read
- * Requires authentication - sends JWT token in Authorization header
+ * Requires authentication - NextAuth cookies are sent automatically
  */
 export function useMarkNotificationRead() {
   const queryClient = useQueryClient();
@@ -68,21 +58,18 @@ export function useMarkNotificationRead() {
       return response.json();
     },
     onMutate: async (notificationId) => {
-      // Get token for cache key
-
       // Cancel outgoing refetches
-      await queryClient.cancelQueries({ queryKey: ["notifications", token] });
+      await queryClient.cancelQueries({ queryKey: ["notifications"] });
 
       // Snapshot previous value
       const previousNotifications = queryClient.getQueryData<Notification[]>([
         "notifications",
-        token,
       ]);
 
       // Optimistically update
       if (previousNotifications) {
         queryClient.setQueryData<Notification[]>(
-          ["notifications", token],
+          ["notifications"],
           (old) =>
             old?.map((notification) =>
               notification.id === notificationId
@@ -92,13 +79,13 @@ export function useMarkNotificationRead() {
         );
       }
 
-      return { previousNotifications, token };
+      return { previousNotifications };
     },
     onError: (err, notificationId, context) => {
       // Rollback on error
-      if (context?.previousNotifications && context?.token) {
+      if (context?.previousNotifications) {
         queryClient.setQueryData(
-          ["notifications", context.token],
+          ["notifications"],
           context.previousNotifications
         );
       }
@@ -111,7 +98,7 @@ export function useMarkNotificationRead() {
 
 /**
  * Mark all notifications as read
- * Requires authentication - sends JWT token in Authorization header
+ * Requires authentication - NextAuth cookies are sent automatically
  */
 export function useMarkAllNotificationsRead() {
   const queryClient = useQueryClient();
@@ -146,7 +133,7 @@ export function useMarkAllNotificationsRead() {
 
 /**
  * Delete a notification
- * Requires authentication - sends JWT token in Authorization header
+ * Requires authentication - NextAuth cookies are sent automatically
  */
 export function useDeleteNotification() {
   const queryClient = useQueryClient();
@@ -181,7 +168,7 @@ export function useDeleteNotification() {
 
 /**
  * Clear all notifications
- * Requires authentication - sends JWT token in Authorization header
+ * Requires authentication - NextAuth cookies are sent automatically
  */
 export function useClearAllNotifications() {
   const queryClient = useQueryClient();
