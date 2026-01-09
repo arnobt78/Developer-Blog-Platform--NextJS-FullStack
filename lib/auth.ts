@@ -36,16 +36,9 @@ export async function getUserIdFromRequest(
 ): Promise<string | null> {
   // First, try to get session from NextAuth using getToken
   try {
-    // Explicitly specify cookie name based on environment
-    const cookieName =
-      process.env.NODE_ENV === "production"
-        ? "__Secure-authjs.session-token"
-        : "authjs.session-token";
-
     const token = await getToken({
       req: request as any,
-      secret: process.env.NEXTAUTH_SECRET,
-      cookieName,
+      secret: process.env.AUTH_SECRET,
     });
 
     if (token?.id) {
@@ -58,13 +51,11 @@ export async function getUserIdFromRequest(
   // Fallback: Check for legacy JWT token in Authorization header
   const authHeader = request.headers.get("authorization");
   if (!authHeader) {
-    console.log("No auth header found");
     return null;
   }
 
   const jwtToken = authHeader.split(" ")[1];
   if (!jwtToken) {
-    console.log("No JWT token in auth header");
     return null;
   }
 
@@ -87,6 +78,7 @@ export async function requireAuth(request: NextRequest): Promise<string> {
 
 // NextAuth v5 configuration
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  trustHost: true, // Required for NextAuth v5 in development and production
   providers: [
     CredentialsProvider({
       name: "credentials",
@@ -126,25 +118,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       },
     }),
   ],
-  session: {
-    strategy: "jwt",
-  },
-  cookies: {
-    sessionToken: {
-      name:
-        process.env.NODE_ENV === "production"
-          ? "__Secure-authjs.session-token"
-          : "authjs.session-token",
-      options: {
-        httpOnly: true,
-        sameSite: "lax",
-        path: "/",
-        secure: process.env.NODE_ENV === "production",
-      },
-    },
-  },
   pages: {
     signIn: "/login",
+  },
+  session: {
+    strategy: "jwt",
   },
   callbacks: {
     async jwt({ token, user }) {
@@ -168,7 +146,4 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return session;
     },
   },
-  secret: process.env.NEXTAUTH_SECRET,
-  trustHost: true, // Required for Vercel production
-  debug: process.env.NODE_ENV === "development",
 });
