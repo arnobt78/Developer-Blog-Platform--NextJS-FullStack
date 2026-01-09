@@ -1,5 +1,6 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import { getToken } from "next-auth/jwt";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
@@ -33,26 +34,29 @@ export function verifyToken(token: string): JWTPayload {
 export async function getUserIdFromRequest(
   request: NextRequest
 ): Promise<string | null> {
-  // First, try to get session from NextAuth (cookies)
+  // First, try to get session from NextAuth using getToken
   try {
-    const session = await auth();
-    if (session?.user?.id) {
-      return session.user.id;
+    const token = await getToken({
+      req: request as any,
+      secret: process.env.NEXTAUTH_SECRET,
+    });
+
+    if (token?.id) {
+      return token.id as string;
     }
   } catch (error) {
-    // If NextAuth fails, try legacy JWT token
-    console.log("NextAuth session not found, trying legacy token");
+    console.log("NextAuth getToken error:", error);
   }
 
   // Fallback: Check for legacy JWT token in Authorization header
   const authHeader = request.headers.get("authorization");
   if (!authHeader) return null;
 
-  const token = authHeader.split(" ")[1];
-  if (!token) return null;
+  const jwtToken = authHeader.split(" ")[1];
+  if (!jwtToken) return null;
 
   try {
-    const decoded = verifyToken(token);
+    const decoded = verifyToken(jwtToken);
     return decoded.id;
   } catch {
     return null;
@@ -110,6 +114,20 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   ],
   session: {
     strategy: "jwt",
+  },
+  cookies: {
+    sessionToken: {
+      name:
+        process.env.NODE_ENV === "production"
+          ? "__Secure-authjs.session-token"
+          : "authjs.session-token",
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
+      },
+    },
   },
   pages: {
     signIn: "/login",
