@@ -23,7 +23,6 @@ import CommentInput from "./CommentInput";
 import CommentAvatar from "./CommentAvatar";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { useSession } from "next-auth/react";
-import { useSession } from "next-auth/react";
 
 interface CommentSectionProps {
   postId: string;
