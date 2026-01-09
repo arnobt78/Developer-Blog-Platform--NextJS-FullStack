@@ -210,7 +210,6 @@ export function useDeleteComment() {
       id: string;
       postId: string;
     }) => {
-      // Get token from localStorage for authentication
       if (!token) {
         throw new Error("Not authenticated");
       }
@@ -311,7 +310,6 @@ export function useLikeComment() {
       commentId: string;
       postId: string;
     }) => {
-      // Get token from localStorage for authentication
       if (!token) {
         throw new Error("Not authenticated");
       }
@@ -407,7 +405,6 @@ export function useHelpfulComment() {
       commentId: string;
       postId: string;
     }) => {
-      // Get token from localStorage for authentication
       if (!token) {
         throw new Error("Not authenticated");
       }

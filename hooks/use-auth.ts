@@ -1,57 +1,30 @@
 /**
- * Custom React Query hooks for authentication
+ * Custom React Query hooks for authentication with NextAuth v5
  * Provides caching and state management for user auth
  */
 
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useSession } from "next-auth/react";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { toast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import type { User } from "@/types";
 
-interface LoginCredentials {
-  email: string;
-  password: string;
-}
-
 /**
- * Check if user is authenticated
- * Reads token from localStorage and validates with server
- *
- * Authentication Flow:
- * 1. Check localStorage for token (client-side check)
- * 2. If token exists, validate with server
- * 3. Server returns user data if token is valid
- *
- * Why validate with server?
- * - Token might be expired
- * - User might be deleted/banned
- * - Token might be invalid/revoked
- *
- * retry: false - Don't retry auth failures (prevents infinite loops)
+ * Check if user is authenticated using NextAuth session
+ * This replaces the old localStorage token approach
  */
 export function useAuth() {
-  return useQuery({
-    queryKey: ["auth"], // Single cache key for auth state
-    queryFn: async () => {
-      // Check for token in localStorage (only available in browser)
-      if (!token) {
-        // No token = not authenticated
-        return { valid: false, user: null };
-      }
-      // Validate token with server
-      const response = await fetch("/api/auth/validate", {
-        headers: {
-          Authorization: `Bearer ${token}`, // Send token in Authorization header
-        },
-      });
-      if (!response.ok) return { valid: false, user: null };
-      return response.json() as Promise<{ valid: boolean; user: User | null }>;
+  const { data: session, status } = useSession();
+  
+  return {
+    data: {
+      valid: status === "authenticated",
+      user: session?.user || null,
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes - auth state doesn't change frequently
-    retry: false, // Don't retry auth failures - prevents infinite retry loops
-  });
+    isLoading: status === "loading",
+  };
 }
 
 /**
@@ -61,15 +34,10 @@ export function useUser(userId?: string) {
   return useQuery({
     queryKey: ["user", userId],
     queryFn: async () => {
-      // Always use /api/auth/me for current user profile
-      // This endpoint returns the full user object
+      // NextAuth cookies are sent automatically
       const response = await fetch("/api/auth/me", {
         method: "GET",
-        headers: token
-          ? {
-              Authorization: `Bearer ${token}`,
-            }
-          : {},
+        credentials: "include",
       });
       if (!response.ok) throw new Error("Failed to fetch user");
       const data = await response.json();
@@ -86,74 +54,9 @@ export function useUser(userId?: string) {
  * Login Flow:
  * 1. Send credentials to server
  * 2. Server validates and returns token + user data
- * 3. Store token in localStorage (persists across page refreshes)
- * 4. Invalidate auth query to trigger refetch with new token
- * 5. Redirect to posts page
- *
- * Why localStorage?
- * - Persists across browser sessions
- * - Available on all pages
- * - Simple to implement
- * - Note: Consider httpOnly cookies for better security in production
- */
-export function useLogin() {
-  const queryClient = useQueryClient();
-  const router = useRouter();
-
-  return useMutation({
-    mutationFn: async (credentials: LoginCredentials) => {
-      // Send login credentials to server
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(credentials),
-      });
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Login failed");
-      }
-      return response.json(); // Returns { token, user }
-    },
-    onSuccess: (data) => {
-      // Store authentication data in localStorage AND cookies
-      // Cookies allow server-side detection, localStorage for compatibility
-      if (typeof window !== "undefined" && data.token) {
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("isLoggedIn", "true");
-        // Set cookie for server-side access
-        document.cookie = `token=${data.token}; path=/; max-age=2592000; SameSite=Lax`;
-        document.cookie = `isLoggedIn=true; path=/; max-age=2592000; SameSite=Lax`;
-        if (data.user) {
-          // Store user data for quick access (avoid refetch on every page)
-          localStorage.setItem("user", JSON.stringify(data.user));
-        }
-      }
-      // Invalidate auth query - this will automatically trigger a refetch
-      // No need to call refetchQueries separately (that causes duplicate calls)
-      queryClient.invalidateQueries({ queryKey: ["auth"] });
-      toast({
-        title: "Success",
-        description: "Logged in successfully",
-        variant: "success",
-      });
-      // Redirect to posts page after successful login
-      router.push("/posts");
-    },
-    onError: (error: Error) => {
-      // Show error message to user
-      toast({
-        title: "Login Failed",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-}
-
-/**
- * Register mutation - supports FormData for avatar upload
- */
-export function useRegister() {
+ * Note: Login is now handled by NextAuth signIn() in the login page
+ * No need for useLogin hook anymore
+ */xport function useRegister() {
   const queryClient = useQueryClient();
   const router = useRouter();
 
@@ -189,31 +92,21 @@ export function useRegister() {
 }
 
 /**
- * Logout mutation
+ * Logout mutation using NextAuth signOut
  */
 export function useLogout() {
   const queryClient = useQueryClient();
   const router = useRouter();
+  const { signOut } = require("next-auth/react");
 
   return useMutation({
     mutationFn: async () => {
-      // Clear localStorage first (client-side logout)
-      if (typeof window !== "undefined") {
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-        localStorage.removeItem("isLoggedIn");
-        // Clear cookies
-        document.cookie = "token=; path=/; max-age=0";
-        document.cookie = "isLoggedIn=; path=/; max-age=0";
-      }
-      // Note: No server-side logout endpoint needed
-      // Token-based auth doesn't require server-side session cleanup
-      // Just clearing localStorage and cache is sufficient
+      // Use NextAuth signOut - clears session automatically
+      await signOut({ redirect: false });
       return { success: true };
     },
     onSuccess: () => {
       queryClient.clear(); // Clear all cached data
-      queryClient.invalidateQueries({ queryKey: ["auth"] });
       toast({
         title: "Success",
         description: "Logged out successfully",
@@ -222,16 +115,7 @@ export function useLogout() {
       router.push("/login");
     },
     onError: (error: Error) => {
-      // Still clear cache and redirect even on error
       queryClient.clear();
-      if (typeof window !== "undefined") {
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-        localStorage.removeItem("isLoggedIn");
-        // Clear cookies
-        document.cookie = "token=; path=/; max-age=0";
-        document.cookie = "isLoggedIn=; path=/; max-age=0";
-      }
       router.push("/login");
       toast({
         title: "Error",
@@ -250,16 +134,10 @@ export function useUpdateProfile() {
 
   return useMutation({
     mutationFn: async (formData: FormData) => {
-      // Get token from localStorage for authentication
-      if (!token) {
-        throw new Error("Not authenticated");
-      }
-
+      // NextAuth cookies are sent automatically
       const response = await fetch("/api/auth/me", {
         method: "PUT",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        credentials: "include",
         body: formData,
       });
       if (!response.ok) {
@@ -270,13 +148,8 @@ export function useUpdateProfile() {
       }
       return response.json();
     },
-    onSuccess: (data) => {
-      // Update localStorage with new user data (including updated avatar)
-      if (typeof window !== "undefined" && data) {
-        localStorage.setItem("user", JSON.stringify(data));
-      }
-      // Invalidate auth query - this will automatically trigger a refetch
-      // No need to call refetchQueries separately (that causes duplicate calls)
+    onSuccess: () => {
+      // Invalidate queries to refetch updated data
       queryClient.invalidateQueries({ queryKey: ["auth"] });
       queryClient.invalidateQueries({ queryKey: ["user"] });
       toast({

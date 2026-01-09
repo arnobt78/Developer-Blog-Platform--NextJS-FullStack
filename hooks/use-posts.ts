@@ -42,7 +42,6 @@ export function usePosts(params?: {
       params,
     ], // Include token in key to refetch on auth change
     queryFn: async () => {
-      // Get token from localStorage for authentication
 
       const headers: HeadersInit = {};
       if (token) {
@@ -77,7 +76,6 @@ export function usePost(id: string) {
       id,
     ], // Include token to refetch on auth change
     queryFn: async () => {
-      // Get token from localStorage for authentication
 
       const headers: HeadersInit = {};
       if (token) {
@@ -101,7 +99,6 @@ export function usePost(id: string) {
  *                        Set to false to skip fetching when user is not authenticated
  */
 export function useSavedPosts(options?: { enabled?: boolean }) {
-  // Get token from localStorage for authentication
 
   return useQuery({
     queryKey: ["saved-posts"],
