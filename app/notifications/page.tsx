@@ -37,6 +37,7 @@ const getNotificationMessage = (
   }
 };
 
+export default function Notifications() {
   const { data: notifications = [], isLoading } = useNotifications();
   const markAllRead = useMarkAllNotificationsRead();
   const { data: session, status } = useSession();
