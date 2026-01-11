@@ -331,7 +331,11 @@ const PostCard: React.FC<PostCardProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between">
           <PostHeader
-            author={author.id === user?.id ? user : author}
+            author={
+              author && author.id && user?.id && author.id === user.id
+                ? user
+                : author
+            }
             createdAt={createdAt}
           />
           {isLoggedIn && (
