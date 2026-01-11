@@ -90,11 +90,11 @@ export default function EditPost() {
 
     if (!id) return;
 
-    // Upload new image to ImageKit if selected
+    // Always upload new image if a new file is selected
     let uploadedImageUrl = imageUrl;
     let uploadedFileId = imageFileId;
 
-    if (screenshot && !imageUrl) {
+    if (screenshot) {
       const result = await uploadImage(screenshot, "posts");
       if (result) {
         uploadedImageUrl = result.url;

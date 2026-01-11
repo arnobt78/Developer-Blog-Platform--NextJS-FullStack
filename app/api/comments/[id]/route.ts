@@ -86,6 +86,10 @@ export async function DELETE(
       );
     }
 
+    // Delete all related likes and helpfuls first
+    await prisma.commentLike.deleteMany({ where: { commentId: id } });
+    await prisma.commentHelpful.deleteMany({ where: { commentId: id } });
+
     // Delete image from ImageKit if exists
     if (comment.fileId) {
       await deleteFromImageKit(comment.fileId);

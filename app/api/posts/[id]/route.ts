@@ -108,6 +108,11 @@ export async function PUT(
         await deleteFromImageKit(post.fileId);
       }
       updatedFileId = fileId;
+    } else if (!fileId && post.fileId) {
+      // Image removed by user: delete old image from ImageKit and clear fields
+      await deleteFromImageKit(post.fileId);
+      updatedImageUrl = null;
+      updatedFileId = null;
     }
 
     const tags = tagsStr ? JSON.parse(tagsStr) : [];
@@ -151,27 +156,42 @@ export async function DELETE(
 
     // Delete image from ImageKit if exists
     if (post.fileId) {
-      await deleteFromImageKit(post.fileId);
+      try {
+        await deleteFromImageKit(post.fileId);
+      } catch (error) {
+        // Ignore file not found errors
+      }
     }
 
-    // Delete all comment images from ImageKit before deleting comments
+    // Delete all comment images and related records before deleting comments
     const comments = await prisma.comment.findMany({
       where: { postId: id },
-      select: { fileId: true },
+      select: { id: true, fileId: true },
     });
 
     for (const comment of comments) {
+      // Delete likes/helpfuls for each comment
+      await prisma.commentLike.deleteMany({ where: { commentId: comment.id } });
+      await prisma.commentHelpful.deleteMany({
+        where: { commentId: comment.id },
+      });
+      // Delete image from ImageKit if exists
       if (comment.fileId) {
-        await deleteFromImageKit(comment.fileId);
+        try {
+          await deleteFromImageKit(comment.fileId);
+        } catch (error) {
+          // Ignore file not found errors
+        }
       }
     }
 
     // Delete all related records first
+    await prisma.notification.deleteMany({ where: { postId: id } });
+    await prisma.report.deleteMany({ where: { postId: id } });
     await prisma.savedPost.deleteMany({ where: { postId: id } });
     await prisma.postLike.deleteMany({ where: { postId: id } });
     await prisma.postHelpful.deleteMany({ where: { postId: id } });
     await prisma.comment.deleteMany({ where: { postId: id } });
-    await prisma.report.deleteMany({ where: { postId: id } });
 
     // Now delete the post
     await prisma.post.delete({ where: { id } });

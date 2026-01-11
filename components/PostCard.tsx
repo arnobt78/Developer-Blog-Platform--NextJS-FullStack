@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Post } from "@/types";
+import { useComments } from "@/hooks/use-comments";
 
 import CommentSection from "./CommentSection";
 import { useRouter } from "next/navigation";
@@ -74,6 +75,9 @@ const PostCard: React.FC<PostCardProps> = ({
     onClick,
     codeSnippet: _codeSnippet,
   } = post;
+
+  // Get latest comments from React Query
+  const { data: latestComments = [] } = useComments(id);
 
   // Local UI state (not synced with server)
   const [showComments, setShowComments] = useState(false); // Toggle comments visibility
@@ -350,7 +354,7 @@ const PostCard: React.FC<PostCardProps> = ({
         <PostStats
           likeCount={likeCount}
           helpfulCount={helpfulCountState}
-          commentCount={comments.length}
+          commentCount={latestComments.length}
           liked={liked}
           helpful={helpful}
         />
@@ -361,7 +365,7 @@ const PostCard: React.FC<PostCardProps> = ({
           helpful={helpful}
           likeCount={likeCount}
           helpfulCount={helpfulCountState}
-          commentCount={comments.length}
+          commentCount={latestComments.length}
           onLike={handleLike}
           onHelpful={handleHelpful}
           onComment={(e) => {
