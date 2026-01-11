@@ -3,6 +3,7 @@ import bcrypt from "bcrypt";
 import { getUserIdFromRequest, requireAuth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { handleFileUpload } from "@/lib/upload";
+import { deleteFromImageKit } from "@/lib/imagekit";
 
 /**
  * Get current user profile
@@ -54,18 +55,25 @@ export async function PUT(request: NextRequest) {
     const password = formData.get("password") as string | null;
     const avatarFile = formData.get("avatar") as File | null;
 
+    // Fetch current user to get old avatar fileId
+    const currentUser = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { avatarUrl: true, fileId: true },
+    });
+
     const updateData: {
       name?: string;
       email?: string;
       country?: string;
       password?: string;
       avatarUrl?: string;
+      fileId?: string;
     } = {};
-    if (name) updateData.name = name;
-    if (email) updateData.email = email;
-    if (country) updateData.country = country;
+    if (typeof name === "string") updateData.name = name;
+    if (typeof email === "string") updateData.email = email;
+    if (typeof country === "string") updateData.country = country;
 
-    if (password) {
+    if (typeof password === "string" && password.length > 0) {
       const hashedPassword = await bcrypt.hash(password, 10);
       updateData.password = hashedPassword;
     }
@@ -73,18 +81,19 @@ export async function PUT(request: NextRequest) {
     // Upload avatar to ImageKit if provided
     if (avatarFile) {
       try {
-        // Pass File directly to handleFileUpload (fixes request body consumption issue)
         const uploaded = await handleFileUpload(avatarFile, "avatars");
         if (uploaded) {
           updateData.avatarUrl = uploaded.url;
+          updateData.fileId = uploaded.fileId;
+          if (currentUser?.fileId && currentUser.fileId !== uploaded.fileId) {
+            await deleteFromImageKit(currentUser.fileId);
+          }
           console.log("Avatar uploaded successfully:", uploaded.url);
         } else {
           console.warn("Avatar upload returned null - file might be invalid");
         }
       } catch (uploadError) {
         console.error("Avatar upload error:", uploadError);
-        // Don't fail the entire update if avatar upload fails
-        // Just log the error and continue with other updates
       }
     }
 
@@ -110,14 +119,24 @@ export async function PUT(request: NextRequest) {
     const user = await prisma.user.update({
       where: { id: userId },
       data: updateData,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        country: true,
+        avatarUrl: true,
+        fileId: true,
+      },
     });
 
+    // Return all updated fields for UI/session
     return NextResponse.json({
       id: user.id,
       name: user.name,
       email: user.email,
       country: user.country,
       avatarUrl: user.avatarUrl,
+      fileId: user.fileId,
     });
   } catch (error) {
     console.error("Profile update error:", error);

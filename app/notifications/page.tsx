@@ -1,6 +1,8 @@
 "use client";
 
 import React from "react";
+import { useSession } from "next-auth/react";
+import { useUser } from "@/hooks/use-auth";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   useNotifications,
@@ -35,9 +37,10 @@ const getNotificationMessage = (
   }
 };
 
-export default function Notifications() {
   const { data: notifications = [], isLoading } = useNotifications();
   const markAllRead = useMarkAllNotificationsRead();
+  const { data: session, status } = useSession();
+  const { data: currentUser } = useUser(session?.user?.id);
 
   // Mark all as read on mount - only once, and only if there are unread notifications
   React.useEffect(() => {

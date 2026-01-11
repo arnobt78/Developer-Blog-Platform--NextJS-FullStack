@@ -24,6 +24,7 @@ import {
   useDeletePost,
 } from "@/hooks/use-posts";
 import { useSession } from "next-auth/react";
+import { useUser } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { InputDialog } from "@/components/InputDialog";
@@ -44,6 +45,8 @@ export default function PostDetails() {
   const { data: session, status } = useSession();
   const isAuthenticated = !!session?.user;
   const isLoadingAuth = status === "loading";
+  // Always fetch current user with useUser for latest info
+  const { data: currentUser } = useUser(session?.user?.id);
   // Only fetch saved posts if user is authenticated (optimization)
   const { data: savedPosts = [] } = useSavedPosts({
     enabled: isAuthenticated,
@@ -54,8 +57,8 @@ export default function PostDetails() {
   const unsavePost = useUnsavePost();
   const deletePost = useDeletePost();
 
-  const currentUser = session?.user || null;
-  const isLoggedIn = !!currentUser && !isLoadingAuth;
+  const user = currentUser || session?.user || null;
+  const isLoggedIn = !!user && !isLoadingAuth;
   const saved = savedPosts.some((p) => p.id === id);
 
   // Handle Like
@@ -242,9 +245,7 @@ export default function PostDetails() {
             <PostHeader author={post.author} createdAt={post.createdAt} />
             {isLoggedIn && (
               <PostDropdownMenu
-                isAuthor={
-                  !!(currentUser && post && currentUser.id === post.author.id)
-                }
+                isAuthor={!!(user && post && user.id === post.author.id)}
                 saved={saved}
                 reported={reported}
                 onSave={handleSave}

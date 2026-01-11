@@ -1,49 +1,48 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
 import Image from "next/image";
-import { useUpdateProfile } from "@/hooks/use-auth";
+import { useUpdateProfile, useUser } from "@/hooks/use-auth";
 
 /**
  * Edit Profile Page - Update user profile
  * Uses React Query for data fetching and mutations with cache invalidation
  */
-export default function EditProfile() {
-  const router = useRouter();
-  const { data: session, status } = useSession();
-  const updateProfile = useUpdateProfile();
 
+interface EditProfileProps {
+  user?: {
+    id: string;
+    email: string;
+    name: string;
+    avatarUrl?: string;
+    country?: string;
+  } | null;
+}
+
+export default function EditProfile({ user: ssrUser }: EditProfileProps) {
+  const router = useRouter();
+  const updateProfile = useUpdateProfile();
+  // Always use client-fetched user for latest info, fallback to SSR user for initial render
+  const { data: clientUser } = useUser(ssrUser?.id);
+  const user = clientUser || ssrUser || null;
+  // DEBUG: Log what user prop is received and what is used
+  console.log("[EditProfile] ssrUser prop:", JSON.stringify(ssrUser));
+  console.log("[EditProfile] clientUser:", JSON.stringify(clientUser));
+  console.log("[EditProfile] user used for render:", JSON.stringify(user));
   const [form, setForm] = useState({
-    name: "",
-    email: "",
-    country: "",
+    name: user?.name || "",
+    email: user?.email || "",
+    country: user?.country || "",
     password: "",
   });
   const [avatar, setAvatar] = useState<File | null>(null);
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-
-  // Redirect if not logged in
-  useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/login?callbackUrl=/edit-profile");
-    }
-  }, [status, router]);
-
-  // Pre-fill form when user data loads
-  useEffect(() => {
-    if (session?.user) {
-      setForm({
-        name: session.user.name || "",
-        email: session.user.email || "",
-        country: session.user.country || "",
-        password: "",
-      });
-      setAvatarUrl(session.user.avatarUrl || null);
-    }
-  }, [session]);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(
+    user?.avatarUrl || null
+  );
+  // Only return null after all hooks
+  if (!user) return null; // or a loading skeleton
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -76,7 +75,7 @@ export default function EditProfile() {
     });
   };
 
-  if (status === "loading") {
+  if (updateProfile.isPending) {
     return (
       <div className="space-y-4 max-w-9xl mx-auto m-36">
         <Skeleton className="h-32 w-32 rounded-full mx-auto" />

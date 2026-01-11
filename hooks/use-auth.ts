@@ -126,10 +126,10 @@ export function useLogout() {
  */
 export function useUpdateProfile() {
   const queryClient = useQueryClient();
+  const router = useRouter();
 
   return useMutation({
     mutationFn: async (formData: FormData) => {
-      // NextAuth cookies are sent automatically
       const response = await fetch("/api/auth/me", {
         method: "PUT",
         credentials: "include",
@@ -143,15 +143,18 @@ export function useUpdateProfile() {
       }
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: async (_data, _variables) => {
       // Invalidate queries to refetch updated data
       queryClient.invalidateQueries({ queryKey: ["auth"] });
       queryClient.invalidateQueries({ queryKey: ["user"] });
+      // Show success toast
       toast({
-        title: "Success",
-        description: "Profile updated successfully",
+        title: "Profile Updated!",
+        description: "Your profile was updated successfully.",
         variant: "success",
       });
+      // Soft SSR refresh to update UI everywhere
+      router.refresh();
     },
     onError: (error: Error) => {
       toast({

@@ -9,7 +9,7 @@ import { NextRequest } from "next/server";
  * This is the ONLY authentication method - no more legacy JWT
  */
 export async function getUserIdFromRequest(
-  request?: NextRequest
+  _request?: NextRequest
 ): Promise<string | null> {
   // Get session from NextAuth directly (like feedback-widget)
   try {

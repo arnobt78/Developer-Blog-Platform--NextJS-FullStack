@@ -65,11 +65,13 @@ const CommentItem: React.FC<CommentItemProps> = ({
 }) => (
   <li className="bg-white rounded-lg shadow p-4">
     <div className="flex gap-3">
-      <CommentAvatar author={comment.author} />
+      <CommentAvatar
+        author={comment.author.id === user?.id ? user : comment.author}
+      />
       <div className="flex-1">
         <div className="flex items-start justify-between">
           <CommentHeader
-            author={comment.author}
+            author={comment.author.id === user?.id ? user : comment.author}
             createdAt={comment.createdAt}
           />
           {user && comment.author.id === user.id && (

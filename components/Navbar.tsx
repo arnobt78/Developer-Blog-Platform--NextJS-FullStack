@@ -6,11 +6,12 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import { useUser } from "@/hooks/use-auth";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter, usePathname } from "next/navigation";
-import { FiSearch, FiMenu, FiX } from "react-icons/fi";
-import { useSession, signOut } from "next-auth/react";
+import { FiSearch, FiX } from "react-icons/fi";
+import { signOut } from "next-auth/react";
 import { useUnreadCount } from "@/hooks/use-notifications";
 import {
   DropdownMenu,
@@ -21,7 +22,17 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 
-const Navbar: React.FC = () => {
+interface NavbarProps {
+  user?: {
+    id: string;
+    email: string;
+    name: string;
+    avatarUrl?: string;
+    country?: string;
+  } | null;
+}
+
+const Navbar: React.FC<NavbarProps> = ({ user: ssrUser }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
@@ -30,13 +41,16 @@ const Navbar: React.FC = () => {
   const [search, setSearch] = useState("");
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  // Use NextAuth session - server-rendered, no flash!
-  const { data: session } = useSession();
-  const user = session?.user;
+  // Always use client-fetched user for latest info, fallback to SSR user for initial render
+  const { data: clientUser, isLoading: isUserLoading } = useUser(ssrUser?.id);
+  const user = clientUser || ssrUser || null;
+  // DEBUG: Log what user prop is received and what is used
+  console.log("[Navbar] ssrUser prop:", JSON.stringify(ssrUser));
+  console.log("[Navbar] clientUser:", JSON.stringify(clientUser));
+  console.log("[Navbar] user used for render:", JSON.stringify(user));
   const unreadCount = useUnreadCount();
 
   const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL;
-  const isAdmin = user && user.email === adminEmail;
 
   const handleLogout = async () => {
     await signOut({ redirect: true, callbackUrl: "/login" });
@@ -62,6 +76,7 @@ const Navbar: React.FC = () => {
     }
   };
 
+  // Always render the Navbar, even if user is not present
   return (
     <>
       <nav
@@ -119,7 +134,7 @@ const Navbar: React.FC = () => {
             </form>
           </div>
 
-          {/* Navigation Links */}
+          {/* Desktop Nav Links and Avatar */}
           <div
             className="hidden md:flex items-center justify-center gap-8"
             suppressHydrationWarning
@@ -157,26 +172,29 @@ const Navbar: React.FC = () => {
                 </Link>
               </>
             )}
+            {/* Avatar/Profile Circle: Use only SSR user for all info */}
             {user && (
               <DropdownMenu modal={false}>
                 <DropdownMenuTrigger asChild>
                   <button className="flex items-center focus:outline-none ml-4 hover:opacity-80 transition-opacity">
                     <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-blue-400 bg-gray-200">
-                      <Image
-                        src={
-                          // Priority: Use uploaded image if available, otherwise use avatar fallback
-                          // Check for both null/undefined and empty string
-                          user?.avatarUrl && user.avatarUrl.trim() !== ""
-                            ? user.avatarUrl
-                            : `https://robohash.org/${
-                                user?.name || "user"
-                              }.png?size=80x80`
-                        }
-                        alt="avatar"
-                        fill
-                        sizes="40px"
-                        className="w-full h-full object-cover"
-                      />
+                      {isUserLoading ? (
+                        <div className="animate-pulse w-full h-full bg-gray-300" />
+                      ) : (
+                        <Image
+                          src={
+                            user?.avatarUrl && user.avatarUrl.trim() !== ""
+                              ? user.avatarUrl
+                              : `https://robohash.org/${
+                                  user?.name || "user"
+                                }.png?size=80x80`
+                          }
+                          alt="avatar"
+                          fill
+                          sizes="40px"
+                          className="w-full h-full object-cover"
+                        />
+                      )}
                     </div>
                   </button>
                 </DropdownMenuTrigger>
@@ -221,7 +239,7 @@ const Navbar: React.FC = () => {
                       Saved Posts
                     </Link>
                   </DropdownMenuItem>
-                  {isAdmin && (
+                  {user.email === adminEmail && (
                     <>
                       <DropdownMenuSeparator className="bg-gray-300" />
                       <DropdownMenuItem asChild>
@@ -255,16 +273,6 @@ const Navbar: React.FC = () => {
                 </DropdownMenuContent>
               </DropdownMenu>
             )}
-          </div>
-
-          {/* Burger Menu for Small Screens */}
-          <div className="flex items-center justify-end md:hidden">
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="text-gray-700 hover:text-blue-500 focus:outline-none hover:scale-105 transition-transform duration-300"
-            >
-              {isMenuOpen ? <FiX size={24} /> : <FiMenu size={24} />}
-            </button>
           </div>
         </div>
       </nav>
@@ -337,6 +345,7 @@ const Navbar: React.FC = () => {
                 </Link>
               </>
             )}
+            {/* Avatar/Profile Circle: Use only SSR user for all info in mobile menu */}
             {user && (
               <div className="flex flex-col items-center space-y-2 mt-4">
                 <Link
@@ -363,7 +372,7 @@ const Navbar: React.FC = () => {
                 >
                   Saved Posts
                 </Link>
-                {isAdmin && (
+                {user.email === adminEmail && (
                   <Link
                     href="/admin/reports"
                     prefetch={false}

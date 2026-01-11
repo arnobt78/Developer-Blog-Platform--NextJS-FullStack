@@ -175,6 +175,12 @@ export default async function RootLayout({
 }) {
   // Get server-side session to prevent navbar flickering on hydration
   const session = await auth();
+  const user = session?.user || null;
+  // DEBUG: Log SSR session and user
+  // eslint-disable-next-line no-console
+  console.log("[SSR] layout.tsx session:", JSON.stringify(session));
+  // eslint-disable-next-line no-console
+  console.log("[SSR] layout.tsx user for Navbar:", JSON.stringify(user));
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -233,7 +239,7 @@ export default async function RootLayout({
       >
         <AuthProvider session={session}>
           <QueryProvider>
-            <Navbar />
+            <Navbar user={user} />
             <main className="flex-1">{children}</main>
             <Footer />
             <Toaster />

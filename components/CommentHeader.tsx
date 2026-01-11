@@ -4,7 +4,7 @@ import React from "react";
 import { Comment } from "@/types";
 
 interface CommentHeaderProps {
-  author: Comment["author"];
+  author: { name?: string };
   createdAt: Date | string;
 }
 

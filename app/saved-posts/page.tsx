@@ -3,6 +3,7 @@
 import React from "react";
 import { PostCardSkeleton } from "@/components/ui/skeleton";
 import { useSession } from "next-auth/react";
+import { useUser } from "@/hooks/use-auth";
 import PostCard from "@/components/PostCard";
 import { useSavedPosts, useSavePost } from "@/hooks/use-posts";
 
@@ -10,6 +11,8 @@ export default function SavedPosts() {
   const { data: session, status } = useSession();
   const isAuthenticated = !!session?.user;
   const isLoadingAuth = status === "loading";
+  // Always fetch current user with useUser for latest info
+  const { data: currentUser } = useUser(session?.user?.id);
 
   // Only fetch saved posts if user is authenticated
   const { data: posts = [], isLoading } = useSavedPosts({
@@ -42,6 +45,7 @@ export default function SavedPosts() {
               key={post.id}
               post={post}
               saved={true}
+              currentUser={currentUser || null}
               onUnsave={handleUnsave}
             />
           ))}

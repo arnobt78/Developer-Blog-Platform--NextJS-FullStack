@@ -25,6 +25,7 @@ import Sidebar from "@/components/Sidebar";
 import { useRouter, useSearchParams } from "next/navigation";
 import { usePosts, useSavedPosts } from "@/hooks/use-posts";
 import { useSession } from "next-auth/react";
+import { useUser } from "@/hooks/use-auth";
 import { Badge } from "@/components/ui/badge";
 
 /**
@@ -44,6 +45,8 @@ function PostsContent() {
   const { data: session, status } = useSession();
   const isLoadingAuth = status === "loading";
   const isAuthenticated = !!session?.user && !isLoadingAuth;
+  // Always fetch current user with useUser for latest info
+  const { data: currentUser } = useUser(session?.user?.id);
 
   /**
    * React Query hooks
@@ -235,6 +238,7 @@ function PostsContent() {
                     helpfulCount: post.helpfulCount || 0,
                   }}
                   saved={savedPostIds.includes(post.id)}
+                  currentUser={currentUser || null}
                   onUnsave={(_postId) => {
                     // React Query will handle cache update automatically
                   }}

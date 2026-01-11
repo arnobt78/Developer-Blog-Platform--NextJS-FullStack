@@ -23,6 +23,7 @@ import CommentInput from "./CommentInput";
 import CommentAvatar from "./CommentAvatar";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { useSession } from "next-auth/react";
+import { useUser } from "@/hooks/use-auth";
 
 interface CommentSectionProps {
   postId: string;
@@ -76,24 +77,23 @@ const CommentSection: React.FC<CommentSectionProps> = ({
   const helpfulCommentMutation = useHelpfulComment(); // Helpful/unhelpful comment (optimistic update)
   const { uploadImage, uploading: _uploading } = useImageUpload(); // Upload images
   const { data: session, status } = useSession(); // Get current user authentication state
-
-  /**
-   * Filter comments by parentId for nested structure
-   *
-   * If parentId is provided:
-   * - Show only comments that are replies to that parent
-   *
-   * If parentId is not provided:
-   * - Show only top-level comments (no parentId)
-   *
-   * This allows recursive nesting of comment threads
-   */
+  // Always fetch current user with useUser for latest info
+  const { data: currentUser } = useUser(session?.user?.id);
+  // Filter comments by parentId for nested structure
+  //
+  // If parentId is provided:
+  // - Show only comments that are replies to that parent
+  //
+  // If parentId is not provided:
+  // - Show only top-level comments (no parentId)
+  //
+  // This allows recursive nesting of comment threads
   const comments = allComments.filter((c: Comment) =>
     parentId ? c.parentId === parentId : !c.parentId
   );
 
   // Check if user is logged in via NextAuth session
-  const user = session?.user || null;
+  const user = currentUser || session?.user || null;
   const isLoadingAuth = status === "loading";
   const isLoggedIn = !!user && !isLoadingAuth;
 

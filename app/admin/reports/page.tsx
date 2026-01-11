@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
+import { useUser } from "@/hooks/use-auth";
 import { TableRowSkeleton } from "@/components/ui/skeleton";
 import { api } from "@/lib/api-client";
 import { Post, User } from "@/types";
@@ -17,6 +19,9 @@ interface Report {
 export default function AdminReports() {
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
+  const { data: session, status: _status } = useSession();
+  const { data } = useUser(session?.user?.id);
+  const _currentUser = data;
 
   useEffect(() => {
     const fetchReports = async () => {

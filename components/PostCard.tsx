@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Post } from "@/types";
+import { Post, User } from "@/types";
 import { useComments } from "@/hooks/use-comments";
 
 import CommentSection from "./CommentSection";
@@ -27,12 +27,14 @@ import { InputDialog } from "@/components/InputDialog";
 interface PostCardProps {
   post: Post & { onClick?: () => void };
   saved?: boolean;
+  currentUser?: User | null; // Accept currentUser from parent (useUser)
   onUnsave?: (postId: string) => void;
   onDelete?: (postId: string) => void;
   onLikeHelpfulUpdate?: (postId: string, data: Partial<Post>) => void;
 }
 
 /**
+  currentUser,
  * PostCard Component
  *
  * Displays a single post card with:
@@ -46,17 +48,19 @@ interface PostCardProps {
  *
  * React Query Integration:
  * - Uses mutation hooks for all actions (like, helpful, save, delete)
- * - Optimistic updates provide instant UI feedback
+    // comments = [], // Default to empty array if undefined
  * - Cache invalidation ensures data stays in sync
  * - No manual state management needed for server data
  */
 const PostCard: React.FC<PostCardProps> = ({
   post,
   saved: savedProp = false,
+  currentUser,
   onUnsave,
   onDelete,
   onLikeHelpfulUpdate,
 }) => {
+  const user = currentUser || null;
   const { toast } = useToast();
 
   // Destructure post data
@@ -68,7 +72,7 @@ const PostCard: React.FC<PostCardProps> = ({
     createdAt,
     likes: _likes, // Prefixed with _ to indicate unused (we use post.likes directly)
     helpfulCount: _helpfulCount, // Same as above
-    comments = [], // Default to empty array if undefined
+    // comments = [], // Default to empty array if undefined
     imageUrl,
     author,
     tags,
@@ -96,12 +100,11 @@ const PostCard: React.FC<PostCardProps> = ({
   const savePost = useSavePost(); // Save post mutation
   const unsavePost = useUnsavePost(); // Unsave post mutation
   const deletePost = useDeletePost(); // Delete post mutation
-  const { data: session, status } = useSession(); // Get current user authentication state
-
-  // Extract user data from auth query
-  const currentUser = session?.user || null;
+  const { status } = useSession(); // Still used for auth status
+  // Use currentUser prop if provided, else fallback to session.user
+  // (already assigned at the top)
   const isLoadingAuth = status === "loading";
-  const isLoggedIn = !!currentUser && !isLoadingAuth; // Boolean check for login status
+  const isLoggedIn = !!user && !isLoadingAuth; // Boolean check for login status
 
   // Use post data directly from props (React Query will handle updates)
   // These values come from the server and are kept in sync via React Query cache
@@ -327,10 +330,13 @@ const PostCard: React.FC<PostCardProps> = ({
       <div className="p-8">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <PostHeader author={author} createdAt={createdAt} />
+          <PostHeader
+            author={author.id === user?.id ? user : author}
+            createdAt={createdAt}
+          />
           {isLoggedIn && (
             <PostDropdownMenu
-              isAuthor={currentUser?.id === author?.id}
+              isAuthor={user?.id === author?.id}
               saved={saved}
               reported={reported}
               onSave={handleSave}

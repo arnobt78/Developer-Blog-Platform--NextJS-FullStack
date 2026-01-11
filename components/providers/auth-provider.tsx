@@ -15,5 +15,13 @@ interface AuthProviderProps {
  * The session from the server ensures correct UI state on initial render
  */
 export function AuthProvider({ children, session }: AuthProviderProps) {
-  return <SessionProvider session={session}>{children}</SessionProvider>;
+  return (
+    <SessionProvider
+      session={session}
+      refetchOnWindowFocus={true}
+      refetchInterval={0}
+    >
+      {children}
+    </SessionProvider>
+  );
 }

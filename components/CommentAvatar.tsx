@@ -5,7 +5,7 @@ import Image from "next/image";
 import { Comment } from "@/types";
 
 interface CommentAvatarProps {
-  author: Comment["author"];
+  author: { avatarUrl?: string; name?: string };
 }
 
 const CommentAvatar: React.FC<CommentAvatarProps> = ({ author }) => (

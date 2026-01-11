@@ -15,6 +15,7 @@ model User {
   password        String
   country         String?
   avatarUrl       String?
+  fileId          String?          // ImageKit fileId for avatar deletion
   resetToken      String?          // <-- Add this line for password reset
   resetTokenExpiry DateTime?       // <-- Add this line for expiry
   emailVerified   DateTime?        // NextAuth field
