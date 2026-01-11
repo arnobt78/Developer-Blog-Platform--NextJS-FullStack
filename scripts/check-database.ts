@@ -1,11 +1,11 @@
 /**
  * Database Inspection Script
- * 
+ *
  * This script checks the database to see:
  * - All users and their avatarUrl values
  * - Recent registrations
  * - User data structure
- * 
+ *
  * Usage:
  *   npx tsx scripts/check-database.ts
  *   or
@@ -20,90 +20,38 @@ async function checkDatabase() {
   try {
     console.log("🔍 Checking database...\n");
 
-    // Get all users
-    const users = await prisma.user.findMany({
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        avatarUrl: true,
-        country: true,
-      },
-      orderBy: {
-        name: "asc",
-      },
-    });
-
-    console.log(`📊 Total Users: ${users.length}\n`);
-
-    if (users.length === 0) {
-      console.log("❌ No users found in database.");
-      return;
+    // Helper to print table
+    async function printTable(name: string, rows: any[]) {
+      console.log(`\n=== ${name} (${rows.length}) ===`);
+      if (rows.length === 0) {
+        console.log("(empty)");
+        return;
+      }
+      rows.forEach((row, i) => {
+        console.log(`\n${i + 1}.`);
+        Object.entries(row).forEach(([k, v]) => {
+          console.log(`   ${k}: ${JSON.stringify(v)}`);
+        });
+      });
     }
 
-    // Display user information
-    console.log("👥 User Details:\n");
-    console.log("=".repeat(100));
-
-    users.forEach((user, index) => {
-      console.log(`\n${index + 1}. User: ${user.name || "N/A"}`);
-      console.log(`   Email: ${user.email || "N/A"}`);
-      console.log(`   ID: ${user.id}`);
-      console.log(`   Country: ${user.country || "N/A"}`);
-      console.log(`   Avatar URL: ${user.avatarUrl || "❌ NULL/EMPTY"}`);
-      
-      if (user.avatarUrl) {
-        console.log(`   ✅ Has uploaded image: ${user.avatarUrl}`);
-        // Check if it's an ImageKit URL
-        if (user.avatarUrl.includes("ik.imagekit.io")) {
-          console.log(`   📸 ImageKit URL detected`);
-        } else {
-          console.log(`   ⚠️  Not an ImageKit URL`);
-        }
-      } else {
-        console.log(`   🔄 Will use avatar fallback (robohash)`);
-      }
-      
-      console.log("-".repeat(100));
-    });
-
-    // Summary statistics
-    console.log("\n📈 Summary:\n");
-    const usersWithAvatar = users.filter((u) => u.avatarUrl && u.avatarUrl.trim() !== "").length;
-    const usersWithoutAvatar = users.length - usersWithAvatar;
-    
-    console.log(`   Total Users: ${users.length}`);
-    console.log(`   Users with uploaded image: ${usersWithAvatar}`);
-    console.log(`   Users without image (using fallback): ${usersWithoutAvatar}`);
-    
-    // Check recent registrations (last 5)
-    console.log("\n🆕 Recent Registrations (Last 5):\n");
-    const recentUsers = users.slice(0, 5);
-    recentUsers.forEach((user, index) => {
-      console.log(
-        `${index + 1}. ${user.name} (${user.email}) - Avatar: ${user.avatarUrl ? "✅ Yes" : "❌ No"}`
-      );
-    });
-
-    // Check for any issues
-    console.log("\n🔎 Potential Issues:\n");
-    const issues: string[] = [];
-    
-    users.forEach((user) => {
-      if (user.avatarUrl && !user.avatarUrl.includes("http")) {
-        issues.push(`User ${user.email} has invalid avatarUrl (not a URL): ${user.avatarUrl}`);
-      }
-      if (user.avatarUrl && user.avatarUrl.trim() === "") {
-        issues.push(`User ${user.email} has empty string avatarUrl`);
-      }
-    });
-
-    if (issues.length === 0) {
-      console.log("   ✅ No issues found!");
-    } else {
-      issues.forEach((issue) => console.log(`   ⚠️  ${issue}`));
-    }
-
+    // Print all tables
+    await printTable("User", await prisma.user.findMany());
+    await printTable("Post", await prisma.post.findMany());
+    await printTable("Comment", await prisma.comment.findMany());
+    await printTable("PostLike", await prisma.postLike.findMany());
+    await printTable("PostHelpful", await prisma.postHelpful.findMany());
+    await printTable("CommentLike", await prisma.commentLike.findMany());
+    await printTable("CommentHelpful", await prisma.commentHelpful.findMany());
+    await printTable("SavedPost", await prisma.savedPost.findMany());
+    await printTable("Report", await prisma.report.findMany());
+    await printTable("Notification", await prisma.notification.findMany());
+    await printTable("Account", await prisma.account.findMany());
+    await printTable("Session", await prisma.session.findMany());
+    await printTable(
+      "VerificationToken",
+      await prisma.verificationToken.findMany()
+    );
   } catch (error) {
     console.error("❌ Error checking database:", error);
     throw error;
@@ -122,4 +70,3 @@ checkDatabase()
     console.error("\n❌ Script failed:", error);
     process.exit(1);
   });
-

@@ -111,8 +111,8 @@ export async function PUT(
     } else if (!fileId && post.fileId) {
       // Image removed by user: delete old image from ImageKit and clear fields
       await deleteFromImageKit(post.fileId);
-      updatedImageUrl = null;
-      updatedFileId = null;
+      updatedImageUrl = "";
+      updatedFileId = "";
     }
 
     const tags = tagsStr ? JSON.parse(tagsStr) : [];
