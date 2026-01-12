@@ -260,8 +260,10 @@ const CommentSection: React.FC<CommentSectionProps> = ({
     );
   }
 
+  // Ensure that the CommentSection component re-renders when the cache updates
+  // Add a key prop to force re-rendering when the postId or parentId changes
   return (
-    <div className="space-y-4">
+    <div key={`${postId}-${parentId}`} className="space-y-4">
       <ul className="space-y-4">
         {comments.map((comment) => (
           <CommentItem

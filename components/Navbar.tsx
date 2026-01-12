@@ -21,6 +21,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface NavbarProps {
   user?: {
@@ -36,6 +37,7 @@ const Navbar: React.FC<NavbarProps> = ({ user: ssrUser }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
+  const queryClient = useQueryClient();
 
   // Search state
   const [search, setSearch] = useState("");
@@ -65,6 +67,14 @@ const Navbar: React.FC<NavbarProps> = ({ user: ssrUser }) => {
   useEffect(() => {
     setSearch("");
   }, [pathname]);
+
+  // Reintroduced real-time updates for notifications
+  useEffect(() => {
+    const interval = setInterval(() => {
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+    }, 60000); // Refetch every 60 seconds
+    return () => clearInterval(interval);
+  }, []);
 
   // Search submit handler
   const handleSearchSubmit = (e: React.FormEvent) => {

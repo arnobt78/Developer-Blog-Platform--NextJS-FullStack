@@ -10,6 +10,8 @@ import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { toast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import type { User } from "@/types";
+import { useEffect } from "react";
+import { useNotifications } from "@/hooks/use-notifications";
 
 /**
  * Check if user is authenticated using NextAuth session
@@ -17,6 +19,13 @@ import type { User } from "@/types";
  */
 export function useAuth() {
   const { data: session, status } = useSession();
+  const { refetch: refetchNotifications } = useNotifications();
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      refetchNotifications();
+    }
+  }, [status, refetchNotifications]);
 
   return {
     data: {

@@ -8,13 +8,14 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/hooks/use-toast";
 import type { Notification } from "@/types";
+import { useState } from "react";
 
 /**
  * Fetch all notifications for current user
  * Requires authentication - NextAuth cookies are sent automatically
  */
 export function useNotifications() {
-  return useQuery({
+  return useQuery<Notification[], Error>({
     queryKey: ["notifications"],
     queryFn: async () => {
       // NextAuth cookies are sent automatically
@@ -33,8 +34,8 @@ export function useNotifications() {
  * Get unread notification count
  */
 export function useUnreadCount() {
-  const { data: notifications } = useNotifications();
-  return notifications?.filter((n) => !n.isRead).length || 0;
+  const { data: notifications = [] } = useNotifications();
+  return notifications.filter((n: Notification) => !n.isRead).length || 0;
 }
 
 /**
@@ -68,29 +69,32 @@ export function useMarkNotificationRead() {
 
       // Optimistically update
       if (previousNotifications) {
-        queryClient.setQueryData<Notification[]>(
-          ["notifications"],
-          (old) =>
-            old?.map((notification) =>
-              notification.id === notificationId
-                ? { ...notification, isRead: true }
-                : notification
-            ) || []
+        const updatedNotifications = previousNotifications.map((notification) =>
+          notification.id === notificationId
+            ? { ...notification, isRead: true }
+            : notification
         );
+        queryClient.setQueryData(["notifications"], updatedNotifications);
       }
 
       return { previousNotifications };
     },
     onError: (err, notificationId, context) => {
-      // Rollback on error
+      // Rollback to previous state
       if (context?.previousNotifications) {
         queryClient.setQueryData(
           ["notifications"],
           context.previousNotifications
         );
       }
+      toast({
+        title: "Error",
+        description: err.message || "Failed to mark notification as read",
+        variant: "destructive",
+      });
     },
     onSettled: () => {
+      // Refetch notifications to ensure real-time updates
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
   });
@@ -102,12 +106,16 @@ export function useMarkNotificationRead() {
  */
 export function useMarkAllNotificationsRead() {
   const queryClient = useQueryClient();
+  const [markAllReadCalled, setMarkAllReadCalled] = useState(false);
 
   return useMutation({
     mutationFn: async () => {
+      if (markAllReadCalled) return; // Prevent multiple calls
+      setMarkAllReadCalled(true);
+
       // NextAuth cookies are sent automatically
       const response = await fetch("/api/notifications/mark-all-read", {
-        method: "PATCH",
+        method: "POST", // Updated from PATCH to POST
         credentials: "include",
       });
       if (!response.ok) throw new Error("Failed to mark all as read");
@@ -120,6 +128,7 @@ export function useMarkAllNotificationsRead() {
         description: "All notifications marked as read",
         variant: "success",
       });
+      setMarkAllReadCalled(false); // Reset flag after success
     },
     onError: (error: Error) => {
       toast({
@@ -127,6 +136,7 @@ export function useMarkAllNotificationsRead() {
         description: error.message,
         variant: "destructive",
       });
+      setMarkAllReadCalled(false); // Reset flag on error
     },
   });
 }

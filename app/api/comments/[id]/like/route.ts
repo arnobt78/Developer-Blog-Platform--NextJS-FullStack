@@ -49,7 +49,10 @@ export async function POST(
       });
     }
 
-    return NextResponse.json({ liked: !existing, likeCount });
+    return NextResponse.json({
+      liked: !existing,
+      likeCount,
+    });
   } catch (error) {
     console.error("Error toggling comment like:", error);
     return NextResponse.json(

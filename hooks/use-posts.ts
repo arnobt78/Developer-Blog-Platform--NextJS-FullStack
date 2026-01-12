@@ -15,32 +15,24 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/hooks/use-toast";
 import type { Post } from "@/types";
+import { useAuth } from "@/hooks/use-auth";
 
 /**
  * Fetch all posts with optional filters
  *
  * @param params - Optional filters: tag, search query, or authorId
  * @returns React Query hook with posts data, loading state, and error
- *
- * How it works:
- * 1. queryKey: ["posts", params] - Unique cache key based on filters
- *    - Different params = different cache entries
- *    - Same params = returns cached data instantly
- * 2. queryFn: Async function that fetches data from API
- * 3. staleTime: Data considered fresh for 5 minutes
- *    - During this time, no refetch occurs
- *    - After staleTime, data refetches in background
  */
 export function usePosts(params?: {
   tag?: string;
   search?: string;
   authorId?: string;
 }) {
+  const { data: auth } = useAuth();
+  const userId = auth?.user?.id || null;
   return useQuery({
-    queryKey: ["posts", params],
+    queryKey: ["posts", params, userId],
     queryFn: async () => {
-      // NextAuth cookies are sent automatically
-      // Build query string from optional parameters
       const searchParams = new URLSearchParams();
       if (params?.tag) searchParams.set("tag", params.tag);
       if (params?.search) searchParams.set("search", params.search);
@@ -53,7 +45,8 @@ export function usePosts(params?: {
       if (!response.ok) throw new Error("Failed to fetch posts");
       return response.json() as Promise<Post[]>;
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes - data stays fresh, no refetch needed
+    staleTime: 5 * 60 * 1000,
+    refetchInterval: 2 * 60 * 1000, // Refetch every 2 minutes for real-time updates
   });
 }
 
@@ -62,10 +55,11 @@ export function usePosts(params?: {
  * Includes Authorization header to get user-specific liked/helpful status
  */
 export function usePost(id: string) {
+  const { data: auth } = useAuth();
+  const userId = auth?.user?.id || null;
   return useQuery({
-    queryKey: ["post", id],
+    queryKey: ["post", id, userId],
     queryFn: async () => {
-      // NextAuth cookies are sent automatically
       const response = await fetch(`/api/posts/${id}`, {
         credentials: "include",
       });
@@ -82,18 +76,17 @@ export function usePost(id: string) {
  *
  * @param options - Optional query options
  * @param options.enabled - Whether to enable the query (default: true)
- *                        Set to false to skip fetching when user is not authenticated
  */
 export function useSavedPosts(options?: { enabled?: boolean }) {
+  const { data: auth } = useAuth();
+  const userId = auth?.user?.id || null;
   return useQuery({
-    queryKey: ["saved-posts"],
+    queryKey: ["saved-posts", userId],
     queryFn: async () => {
-      // NextAuth cookies are sent automatically
       const response = await fetch("/api/users/me/saved-posts", {
         credentials: "include",
       });
       if (!response.ok) {
-        // Return empty array if not authenticated or error
         if (response.status === 401 || response.status === 404) {
           return [];
         }
@@ -102,7 +95,7 @@ export function useSavedPosts(options?: { enabled?: boolean }) {
       return response.json() as Promise<Post[]>;
     },
     staleTime: 2 * 60 * 1000,
-    enabled: options?.enabled !== false, // Default to true, but can be disabled
+    enabled: options?.enabled !== false,
   });
 }
 
@@ -121,14 +114,12 @@ export function useSavedPosts(options?: { enabled?: boolean }) {
  */
 export function useCreatePost() {
   const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: async (formData: FormData) => {
-      // NextAuth cookies are sent automatically - no token needed!
       const response = await fetch("/api/posts", {
         method: "POST",
-        body: formData, // FormData includes text fields + file uploads
-        credentials: "include", // Ensure cookies are sent
+        body: formData,
+        credentials: "include",
       });
       if (!response.ok) {
         const error = await response.json();
@@ -138,39 +129,15 @@ export function useCreatePost() {
       }
       return response.json();
     },
-    onSettled: (data, _error) => {
-      // Add new post to cache immediately if successful
-      if (data) {
-        // Get token for cache key
-        const _token =
-          // Update all posts queries with prefix matching
-          queryClient.setQueriesData<Post[]>({ queryKey: ["posts"] }, (old) =>
-            old ? [data, ...old] : [data]
-          );
-      }
-    },
     onSuccess: () => {
-      // Cache already updated in onSettled
-      // Now invalidate for background refetch to ensure consistency
-      queryClient.invalidateQueries({
-        queryKey: ["posts"],
-        refetchType: "none",
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["saved-posts"],
-        refetchType: "none",
-      });
-      // Background refetch (non-blocking)
-      queryClient.refetchQueries({ queryKey: ["posts"] });
-      queryClient.refetchQueries({ queryKey: ["saved-posts"] });
+      queryClient.invalidateQueries({ queryKey: ["posts"] });
+      queryClient.invalidateQueries({ queryKey: ["saved-posts"] });
       toast({
-        title: "Success",
-        description: "Post created successfully",
+        title: "Post created!",
         variant: "success",
       });
     },
     onError: (error: Error) => {
-      // Show user-friendly error message
       toast({
         title: "Error",
         description: error.message,
@@ -185,7 +152,6 @@ export function useCreatePost() {
  */
 export function useUpdatePost() {
   const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: async ({
       id,
@@ -194,7 +160,6 @@ export function useUpdatePost() {
       id: string;
       formData: FormData;
     }) => {
-      // NextAuth cookies are sent automatically
       const response = await fetch(`/api/posts/${id}`, {
         method: "PUT",
         body: formData,
@@ -208,89 +173,19 @@ export function useUpdatePost() {
       }
       return response.json();
     },
-    onMutate: async ({ id }) => {
-      // Cancel outgoing refetches to prevent race conditions
-      await queryClient.cancelQueries({ queryKey: ["post", id] });
-      await queryClient.cancelQueries({ queryKey: ["posts"] });
-
-      // Snapshot previous values for rollback
-      const previousPost = queryClient.getQueryData<Post>(["post", id]);
-      const previousPostsQueries = queryClient.getQueriesData<Post[]>({
-        queryKey: ["posts"],
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["posts"] });
+      queryClient.invalidateQueries({ queryKey: ["saved-posts"] });
+      toast({
+        title: "Post updated!",
+        variant: "success",
       });
-
-      // Note: We can't read FormData here as it's already consumed
-      // The optimistic update will be minimal - we'll just mark it as updating
-      // The actual update will happen after server response via invalidateQueries
-      // This prevents flicker by keeping the old data visible until new data arrives
-
-      return { previousPost, previousPostsQueries };
     },
-    onError: (error, variables, context) => {
-      // Rollback on error
-      if (context?.previousPost) {
-        queryClient.setQueryData(["post", variables.id], context.previousPost);
-      }
-      if (context?.previousPostsQueries) {
-        context.previousPostsQueries.forEach(([key, data]) => {
-          queryClient.setQueryData(key, data);
-        });
-      }
+    onError: (error: Error) => {
       toast({
         title: "Error",
         description: error.message,
         variant: "destructive",
-      });
-    },
-    onSettled: (data, error, variables) => {
-      // onSettled runs after onSuccess/onError but before component re-renders
-      // This ensures cache is fully updated before any navigation occurs
-      if (data) {
-        // Update cache immediately with server response to prevent flicker
-        queryClient.setQueryData<Post>(["post", variables.id], data);
-
-        // Update all posts list caches with the new data using prefix matching
-        queryClient.setQueriesData<Post[]>({ queryKey: ["posts"] }, (old) =>
-          old
-            ? old.map((post) => (post.id === variables.id ? data : post))
-            : old
-        );
-
-        // Update saved posts cache if the post is in there
-        queryClient.setQueriesData<Post[]>(
-          { queryKey: ["saved-posts"] },
-          (old) =>
-            old
-              ? old.map((post) => (post.id === variables.id ? data : post))
-              : old
-        );
-      }
-    },
-    onSuccess: (data, variables) => {
-      // Cache is already updated in onSettled above
-      // Now just invalidate for background refetch
-      queryClient.invalidateQueries({
-        queryKey: ["posts"],
-        refetchType: "none",
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["post", variables.id],
-        refetchType: "none",
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["saved-posts"],
-        refetchType: "none",
-      });
-
-      // Trigger background refetch (non-blocking)
-      queryClient.refetchQueries({ queryKey: ["posts"] });
-      queryClient.refetchQueries({ queryKey: ["post", variables.id] });
-      queryClient.refetchQueries({ queryKey: ["saved-posts"] });
-
-      toast({
-        title: "Success",
-        description: "Post updated successfully",
-        variant: "success",
       });
     },
   });
@@ -369,14 +264,6 @@ export function useDeletePost() {
         queryKey: ["saved-posts"],
         refetchType: "none",
       });
-      // Background refetch (non-blocking)
-      queryClient.refetchQueries({ queryKey: ["posts"] });
-      queryClient.refetchQueries({ queryKey: ["saved-posts"] });
-      toast({
-        title: "Success",
-        description: "Post deleted successfully",
-        variant: "success",
-      });
     },
   });
 }
@@ -411,13 +298,16 @@ export function useLikePost() {
       return response.json();
     },
     onMutate: async (postId) => {
+      console.log("Toggling like for post:", postId);
+      const previousPost = queryClient.getQueryData<Post>(["post", postId]);
+      console.log("Previous post cache:", previousPost);
+
       // Cancel outgoing refetches to prevent race conditions
       await queryClient.cancelQueries({ queryKey: ["post", postId] });
       await queryClient.cancelQueries({ queryKey: ["posts"] });
       await queryClient.cancelQueries({ queryKey: ["saved-posts"] });
 
       // Snapshot the current values for potential rollback
-      const previousPost = queryClient.getQueryData<Post>(["post", postId]);
       const previousPostsQueries = queryClient.getQueriesData<Post[]>({
         queryKey: ["posts"],
       });
@@ -472,7 +362,9 @@ export function useLikePost() {
         previousSavedPostsQueries,
       };
     },
-    onSuccess: (data, postId, _context) => {
+    onSuccess: (data, postId) => {
+      console.log("Server response for like toggle:", data);
+
       // Update cache with authoritative server response
       // This prevents flicker by not triggering a refetch
       const { liked, likes } = data;
@@ -540,13 +432,16 @@ export function useMarkHelpful() {
       return response.json();
     },
     onMutate: async (postId) => {
+      console.log("Toggling helpful for post:", postId);
+      const previousPost = queryClient.getQueryData<Post>(["post", postId]);
+      console.log("Previous post cache:", previousPost);
+
       // Cancel outgoing refetches to prevent race conditions
       await queryClient.cancelQueries({ queryKey: ["post", postId] });
       await queryClient.cancelQueries({ queryKey: ["posts"] });
       await queryClient.cancelQueries({ queryKey: ["saved-posts"] });
 
       // Snapshot the current values for potential rollback
-      const previousPost = queryClient.getQueryData<Post>(["post", postId]);
       const previousPostsQueries = queryClient.getQueriesData<Post[]>({
         queryKey: ["posts"],
       });
@@ -601,7 +496,9 @@ export function useMarkHelpful() {
         previousSavedPostsQueries,
       };
     },
-    onSuccess: (data, postId, _context) => {
+    onSuccess: (data, postId) => {
+      console.log("Server response for helpful toggle:", data);
+
       // Update cache with authoritative server response
       // This prevents flicker by not triggering a refetch
       const { helpful, helpfulCount } = data;

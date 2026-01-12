@@ -44,14 +44,19 @@ export default function Notifications() {
   const { data: currentUser } = useUser(session?.user?.id);
 
   // Mark all as read on mount - only once, and only if there are unread notifications
+  const [markAllReadCalled, setMarkAllReadCalled] = React.useState(false);
+
+  // Remove toast logic from useEffect
   React.useEffect(() => {
-    // Check if there are any unread notifications before marking as read
-    const hasUnread = notifications.some((n) => !n.isRead);
-    if (hasUnread && !markAllRead.isPending) {
+    if (
+      notifications.length > 0 &&
+      !markAllRead.isPending &&
+      !markAllReadCalled
+    ) {
       markAllRead.mutate();
+      setMarkAllReadCalled(true);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Empty dependency array - only run once on mount
+  }, [notifications, markAllRead, markAllReadCalled]);
 
   return (
     <div className="max-w-9xl mx-auto mt-32 p-6 bg-white rounded shadow">

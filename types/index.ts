@@ -31,6 +31,7 @@ export interface Comment {
   helpful?: boolean;
   likeCount: number;
   helpfulCount: number;
+  replies?: Comment[]; // Added to support nested comments
 }
 
 export interface User {

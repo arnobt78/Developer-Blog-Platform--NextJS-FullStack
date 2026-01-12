@@ -44,7 +44,10 @@ export async function POST(
       });
     }
 
-    return NextResponse.json({ helpful: !existing, helpfulCount });
+    return NextResponse.json({
+      helpful: !existing,
+      helpfulCount,
+    });
   } catch (error) {
     console.error("Error toggling comment helpful:", error);
     return NextResponse.json(

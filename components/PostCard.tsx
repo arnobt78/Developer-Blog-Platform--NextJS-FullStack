@@ -64,21 +64,8 @@ const PostCard: React.FC<PostCardProps> = ({
   const { toast } = useToast();
 
   // Destructure post data
-  const {
-    id,
-    title,
-    description,
-    content: _content,
-    createdAt,
-    likes: _likes, // Prefixed with _ to indicate unused (we use post.likes directly)
-    helpfulCount: _helpfulCount, // Same as above
-    // comments = [], // Default to empty array if undefined
-    imageUrl,
-    author,
-    tags,
-    onClick,
-    codeSnippet: _codeSnippet,
-  } = post;
+  const { id, title, description, createdAt, imageUrl, author, tags, onClick } =
+    post;
 
   // Get latest comments from React Query
   const { data: latestComments = [] } = useComments(id);
