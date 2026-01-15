@@ -314,6 +314,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({
               setEditingComment(null);
               setEditText("");
             }}
+            isSaving={updateCommentMutation.isPending && editingComment === comment.id}
             isLoggedIn={isLoggedIn}
             replyTo={replyTo}
             newComment={newComment}
@@ -326,6 +327,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({
               setImagePreview(null);
               setUploadedImageUrl(undefined);
             }}
+            isReplying={createCommentMutation.isPending && replyTo === comment.id}
             imagePreview={imagePreview}
             onImageChange={handleImageChange}
             onRemoveImage={() => {
@@ -370,6 +372,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({
               }}
               uploading={uploading}
               uploadProgress={progress}
+              isSubmitting={createCommentMutation.isPending}
             />
           </div>
         </div>

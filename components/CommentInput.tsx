@@ -2,7 +2,7 @@
 
 import React from "react";
 import Image from "next/image";
-import { ImagePlus, X } from "lucide-react";
+import { ImagePlus, X, Loader2 } from "lucide-react";
 
 interface CommentInputProps {
   value: string;
@@ -16,6 +16,7 @@ interface CommentInputProps {
   submitLabel?: string;
   uploading?: boolean;
   uploadProgress?: number;
+  isSubmitting?: boolean;
 }
 
 const CommentInput: React.FC<CommentInputProps> = ({
@@ -30,6 +31,7 @@ const CommentInput: React.FC<CommentInputProps> = ({
   submitLabel = "Comment",
   uploading = false,
   uploadProgress = 0,
+  isSubmitting = false,
 }) => {
   // Show cancel button only when there's text in the input or an image preview
   const showCancel = value.trim().length > 0 || !!imagePreview;
@@ -97,9 +99,13 @@ const CommentInput: React.FC<CommentInputProps> = ({
         )}
         <button
           onClick={onSubmit}
-          className="px-4 py-1 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-colors"
+          disabled={isSubmitting}
+          className="px-4 py-1 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
         >
-          {submitLabel}
+          {isSubmitting && (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          )}
+          {isSubmitting ? "Commenting..." : submitLabel}
         </button>
       </div>
     </div>

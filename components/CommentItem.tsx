@@ -2,7 +2,7 @@
 
 import React from "react";
 import Image from "next/image";
-import { ThumbsUp, Heart, MessageCircle, Share2 } from "lucide-react";
+import { ThumbsUp, Heart, MessageCircle, Share2, Loader2 } from "lucide-react";
 import CommentAvatar from "./CommentAvatar";
 import CommentHeader from "./CommentHeader";
 import CommentDropdownMenu from "./CommentDropdownMenu";
@@ -34,6 +34,8 @@ interface CommentItemProps {
   imagePreview?: string | null;
   onImageChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onRemoveImage?: () => void;
+  isSaving?: boolean;
+  isReplying?: boolean;
   children?: React.ReactNode;
 }
 
@@ -61,6 +63,8 @@ const CommentItem: React.FC<CommentItemProps> = ({
   imagePreview: _imagePreview,
   onImageChange: _onImageChange,
   onRemoveImage: _onRemoveImage,
+  isSaving = false,
+  isReplying = false,
   children,
 }) => (
   <li className="bg-white rounded-lg shadow p-4">
@@ -125,13 +129,18 @@ const CommentItem: React.FC<CommentItemProps> = ({
               <div className="flex gap-2">
                 <button
                   onClick={onSaveEdit}
-                  className="px-3 py-1 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                  disabled={isSaving}
+                  className="px-3 py-1 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
-                  Save
+                  {isSaving && (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  )}
+                  {isSaving ? "Saving..." : "Save"}
                 </button>
                 <button
                   onClick={onCancelEdit}
-                  className="px-3 py-1 bg-gray-200 rounded-lg hover:bg-gray-300"
+                  disabled={isSaving}
+                  className="px-3 py-1 bg-gray-200 rounded-lg hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Cancel
                 </button>
@@ -202,9 +211,13 @@ const CommentItem: React.FC<CommentItemProps> = ({
                   )}
                   <button
                     onClick={onReplySubmit}
-                    className="px-4 py-1 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-colors"
+                    disabled={isReplying}
+                    className="px-4 py-1 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                   >
-                    Reply
+                    {isReplying && (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    )}
+                    {isReplying ? "Replying..." : "Reply"}
                   </button>
                 </div>
               </div>
