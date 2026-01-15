@@ -6,10 +6,27 @@ export async function POST(request: NextRequest) {
   try {
     const { email, resetToken, newPassword } = await request.json();
 
+    // Validate input
+    if (!email || !resetToken || !newPassword) {
+      return NextResponse.json(
+        { error: "Email, token, and new password are required." },
+        { status: 400 }
+      );
+    }
+
+    // Validate password strength (minimum 6 characters)
+    if (newPassword.length < 6) {
+      return NextResponse.json(
+        { error: "Password must be at least 6 characters long." },
+        { status: 400 }
+      );
+    }
+
     const user = await prisma.user.findUnique({ where: { email } });
 
     if (
       !user ||
+      !user.resetToken ||
       user.resetToken !== resetToken ||
       !user.resetTokenExpiry ||
       new Date() > user.resetTokenExpiry
@@ -20,8 +37,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Hash the new password
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
+    // Update password and clear reset token
     await prisma.user.update({
       where: { email },
       data: {

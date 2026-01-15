@@ -2,12 +2,17 @@ import nodemailer from "nodemailer";
 
 /**
  * Get the base URL for the application
- * Falls back to Vercel URL or localhost if NEXT_PUBLIC_APP_URL is not set
+ * Priority: NEXT_PUBLIC_APP_URL > NEXTAUTH_URL > VERCEL_URL > fallback
  */
 function getBaseUrl(): string {
   // Check for explicit environment variable first
   if (process.env.NEXT_PUBLIC_APP_URL) {
     return process.env.NEXT_PUBLIC_APP_URL;
+  }
+
+  // Use NEXTAUTH_URL if available (already set in Vercel)
+  if (process.env.NEXTAUTH_URL) {
+    return process.env.NEXTAUTH_URL;
   }
 
   // Fallback to Vercel URL if available
@@ -17,7 +22,7 @@ function getBaseUrl(): string {
 
   // Fallback to localhost for development
   return process.env.NODE_ENV === "production"
-    ? "https://arnob-mahmud.vercel.app"
+    ? "https://dev-bug-coder-blog.vercel.app"
     : "http://localhost:3000";
 }
 
