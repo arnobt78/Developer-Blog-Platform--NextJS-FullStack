@@ -27,6 +27,7 @@ import { usePosts, useSavedPosts } from "@/hooks/use-posts";
 import { useSession } from "next-auth/react";
 import { useUser } from "@/hooks/use-auth";
 import { Badge } from "@/components/ui/badge";
+import { useIsMutating } from "@tanstack/react-query";
 
 /**
  * Posts content component that uses useSearchParams
@@ -77,6 +78,13 @@ function PostsContent() {
   });
   // Create array of saved post IDs for quick lookup
   const savedPostIds = savedPosts.map((p) => p.id);
+
+  // Track if any post is being updated (for skeleton loading)
+  // We check if there's a mutation in progress for posts
+  const isUpdatingPost = useIsMutating({
+    mutationKey: ["updatePost"],
+    exact: false,
+  }) > 0;
 
   /**
    * Sync selectedTag with URL parameter
@@ -273,30 +281,39 @@ function PostsContent() {
         ) : (
           <>
             <div className="grid grid-cols-1 gap-4 w-full">
-              {paginatedPosts.map((post) => (
-                <PostCard
-                  key={post.id}
-                  post={{
-                    ...post,
-                    onClick: () => router.push(`/post/${post.id}`),
-                    liked: !!post.liked,
-                    helpful: !!post.helpful,
-                    likes: post.likes || 0,
-                    helpfulCount: post.helpfulCount || 0,
-                  }}
-                  saved={savedPostIds.includes(post.id)}
-                  currentUser={currentUser || null}
-                  onUnsave={(_postId) => {
-                    // React Query will handle cache update automatically
-                  }}
-                  onDelete={(_postId) => {
-                    // React Query will handle cache update automatically
-                  }}
-                  onLikeHelpfulUpdate={(_postId, _data) => {
-                    // React Query optimistic updates handle this
-                  }}
-                />
-              ))}
+              {paginatedPosts.map((post) => {
+                // Show skeleton briefly during update to prevent flash of old data
+                // Optimistic updates should handle most of the UI update, but this prevents
+                // the brief moment where old cached data might flash before new data arrives
+                const showSkeleton = isUpdatingPost;
+                
+                return showSkeleton ? (
+                  <PostCardSkeleton key={post.id} />
+                ) : (
+                  <PostCard
+                    key={post.id}
+                    post={{
+                      ...post,
+                      onClick: () => router.push(`/post/${post.id}`),
+                      liked: !!post.liked,
+                      helpful: !!post.helpful,
+                      likes: post.likes || 0,
+                      helpfulCount: post.helpfulCount || 0,
+                    }}
+                    saved={savedPostIds.includes(post.id)}
+                    currentUser={currentUser || null}
+                    onUnsave={(_postId) => {
+                      // React Query will handle cache update automatically
+                    }}
+                    onDelete={(_postId) => {
+                      // React Query will handle cache update automatically
+                    }}
+                    onLikeHelpfulUpdate={(_postId, _data) => {
+                      // React Query optimistic updates handle this
+                    }}
+                  />
+                );
+              })}
             </div>
             {/* Pagination buttons - Always show when there are posts */}
             {totalPosts > 0 && (
