@@ -8,7 +8,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/hooks/use-toast";
 import type { Notification } from "@/types";
-import { useState } from "react";
 
 /**
  * Fetch all notifications for current user
@@ -106,29 +105,29 @@ export function useMarkNotificationRead() {
  */
 export function useMarkAllNotificationsRead() {
   const queryClient = useQueryClient();
-  const [markAllReadCalled, setMarkAllReadCalled] = useState(false);
 
   return useMutation({
     mutationFn: async () => {
-      if (markAllReadCalled) return; // Prevent multiple calls
-      setMarkAllReadCalled(true);
-
       // NextAuth cookies are sent automatically
       const response = await fetch("/api/notifications/mark-all-read", {
-        method: "POST", // Updated from PATCH to POST
+        method: "POST",
         credentials: "include",
       });
       if (!response.ok) throw new Error("Failed to mark all as read");
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
-      toast({
-        title: "Success",
-        description: "All notifications marked as read",
-        variant: "success",
-      });
-      setMarkAllReadCalled(false); // Reset flag after success
+      
+      // Only show toast if notifications were actually marked as read
+      if (data.count > 0) {
+        toast({
+          title: "Success",
+          description: "All notifications marked as read",
+          variant: "success",
+        });
+      }
+      // If count is 0, no toast is shown (no unread notifications to mark)
     },
     onError: (error: Error) => {
       toast({
@@ -136,7 +135,6 @@ export function useMarkAllNotificationsRead() {
         description: error.message,
         variant: "destructive",
       });
-      setMarkAllReadCalled(false); // Reset flag on error
     },
   });
 }

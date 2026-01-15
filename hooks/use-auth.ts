@@ -105,27 +105,39 @@ export function useLogout() {
 
   return useMutation({
     mutationFn: async () => {
-      // Use NextAuth signOut - clears session automatically
-      await signOut({ redirect: false });
-      return { success: true };
-    },
-    onSuccess: () => {
-      queryClient.clear(); // Clear all cached data
+      // Show friendly goodbye toast first
       toast({
-        title: "Success",
-        description: "Logged out successfully",
+        title: "See you soon 👋",
+        description:
+          "Thanks for visiting! We'll be here whenever you're ready to come back.",
         variant: "success",
       });
+
+      // Immediately redirect to login page to prevent UI flash
+      // This happens synchronously, preventing any re-render with cleared session
       router.push("/login");
+
+      // Use NextAuth signOut in the background - clears session and cookies automatically
+      // This happens after redirect, so no flash is visible
+      await signOut({ redirect: false });
+
+      // Clear all cached data
+      queryClient.clear();
+
+      // Refresh to update SSR session state
+      router.refresh();
+
+      return { success: true };
     },
     onError: (error: Error) => {
       queryClient.clear();
-      router.push("/login");
       toast({
         title: "Error",
         description: error.message,
         variant: "destructive",
       });
+      router.push("/login");
+      router.refresh();
     },
   });
 }

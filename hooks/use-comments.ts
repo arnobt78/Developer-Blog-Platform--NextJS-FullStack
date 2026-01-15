@@ -294,16 +294,19 @@ export function useDeleteComment() {
   });
 }
 
-// Helper function to update a specific comment in a nested structure
+// Updated updateNestedComments to handle empty cache more robustly
 function updateNestedComments(
-  comments: Comment[],
+  comments: Comment[] = [],
   commentId: string,
   updater: (comment: Comment) => Comment
 ): Comment[] {
-  console.log("Updating nested comments:", { comments, commentId });
+  if (!comments || comments.length === 0) {
+    console.warn("updateNestedComments: No comments to update.");
+    return comments; // Return as is if no comments exist
+  }
+
   return comments.map((comment) => {
     if (comment.id === commentId) {
-      console.log("Updating comment:", comment);
       return updater(comment);
     }
     if (comment.replies) {
@@ -351,6 +354,7 @@ export function useLikeComment() {
       commentId: string;
       postId: string;
     }) => {
+      console.log(`Toggling like for comment: ${commentId}`);
       const response = await fetch(`/api/comments/${commentId}/like`, {
         method: "POST",
         credentials: "include",
@@ -361,33 +365,93 @@ export function useLikeComment() {
           error.error || error.message || "Failed to like comment"
         );
       }
-      return response.json();
+      const data = await response.json();
+      console.log("Server response for like toggle:", data);
+      return data;
     },
     onMutate: async ({ commentId, postId }) => {
-      await queryClient.cancelQueries({ queryKey: ["comments", postId] });
+      console.log(`Optimistically updating like for comment: ${commentId}`);
+      // Cancel all comment queries for this post (regardless of userId in query key)
+      await queryClient.cancelQueries({ 
+        queryKey: ["comments", postId],
+        exact: false, // Match all queries starting with ["comments", postId]
+      });
 
-      const previousComments = queryClient.getQueryData<Comment[]>([
-        "comments",
-        postId,
+      // Get all comment queries for this post (may have different userIds in key)
+      const allCommentQueries = queryClient.getQueriesData<Comment[]>({
+        queryKey: ["comments", postId],
+        exact: false,
+      });
+
+      // Snapshot previous values for rollback
+      const previousCommentsQueries = allCommentQueries.map(([queryKey, data]) => [
+        queryKey,
+        data,
       ]);
 
-      if (previousComments) {
+      // Optimistically update ALL comment queries for this post
+      allCommentQueries.forEach(([queryKey, previousComments]) => {
+        if (!previousComments) {
+          console.warn(
+            `No previous comments found in cache for key: ${JSON.stringify(queryKey)}. Skipping.`
+          );
+          return;
+        }
+
         const updatedComments = updateNestedComments(
           previousComments,
           commentId,
-          (comment) => ({
-            ...comment,
-            liked: !comment.liked,
-            likeCount: comment.liked
-              ? comment.likeCount - 1
-              : comment.likeCount + 1,
-          })
+          (comment) => {
+            const isLiked = !comment.liked; // Toggle liked state
+            return {
+              ...comment,
+              liked: isLiked,
+              likeCount: isLiked ? comment.likeCount + 1 : comment.likeCount - 1,
+            };
+          }
         );
-        queryClient.setQueryData(["comments", postId], updatedComments);
-      }
+        queryClient.setQueryData(queryKey, updatedComments);
+      });
+
+      console.log("Optimistically updated all comment queries");
+
+      return { previousCommentsQueries };
     },
-    onError: (err, { postId }) => {
-      queryClient.invalidateQueries({ queryKey: ["comments", postId] });
+    onSuccess: (data, { commentId, postId }) => {
+      console.log("Server response for like toggle:", data);
+
+      // Update cache with authoritative server response
+      // This prevents flicker by not triggering a refetch
+      const { liked, likeCount } = data;
+
+      // Update ALL comment queries for this post (regardless of userId in query key)
+      queryClient.setQueriesData<Comment[]>(
+        { queryKey: ["comments", postId], exact: false },
+        (old) => {
+          if (!old) return old;
+          return updateNestedComments(old, commentId, (comment) => ({
+            ...comment,
+            liked,
+            likeCount,
+          }));
+        }
+      );
+    },
+    onError: (err, { postId }, context) => {
+      console.error("Error toggling like:", err);
+      
+      // Rollback to previous state
+      if (context?.previousCommentsQueries) {
+        context.previousCommentsQueries.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
+      }
+      
+      toast({
+        title: "Error",
+        description: err.message || "Failed to like comment",
+        variant: "destructive",
+      });
     },
   });
 }
@@ -406,6 +470,7 @@ export function useHelpfulComment() {
       commentId: string;
       postId: string;
     }) => {
+      console.log(`Toggling helpful for comment: ${commentId}`);
       const response = await fetch(`/api/comments/${commentId}/helpful`, {
         method: "POST",
         credentials: "include",
@@ -416,33 +481,95 @@ export function useHelpfulComment() {
           error.error || error.message || "Failed to mark comment as helpful"
         );
       }
-      return response.json();
+      const data = await response.json();
+      console.log("Server response for helpful toggle:", data);
+      return data;
     },
     onMutate: async ({ commentId, postId }) => {
-      await queryClient.cancelQueries({ queryKey: ["comments", postId] });
+      console.log(`Optimistically updating helpful for comment: ${commentId}`);
+      // Cancel all comment queries for this post (regardless of userId in query key)
+      await queryClient.cancelQueries({ 
+        queryKey: ["comments", postId],
+        exact: false, // Match all queries starting with ["comments", postId]
+      });
 
-      const previousComments = queryClient.getQueryData<Comment[]>([
-        "comments",
-        postId,
+      // Get all comment queries for this post (may have different userIds in key)
+      const allCommentQueries = queryClient.getQueriesData<Comment[]>({
+        queryKey: ["comments", postId],
+        exact: false,
+      });
+
+      // Snapshot previous values for rollback
+      const previousCommentsQueries = allCommentQueries.map(([queryKey, data]) => [
+        queryKey,
+        data,
       ]);
 
-      if (previousComments) {
+      // Optimistically update ALL comment queries for this post
+      allCommentQueries.forEach(([queryKey, previousComments]) => {
+        if (!previousComments) {
+          console.warn(
+            `No previous comments found in cache for key: ${JSON.stringify(queryKey)}. Skipping.`
+          );
+          return;
+        }
+
         const updatedComments = updateNestedComments(
           previousComments,
           commentId,
-          (comment) => ({
-            ...comment,
-            helpful: !comment.helpful,
-            helpfulCount: comment.helpful
-              ? comment.helpfulCount - 1
-              : comment.helpfulCount + 1,
-          })
+          (comment) => {
+            const isHelpful = !comment.helpful; // Toggle helpful state
+            return {
+              ...comment,
+              helpful: isHelpful,
+              helpfulCount: isHelpful
+                ? comment.helpfulCount + 1
+                : comment.helpfulCount - 1,
+            };
+          }
         );
-        queryClient.setQueryData(["comments", postId], updatedComments);
-      }
+        queryClient.setQueryData(queryKey, updatedComments);
+      });
+
+      console.log("Optimistically updated all comment queries");
+
+      return { previousCommentsQueries };
     },
-    onError: (err, { postId }) => {
-      queryClient.invalidateQueries({ queryKey: ["comments", postId] });
+    onSuccess: (data, { commentId, postId }) => {
+      console.log("Server response for helpful toggle:", data);
+
+      // Update cache with authoritative server response
+      // This prevents flicker by not triggering a refetch
+      const { helpful, helpfulCount } = data;
+
+      // Update ALL comment queries for this post (regardless of userId in query key)
+      queryClient.setQueriesData<Comment[]>(
+        { queryKey: ["comments", postId], exact: false },
+        (old) => {
+          if (!old) return old;
+          return updateNestedComments(old, commentId, (comment) => ({
+            ...comment,
+            helpful,
+            helpfulCount,
+          }));
+        }
+      );
+    },
+    onError: (err, { postId }, context) => {
+      console.error("Error toggling helpful:", err);
+      
+      // Rollback to previous state
+      if (context?.previousCommentsQueries) {
+        context.previousCommentsQueries.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
+      }
+      
+      toast({
+        title: "Error",
+        description: err.message || "Failed to mark comment as helpful",
+        variant: "destructive",
+      });
     },
   });
 }

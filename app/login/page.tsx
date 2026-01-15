@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -98,11 +98,35 @@ export default function Login() {
           variant: "destructive",
         });
       } else if (result?.ok) {
-        toast({
-          title: "Success",
-          description: "Logged in successfully",
-          variant: "success",
-        });
+        // Fetch user data to get name for personalized welcome message
+        try {
+          const userResponse = await fetch("/api/auth/me", {
+            credentials: "include",
+          });
+          if (userResponse.ok) {
+            const userData = await userResponse.json();
+            const userName = userData?.name || "there";
+            toast({
+              title: `Hi, ${userName} 👋`,
+              description: "Welcome! Enjoy blogging and sharing your thoughts with the community.",
+              variant: "success",
+            });
+          } else {
+            // Fallback if user data fetch fails
+            toast({
+              title: "Hi there 👋",
+              description: "Welcome! Enjoy blogging and sharing your thoughts with the community.",
+              variant: "success",
+            });
+          }
+        } catch {
+          // Fallback if user data fetch fails
+          toast({
+            title: "Hi there 👋",
+            description: "Welcome! Enjoy blogging and sharing your thoughts with the community.",
+            variant: "success",
+          });
+        }
         router.push("/posts");
         router.refresh();
       }

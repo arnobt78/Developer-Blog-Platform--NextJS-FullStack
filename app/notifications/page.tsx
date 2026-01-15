@@ -44,19 +44,29 @@ export default function Notifications() {
   const { data: currentUser } = useUser(session?.user?.id);
 
   // Mark all as read on mount - only once, and only if there are unread notifications
-  const [markAllReadCalled, setMarkAllReadCalled] = React.useState(false);
+  const markAllReadCalledRef = React.useRef(false);
 
-  // Remove toast logic from useEffect
+  // Mark all as read on mount - only if there are unread notifications
   React.useEffect(() => {
+    // Check if there are unread notifications
+    const hasUnreadNotifications = notifications.some((n) => !n.isRead);
+    
+    // Only mark as read if:
+    // 1. Notifications are loaded (not loading)
+    // 2. There are unread notifications
+    // 3. Mutation is not pending and not already successful
+    // 4. We haven't called it yet (using ref to persist across renders)
     if (
-      notifications.length > 0 &&
+      !isLoading &&
+      hasUnreadNotifications &&
       !markAllRead.isPending &&
-      !markAllReadCalled
+      !markAllRead.isSuccess &&
+      !markAllReadCalledRef.current
     ) {
       markAllRead.mutate();
-      setMarkAllReadCalled(true);
+      markAllReadCalledRef.current = true;
     }
-  }, [notifications, markAllRead, markAllReadCalled]);
+  }, [notifications, isLoading, markAllRead]);
 
   return (
     <div className="max-w-9xl mx-auto mt-32 p-6 bg-white rounded shadow">

@@ -24,6 +24,7 @@ import CommentAvatar from "./CommentAvatar";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { useSession } from "next-auth/react";
 import { useUser } from "@/hooks/use-auth";
+import { toast } from "@/hooks/use-toast";
 
 interface CommentSectionProps {
   postId: string;
@@ -51,6 +52,8 @@ const CommentSection: React.FC<CommentSectionProps> = ({
   parentId, // If provided, shows only replies to this comment
   onShowLoginPrompt, // Callback to show login prompt dialog
 }) => {
+  console.log("Rendering CommentSection:", { postId, parentId });
+
   // Form state for new comment
   const [newComment, setNewComment] = useState(""); // Comment text
   const [image, setImage] = useState<File | null>(null); // Image file to upload
@@ -65,37 +68,29 @@ const CommentSection: React.FC<CommentSectionProps> = ({
   const [showShareModal, setShowShareModal] = useState<string | null>(null); // Share modal for comment link
   const [commentToDelete, setCommentToDelete] = useState<string | null>(null); // Comment ID to delete
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false); // Show delete confirmation dialog
+  const [loadingCommentId, setLoadingCommentId] = useState<string | null>(null); // Track loading state for like/helpful actions
 
   // React Query hooks with automatic caching and optimistic updates
-  // useComments: Fetches all comments for this post
-  // Default to empty array if data is undefined (prevents errors)
   const { data: allComments = [], isLoading } = useComments(postId);
-  const createCommentMutation = useCreateComment(); // Create new comment
-  const updateCommentMutation = useUpdateComment(); // Edit existing comment
-  const deleteCommentMutation = useDeleteComment(); // Delete comment
-  const likeCommentMutation = useLikeComment(); // Like/unlike comment (optimistic update)
-  const helpfulCommentMutation = useHelpfulComment(); // Helpful/unhelpful comment (optimistic update)
-  const { uploadImage, uploading: _uploading } = useImageUpload(); // Upload images
-  const { data: session, status } = useSession(); // Get current user authentication state
-  // Always fetch current user with useUser for latest info
-  const { data: currentUser } = useUser(session?.user?.id);
-  // Filter comments by parentId for nested structure
-  //
-  // If parentId is provided:
-  // - Show only comments that are replies to that parent
-  //
-  // If parentId is not provided:
-  // - Show only top-level comments (no parentId)
-  //
-  // This allows recursive nesting of comment threads
-  const comments = allComments.filter((c: Comment) =>
-    parentId ? c.parentId === parentId : !c.parentId
-  );
+  const createCommentMutation = useCreateComment();
+  const updateCommentMutation = useUpdateComment();
+  const deleteCommentMutation = useDeleteComment();
+  const likeCommentMutation = useLikeComment();
+  const helpfulCommentMutation = useHelpfulComment();
+  const { uploadImage, uploading: _uploading } = useImageUpload();
 
-  // Check if user is logged in via NextAuth session
+  // Authentication hooks
+  const { data: session, status } = useSession();
+  const { data: currentUser } = useUser(session?.user?.id);
   const user = currentUser || session?.user || null;
   const isLoadingAuth = status === "loading";
   const isLoggedIn = !!user && !isLoadingAuth;
+
+  // Filter comments by parentId for nested structure
+  const comments = allComments.filter((c: Comment) =>
+    parentId ? c.parentId === parentId : !c.parentId
+  );
+  console.log("Filtered comments:", comments);
 
   /**
    * Handle adding a new comment with optimistic update
@@ -206,7 +201,18 @@ const CommentSection: React.FC<CommentSectionProps> = ({
       onShowLoginPrompt?.();
       return;
     }
-    likeCommentMutation.mutate({ commentId, postId });
+    console.log(`Toggling like for comment: ${commentId}`);
+    likeCommentMutation.mutate(
+      { commentId, postId },
+      {
+        onSuccess: () => {
+          console.log(`Successfully toggled like for comment: ${commentId}`);
+        },
+        onError: (error) => {
+          console.error(`Error toggling like for comment: ${commentId}`, error);
+        },
+      }
+    );
   };
 
   /**
@@ -217,7 +223,21 @@ const CommentSection: React.FC<CommentSectionProps> = ({
       onShowLoginPrompt?.();
       return;
     }
-    helpfulCommentMutation.mutate({ commentId, postId });
+    console.log(`Toggling helpful for comment: ${commentId}`);
+    helpfulCommentMutation.mutate(
+      { commentId, postId },
+      {
+        onSuccess: () => {
+          console.log(`Successfully toggled helpful for comment: ${commentId}`);
+        },
+        onError: (error) => {
+          console.error(
+            `Error toggling helpful for comment: ${commentId}`,
+            error
+          );
+        },
+      }
+    );
   };
 
   /**
@@ -263,7 +283,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({
   // Ensure that the CommentSection component re-renders when the cache updates
   // Add a key prop to force re-rendering when the postId or parentId changes
   return (
-    <div key={`${postId}-${parentId}`} className="space-y-4">
+    <div key={`${postId}-${parentId}-${comments.length}`} className="space-y-4">
       <ul className="space-y-4">
         {comments.map((comment) => (
           <CommentItem

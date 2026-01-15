@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
 
 interface NavbarProps {
   user?: {
@@ -54,8 +55,30 @@ const Navbar: React.FC<NavbarProps> = ({ user: ssrUser }) => {
 
   const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL;
 
+  const { toast } = useToast();
+
   const handleLogout = async () => {
-    await signOut({ redirect: true, callbackUrl: "/login" });
+    // Show friendly goodbye toast first
+    toast({
+      title: "See you soon 👋",
+      description:
+        "Thanks for visiting! We'll be here whenever you're ready to come back.",
+      variant: "success",
+    });
+
+    // Immediately redirect to login page to prevent UI flash
+    // This happens synchronously, preventing any re-render with cleared session
+    router.push("/login");
+
+    // Sign out in the background (clears session and cookies)
+    // This happens after redirect, so no flash is visible
+    await signOut({ redirect: false });
+
+    // Clear all React Query cache
+    queryClient.clear();
+
+    // Refresh to update SSR session state
+    router.refresh();
   };
 
   // Static navLinks - same on server and client
@@ -74,7 +97,7 @@ const Navbar: React.FC<NavbarProps> = ({ user: ssrUser }) => {
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
     }, 60000); // Refetch every 60 seconds
     return () => clearInterval(interval);
-  }, []);
+  }, [queryClient]);
 
   // Search submit handler
   const handleSearchSubmit = (e: React.FormEvent) => {

@@ -9,15 +9,23 @@ export async function POST(request: NextRequest) {
 
     // Return success if user is not authenticated (no-op)
     if (!userId) {
-      return NextResponse.json({ success: true });
+      return NextResponse.json({ success: true, count: 0 });
     }
 
-    await prisma.notification.updateMany({
+    // Get count of unread notifications before updating
+    const unreadCount = await prisma.notification.count({
       where: { userId, isRead: false },
-      data: { isRead: true },
     });
 
-    return NextResponse.json({ success: true });
+    // Only update if there are unread notifications
+    if (unreadCount > 0) {
+      await prisma.notification.updateMany({
+        where: { userId, isRead: false },
+        data: { isRead: true },
+      });
+    }
+
+    return NextResponse.json({ success: true, count: unreadCount });
   } catch (error) {
     console.error("Error marking notifications as read:", error);
     return NextResponse.json(
