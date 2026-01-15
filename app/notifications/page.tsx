@@ -70,7 +70,9 @@ export default function Notifications() {
 
   return (
     <div className="max-w-9xl mx-auto mt-32 p-6 bg-white rounded shadow">
-      <h2 className="text-2xl font-bold mb-6">Notifications</h2>
+      <h2 className="text-2xl font-bold mb-6">
+        Notifications {!isLoading && <span className="text-gray-600 font-normal text-lg">({notifications.length})</span>}
+      </h2>
       {isLoading ? (
         <div className="space-y-4">
           {[1, 2, 3, 4, 5].map((i) => (

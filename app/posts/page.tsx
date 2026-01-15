@@ -261,6 +261,7 @@ function PostsContent() {
 
         <h1 className="text-2xl font-bold mb-4">
           {selectedTag ? `Posts tagged "${selectedTag}"` : "Posts"}
+          {!isLoading && <span className="text-gray-600 font-normal text-lg"> ({totalPosts})</span>}
         </h1>
 
         {/* Loading state with skeleton */}

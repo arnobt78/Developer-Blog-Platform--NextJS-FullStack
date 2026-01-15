@@ -27,7 +27,9 @@ export default function SavedPosts() {
 
   return (
     <div className="max-w-9xl mx-auto pt-32 px-2 sm:px-4 xl:px-8 pb-8 flex flex-col">
-      <h1 className="text-2xl font-bold mb-4">Your Saved Posts</h1>
+      <h1 className="text-2xl font-bold mb-4">
+        Your Saved Posts {!isLoadingAuth && !isLoading && <span className="text-gray-600 font-normal text-lg">({posts.length})</span>}
+      </h1>
       {isLoadingAuth || isLoading ? (
         <div className="grid grid-cols-1 gap-4 w-full">
           {[1, 2, 3].map((i) => (
