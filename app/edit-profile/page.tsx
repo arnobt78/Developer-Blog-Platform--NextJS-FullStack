@@ -97,7 +97,7 @@ export default function EditProfile({ user: ssrUser }: EditProfileProps) {
         !avatarUrl.startsWith("blob:")); // Server URL changed (not just a preview)
 
     return textChanged || avatarChanged;
-  }, [form, avatar, avatarUrl, baselineValues]);
+  }, [form, avatar, avatarFileId, avatarUrl, baselineValues]);
 
   // Update form state when user data changes (after successful update)
   useEffect(() => {
