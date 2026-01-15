@@ -129,18 +129,21 @@ export function useCreatePost() {
       }
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data, formData) => {
       queryClient.invalidateQueries({ queryKey: ["posts"] });
       queryClient.invalidateQueries({ queryKey: ["saved-posts"] });
+      const title = data?.title || (formData instanceof FormData ? formData.get("headline")?.toString() : null) || "Your post";
+      const truncatedTitle = title.length > 50 ? title.substring(0, 50) + "..." : title;
       toast({
-        title: "Post created!",
+        title: "🎉 Post Published!",
+        description: `"${truncatedTitle}" has been shared with the community!`,
         variant: "success",
       });
     },
     onError: (error: Error) => {
       toast({
-        title: "Error",
-        description: error.message,
+        title: "Oops! 😅",
+        description: error.message || "Failed to create your post. Please try again.",
         variant: "destructive",
       });
     },
@@ -173,18 +176,21 @@ export function useUpdatePost() {
       }
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["posts"] });
       queryClient.invalidateQueries({ queryKey: ["saved-posts"] });
+      const title = data?.title || (variables.formData instanceof FormData ? variables.formData.get("title")?.toString() : null) || "Your post";
+      const truncatedTitle = title.length > 50 ? title.substring(0, 50) + "..." : title;
       toast({
-        title: "Post updated!",
+        title: "✨ Post Updated!",
+        description: `"${truncatedTitle}" has been updated successfully!`,
         variant: "success",
       });
     },
     onError: (error: Error) => {
       toast({
-        title: "Error",
-        description: error.message,
+        title: "Oops! 😅",
+        description: error.message || "Failed to update your post. Please try again.",
         variant: "destructive",
       });
     },
@@ -225,6 +231,18 @@ export function useDeletePost() {
         queryKey: ["saved-posts"],
       });
 
+      // Get post title before removing (for toast message)
+      let postTitle = "Your post";
+      for (const [, posts] of previousPostsQueries) {
+        if (posts) {
+          const post = posts.find((p) => p.id === id);
+          if (post?.title) {
+            postTitle = post.title;
+            break;
+          }
+        }
+      }
+
       // Optimistically remove the post from all lists using prefix matching
       queryClient.setQueriesData<Post[]>({ queryKey: ["posts"] }, (old) =>
         old ? old.filter((post) => post.id !== id) : old
@@ -233,7 +251,7 @@ export function useDeletePost() {
         old ? old.filter((post) => post.id !== id) : old
       );
 
-      return { previousPostsQueries, previousSavedPostsQueries };
+      return { previousPostsQueries, previousSavedPostsQueries, postTitle };
     },
     onError: (error, id, context) => {
       // Rollback on error
@@ -254,12 +272,12 @@ export function useDeletePost() {
         });
       }
       toast({
-        title: "Error",
-        description: error.message,
+        title: "Oops! 😅",
+        description: error.message || "Failed to delete your post. Please try again.",
         variant: "destructive",
       });
     },
-    onSuccess: () => {
+    onSuccess: (data, id, context) => {
       // Cache already updated optimistically in onMutate
       // Now invalidate for background refetch to ensure consistency
       queryClient.invalidateQueries({
@@ -269,6 +287,15 @@ export function useDeletePost() {
       queryClient.invalidateQueries({
         queryKey: ["saved-posts"],
         refetchType: "none",
+      });
+      
+      // Use post title from context (saved before deletion)
+      const postTitle = context?.postTitle || "Your post";
+      const truncatedTitle = postTitle.length > 50 ? postTitle.substring(0, 50) + "..." : postTitle;
+      toast({
+        title: "🗑️ Post Deleted",
+        description: `"${truncatedTitle}" has been removed successfully.`,
+        variant: "success",
       });
     },
   });

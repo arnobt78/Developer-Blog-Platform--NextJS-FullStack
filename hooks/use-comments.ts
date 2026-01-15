@@ -116,9 +116,23 @@ export function useCreateComment() {
         );
       }
       toast({
-        title: "Error",
-        description: error.message,
+        title: "Oops! 😅",
+        description:
+          error.message || "Failed to add your comment. Please try again.",
         variant: "destructive",
+      });
+    },
+    onSuccess: (data, newComment) => {
+      const content = newComment.content || "";
+      const truncatedContent =
+        content.length > 60 ? content.substring(0, 60) + "..." : content;
+      const isReply = !!newComment.parentId;
+      toast({
+        title: isReply ? "💬 Reply Added!" : "💬 Comment Added!",
+        description: isReply
+          ? `Your reply has been posted successfully!`
+          : `"${truncatedContent || "Your comment"}" has been shared!`,
+        variant: "success",
       });
     },
     onSettled: (data, error, variables) => {
@@ -187,16 +201,22 @@ export function useUpdateComment() {
       queryClient.refetchQueries({
         queryKey: ["comments", variables.postId],
       });
+      const content = variables.content || "";
+      const truncatedContent =
+        content.length > 60 ? content.substring(0, 60) + "..." : content;
       toast({
-        title: "Success",
-        description: "Comment updated successfully",
+        title: "✏️ Comment Updated!",
+        description: `"${
+          truncatedContent || "Your comment"
+        }" has been updated successfully!`,
         variant: "success",
       });
     },
     onError: (error: Error) => {
       toast({
-        title: "Error",
-        description: error.message,
+        title: "Oops! 😅",
+        description:
+          error.message || "Failed to update your comment. Please try again.",
         variant: "destructive",
       });
     },
@@ -243,6 +263,15 @@ export function useDeleteComment() {
         postId,
       ]);
 
+      // Get comment content before removing (for toast message)
+      let commentContent = "Your comment";
+      if (previousComments) {
+        const comment = previousComments.find((c) => c.id === id);
+        if (comment?.content) {
+          commentContent = comment.content;
+        }
+      }
+
       // Optimistically remove comment from cache
       if (previousComments) {
         queryClient.setQueryData<Comment[]>(
@@ -251,7 +280,7 @@ export function useDeleteComment() {
         );
       }
 
-      return { previousComments };
+      return { previousComments, commentContent };
     },
     onError: (error, variables, context) => {
       // Rollback on error
@@ -262,12 +291,13 @@ export function useDeleteComment() {
         );
       }
       toast({
-        title: "Error",
-        description: error.message,
+        title: "Oops! 😅",
+        description:
+          error.message || "Failed to delete your comment. Please try again.",
         variant: "destructive",
       });
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (data, variables, context) => {
       // Cache already updated optimistically in onMutate
       // Now invalidate for background refetch to ensure consistency
       queryClient.invalidateQueries({
@@ -285,9 +315,14 @@ export function useDeleteComment() {
       queryClient.refetchQueries({
         queryKey: ["post", variables.postId],
       });
+      const commentContent = context?.commentContent || "Your comment";
+      const truncatedContent =
+        commentContent.length > 60
+          ? commentContent.substring(0, 60) + "..."
+          : commentContent;
       toast({
-        title: "Success",
-        description: "Comment deleted successfully",
+        title: "🗑️ Comment Deleted",
+        description: `"${truncatedContent}" has been removed successfully.`,
         variant: "success",
       });
     },
