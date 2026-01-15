@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -41,6 +41,24 @@ export default function EditProfile({ user: ssrUser }: EditProfileProps) {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(
     user?.avatarUrl || null
   );
+
+  // Update form state when user data changes (after successful update)
+  useEffect(() => {
+    if (user) {
+      setForm((prev) => ({
+        name: user.name || prev.name,
+        email: user.email || prev.email,
+        country: user.country || prev.country,
+        password: "", // Always clear password field after update
+      }));
+      // Update avatarUrl when user data changes (after successful update)
+      // This ensures we show the server-uploaded image, not the local preview
+      if (user.avatarUrl) {
+        setAvatarUrl(user.avatarUrl);
+      }
+    }
+  }, [user]);
+
   // Only return null after all hooks
   if (!user) return null; // or a loading skeleton
 
@@ -68,9 +86,23 @@ export default function EditProfile({ user: ssrUser }: EditProfileProps) {
       formData.append("avatar", avatar);
     }
     updateProfile.mutate(formData, {
-      onSuccess: () => {
-        // Redirect after successful update
-        router.push("/");
+      onSuccess: (data) => {
+        // Stay on edit profile page - update form immediately with server response
+        if (data) {
+          setForm((prev) => ({
+            name: data.name || prev.name,
+            email: data.email || prev.email,
+            country: data.country || prev.country,
+            password: "", // Clear password field after update
+          }));
+          // Update avatarUrl immediately with server response
+          if (data.avatarUrl) {
+            setAvatarUrl(data.avatarUrl);
+          }
+        }
+        // Clear avatar file state after successful upload
+        setAvatar(null);
+        // useUser hook will refetch after query invalidation to keep everything in sync
       },
     });
   };
