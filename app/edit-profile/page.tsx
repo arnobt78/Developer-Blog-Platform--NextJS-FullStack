@@ -1,10 +1,13 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useUpdateProfile, useUser } from "@/hooks/use-auth";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { useImageUpload } from "@/hooks/use-image-upload";
+import { X } from "lucide-react";
 
 /**
  * Edit Profile Page - Update user profile
@@ -41,6 +44,60 @@ export default function EditProfile({ user: ssrUser }: EditProfileProps) {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(
     user?.avatarUrl || null
   );
+  const [avatarFileId, setAvatarFileId] = useState<string | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [showUpdateConfirm, setShowUpdateConfirm] = useState(false);
+
+  const { uploadImage, uploading, progress } = useImageUpload();
+
+  // Store baseline values for comparison (only updated after successful save)
+  const [baselineValues, setBaselineValues] = useState<{
+    name: string;
+    email: string;
+    country: string;
+    avatarUrl: string | null;
+  } | null>(null);
+
+  // Initialize baseline values when user data loads (only once, or when explicitly reset)
+  useEffect(() => {
+    if (user) {
+      // Only set baseline if not already set, or if user data has changed significantly
+      // This prevents resetting baseline during normal refetches
+      if (!baselineValues) {
+        setBaselineValues({
+          name: user.name || "",
+          email: user.email || "",
+          country: user.country || "",
+          avatarUrl: user.avatarUrl || null,
+        });
+      }
+    }
+  }, [user, baselineValues]);
+
+  // Check if form has any changes compared to baseline
+  const hasChanges = useMemo(() => {
+    if (!baselineValues) return false;
+
+    // Check text fields
+    const textChanged =
+      form.name !== baselineValues.name ||
+      form.email !== baselineValues.email ||
+      form.country !== baselineValues.country ||
+      form.password !== "";
+
+    // Check avatar changes
+    // - If avatar (File) is set, it means a new file was selected (definite change)
+    // - If avatarFileId is set, it means a new image was uploaded (definite change)
+    // - If avatarUrl changed from baseline and it's a server URL (not blob), it's a change
+    const avatarChanged =
+      avatar !== null || // New file selected (always a change)
+      avatarFileId !== null || // New image uploaded (always a change)
+      (avatarUrl !== baselineValues.avatarUrl &&
+        avatarUrl !== null &&
+        !avatarUrl.startsWith("blob:")); // Server URL changed (not just a preview)
+
+    return textChanged || avatarChanged;
+  }, [form, avatar, avatarUrl, baselineValues]);
 
   // Update form state when user data changes (after successful update)
   useEffect(() => {
@@ -66,15 +123,41 @@ export default function EditProfile({ user: ssrUser }: EditProfileProps) {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setAvatar(e.target.files[0]);
-      setAvatarUrl(URL.createObjectURL(e.target.files[0]));
+      const file = e.target.files[0];
+      setAvatar(file);
+      setAvatarPreview(URL.createObjectURL(file));
+
+      // Upload image immediately when selected
+      const result = await uploadImage(file, "avatars");
+      if (result) {
+        setAvatarUrl(result.url);
+        setAvatarFileId(result.fileId);
+      } else {
+        // If upload failed, clear the image
+        setAvatar(null);
+        setAvatarPreview(null);
+        setAvatarUrl(user?.avatarUrl || null);
+        setAvatarFileId(null);
+      }
     }
+  };
+
+  const handleRemoveAvatar = () => {
+    setAvatar(null);
+    setAvatarPreview(null);
+    setAvatarUrl(user?.avatarUrl || null);
+    setAvatarFileId(null);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    // Show confirmation dialog instead of submitting directly
+    setShowUpdateConfirm(true);
+  };
+
+  const confirmUpdate = () => {
     const formData = new FormData();
     formData.append("name", form.name);
     formData.append("email", form.email);
@@ -82,8 +165,13 @@ export default function EditProfile({ user: ssrUser }: EditProfileProps) {
     if (form.password) {
       formData.append("password", form.password);
     }
-    if (avatar) {
-      formData.append("avatar", avatar);
+    // Send imageUrl and fileId from client-side upload (not the file itself)
+    if (avatarUrl !== null && avatarUrl !== user?.avatarUrl) {
+      // Only send if image was changed (new upload or removed)
+      formData.append("imageUrl", avatarUrl || "");
+    }
+    if (avatarFileId) {
+      formData.append("fileId", avatarFileId);
     }
     updateProfile.mutate(formData, {
       onSuccess: (data) => {
@@ -99,9 +187,18 @@ export default function EditProfile({ user: ssrUser }: EditProfileProps) {
           if (data.avatarUrl) {
             setAvatarUrl(data.avatarUrl);
           }
+          // Update baseline values to new saved values (so button becomes disabled again)
+          setBaselineValues({
+            name: data.name || "",
+            email: data.email || "",
+            country: data.country || "",
+            avatarUrl: data.avatarUrl || null,
+          });
         }
         // Clear avatar file state after successful upload
         setAvatar(null);
+        setAvatarPreview(null);
+        setAvatarFileId(null);
         // useUser hook will refetch after query invalidation to keep everything in sync
       },
     });
@@ -127,18 +224,49 @@ export default function EditProfile({ user: ssrUser }: EditProfileProps) {
       encType="multipart/form-data"
     >
       <div className="flex flex-col items-center mb-4">
-        {avatarUrl && (
+        {(avatarPreview || avatarUrl) && (
           <div className="relative w-24 h-24 mb-2">
             <Image
-              src={avatarUrl}
+              src={avatarPreview || avatarUrl || ""}
               alt="Avatar"
               fill
               sizes="96px"
               className="rounded-full object-cover border"
             />
+            {(avatarPreview || avatarFileId) && (
+              <button
+                type="button"
+                onClick={handleRemoveAvatar}
+                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
+                aria-label="Remove avatar"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
           </div>
         )}
-        <input type="file" accept="image/*" onChange={handleAvatarChange} />
+        <div className="w-full">
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleAvatarChange}
+            disabled={uploading}
+            className="w-full p-2 border disabled:opacity-50 disabled:cursor-not-allowed"
+          />
+          {uploading && (
+            <div className="mt-2">
+              <div className="flex items-center gap-2 text-sm text-gray-600 mb-1">
+                <span>Uploading image... {progress}%</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div
+                  className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+            </div>
+          )}
+        </div>
       </div>
       <input
         name="name"
@@ -175,7 +303,7 @@ export default function EditProfile({ user: ssrUser }: EditProfileProps) {
       <div className="flex gap-3">
         <button
           type="submit"
-          disabled={updateProfile.isPending}
+          disabled={updateProfile.isPending || !hasChanges || uploading}
           className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {updateProfile.isPending ? "Updating..." : "Update Profile"}
@@ -189,6 +317,18 @@ export default function EditProfile({ user: ssrUser }: EditProfileProps) {
           Cancel
         </button>
       </div>
+
+      {/* Update Profile Confirmation Dialog */}
+      <ConfirmDialog
+        open={showUpdateConfirm}
+        onOpenChange={setShowUpdateConfirm}
+        title="Update Profile"
+        description="Are you sure you want to update your profile? Your changes will be saved and reflected across the platform."
+        confirmText="Update"
+        cancelText="Cancel"
+        onConfirm={confirmUpdate}
+        variant="default"
+      />
     </form>
   );
 }

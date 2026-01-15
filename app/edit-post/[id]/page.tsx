@@ -37,7 +37,7 @@ export default function EditPost() {
   const [screenshot, setScreenshot] = useState<File | null>(null);
   const [tags, setTags] = useState<string[]>([]);
   const [imageUrl, setImageUrl] = useState<string | undefined>(undefined);
-  const [imageFileId, setImageFileId] = useState<string | undefined>(undefined);
+  const [imageFileId, setImageFileId] = useState<string | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   const { uploadImage, uploading, progress } = useImageUpload();
@@ -95,7 +95,7 @@ export default function EditPost() {
     setScreenshot(null);
     setImagePreview(null);
     setImageUrl(undefined);
-    setImageFileId(undefined);
+    setImageFileId(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

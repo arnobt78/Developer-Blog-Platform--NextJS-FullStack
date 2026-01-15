@@ -54,6 +54,8 @@ export async function PUT(request: NextRequest) {
     const country = formData.get("country") as string | null;
     const password = formData.get("password") as string | null;
     const avatarFile = formData.get("avatar") as File | null;
+    const imageUrl = formData.get("imageUrl") as string | null;
+    const fileId = formData.get("fileId") as string | null;
 
     // Fetch current user to get old avatar fileId
     const currentUser = await prisma.user.findUnique({
@@ -78,15 +80,23 @@ export async function PUT(request: NextRequest) {
       updateData.password = hashedPassword;
     }
 
-    // Upload avatar to ImageKit if provided
+    // Handle avatar/image updates
+    // Priority: 1) Direct file upload (avatarFile), 2) Client-side ImageKit upload (imageUrl + fileId)
     if (avatarFile) {
+      // Direct file upload (backward compatibility)
       try {
         const uploaded = await handleFileUpload(avatarFile, "avatars");
         if (uploaded) {
           updateData.avatarUrl = uploaded.url;
           updateData.fileId = uploaded.fileId;
+          // Delete old image from ImageKit if exists and different
           if (currentUser?.fileId && currentUser.fileId !== uploaded.fileId) {
-            await deleteFromImageKit(currentUser.fileId);
+            try {
+              await deleteFromImageKit(currentUser.fileId);
+            } catch (error) {
+              // Ignore file not found errors
+              console.warn("Error deleting old avatar:", error);
+            }
           }
           console.log("Avatar uploaded successfully:", uploaded.url);
         } else {
@@ -95,6 +105,49 @@ export async function PUT(request: NextRequest) {
       } catch (uploadError) {
         console.error("Avatar upload error:", uploadError);
       }
+    } else if (fileId) {
+      // New image uploaded via client-side ImageKit
+      if (currentUser?.fileId && currentUser.fileId !== fileId) {
+        // Delete old image from ImageKit if different
+        try {
+          await deleteFromImageKit(currentUser.fileId);
+        } catch (error) {
+          // Ignore file not found errors
+          console.warn("Error deleting old avatar:", error);
+        }
+      }
+      updateData.fileId = fileId;
+      // Use imageUrl from formData if provided
+      if (imageUrl !== null) {
+        updateData.avatarUrl = imageUrl || null; // Empty string means remove image
+      }
+    } else if (imageUrl !== null) {
+      // imageUrl explicitly provided in formData (could be empty string to remove)
+      if (imageUrl === "" && currentUser?.fileId) {
+        // Image removed by user: delete old image from ImageKit and clear fields
+        try {
+          await deleteFromImageKit(currentUser.fileId);
+        } catch (error) {
+          // Ignore file not found errors
+          console.warn("Error deleting old avatar:", error);
+        }
+        updateData.avatarUrl = null;
+        updateData.fileId = null;
+      } else if (imageUrl) {
+        // New imageUrl provided (from client-side upload)
+        // If old fileId exists and is different, delete it from ImageKit
+        // Note: This case is less common since fileId should be provided with imageUrl
+        if (currentUser?.fileId && currentUser.avatarUrl !== imageUrl) {
+          try {
+            await deleteFromImageKit(currentUser.fileId);
+          } catch (error) {
+            // Ignore file not found errors
+            console.warn("Error deleting old avatar:", error);
+          }
+        }
+        updateData.avatarUrl = imageUrl;
+      }
+      // If imageUrl is null, we preserve existing values (already set above)
     }
 
     // Only update if there's data to update
