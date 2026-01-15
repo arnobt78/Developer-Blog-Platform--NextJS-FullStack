@@ -5,7 +5,7 @@ import { PostCardSkeleton } from "@/components/ui/skeleton";
 import { useSession } from "next-auth/react";
 import { useUser } from "@/hooks/use-auth";
 import PostCard from "@/components/PostCard";
-import { useSavedPosts, useSavePost } from "@/hooks/use-posts";
+import { useSavedPosts, useUnsavePost } from "@/hooks/use-posts";
 
 export default function SavedPosts() {
   const { data: session, status } = useSession();
@@ -18,11 +18,11 @@ export default function SavedPosts() {
   const { data: posts = [], isLoading } = useSavedPosts({
     enabled: isAuthenticated,
   });
-  const savePost = useSavePost();
+  const unsavePost = useUnsavePost();
 
   // Remove post from list when unsaved with optimistic update
   const handleUnsave = (postId: string) => {
-    savePost.mutate(postId);
+    unsavePost.mutate(postId);
   };
 
   return (

@@ -753,26 +753,27 @@ export function useUnsavePost() {
     },
     onMutate: async (postId) => {
       // Cancel outgoing refetches to prevent race conditions
-      await queryClient.cancelQueries({ queryKey: ["post", postId] });
+      // Use exact: false to match all variations of query keys (with or without userId)
+      await queryClient.cancelQueries({ queryKey: ["post", postId], exact: false });
       await queryClient.cancelQueries({ queryKey: ["posts"] });
-      await queryClient.cancelQueries({ queryKey: ["saved-posts"] });
+      await queryClient.cancelQueries({ queryKey: ["saved-posts"], exact: false });
 
       // Snapshot the current values for potential rollback
       const previousPost = queryClient.getQueryData<Post>(["post", postId]);
       const previousPostsQueries = queryClient.getQueriesData<Post[]>({
         queryKey: ["posts"],
       });
-      const previousSavedPosts = queryClient.getQueryData<Post[]>([
-        "saved-posts",
-      ]);
+      const previousSavedPostsQueries = queryClient.getQueriesData<Post[]>({
+        queryKey: ["saved-posts"],
+        exact: false, // Match all saved-posts queries (with or without userId)
+      });
 
       // Optimistically update single post cache - mark as unsaved
-      if (previousPost) {
-        queryClient.setQueryData<Post>(["post", postId], {
-          ...previousPost,
-          saved: false,
-        });
-      }
+      // Update all variations of single post query (with or without userId)
+      queryClient.setQueriesData<Post>(
+        { queryKey: ["post", postId], exact: false },
+        (old) => (old ? { ...old, saved: false } : old)
+      );
 
       // Optimistically update ALL posts queries - mark as unsaved
       queryClient.setQueriesData<Post[]>({ queryKey: ["posts"] }, (old) =>
@@ -781,22 +782,25 @@ export function useUnsavePost() {
         )
       );
 
-      // Optimistically remove from saved-posts cache
-      queryClient.setQueryData<Post[]>(["saved-posts"], (old) =>
-        old?.filter((post) => post.id !== postId)
+      // Optimistically remove from ALL saved-posts cache variations (with or without userId)
+      queryClient.setQueriesData<Post[]>(
+        { queryKey: ["saved-posts"], exact: false },
+        (old) => old?.filter((post) => post.id !== postId)
       );
 
       return {
         previousPost,
         previousPostsQueries,
-        previousSavedPosts,
+        previousSavedPostsQueries,
       };
     },
     onSuccess: (data, postId, _context) => {
       // Update with server response if available
       if (data) {
-        queryClient.setQueryData<Post>(["post", postId], (old) =>
-          old ? { ...old, saved: data.saved } : old
+        // Update all variations of single post query (with or without userId)
+        queryClient.setQueriesData<Post>(
+          { queryKey: ["post", postId], exact: false },
+          (old) => (old ? { ...old, saved: data.saved } : old)
         );
 
         queryClient.setQueriesData<Post[]>({ queryKey: ["posts"] }, (old) =>
@@ -809,13 +813,14 @@ export function useUnsavePost() {
       // Background refetch for consistency
       queryClient.invalidateQueries({
         queryKey: ["saved-posts"],
+        exact: false, // Invalidate all saved-posts queries
         refetchType: "none",
       });
       queryClient.invalidateQueries({
         queryKey: ["posts"],
         refetchType: "none",
       });
-      queryClient.refetchQueries({ queryKey: ["saved-posts"] });
+      queryClient.refetchQueries({ queryKey: ["saved-posts"], exact: false });
       queryClient.refetchQueries({ queryKey: ["posts"] });
 
       toast({
@@ -837,8 +842,13 @@ export function useUnsavePost() {
           }
         });
       }
-      if (context?.previousSavedPosts) {
-        queryClient.setQueryData(["saved-posts"], context.previousSavedPosts);
+      if (context?.previousSavedPostsQueries) {
+        context.previousSavedPostsQueries.forEach(([queryKey, data]) => {
+          // Only set query data if data exists (not undefined)
+          if (data !== undefined) {
+            queryClient.setQueryData(queryKey, data);
+          }
+        });
       }
 
       toast({
