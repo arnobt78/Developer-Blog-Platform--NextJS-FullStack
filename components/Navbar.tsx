@@ -49,6 +49,13 @@ const Navbar: React.FC<NavbarProps> = ({ user: ssrUser }) => {
   const { status: sessionStatus } = useSession();
   const isAuthenticated = sessionStatus === "authenticated";
   
+  // Reset isLoggingOut when user becomes authenticated (after login)
+  useEffect(() => {
+    if (isAuthenticated) {
+      setIsLoggingOut(false);
+    }
+  }, [isAuthenticated]);
+  
   // Always use client-fetched user for latest info, fallback to SSR user for initial render
   // Only show user if authenticated and not logging out (prevents flicker on logout)
   const { data: clientUser, isLoading: isUserLoading } = useUser(ssrUser?.id);
