@@ -35,6 +35,9 @@ export function useAuth() {
  * Get current user profile
  */
 export function useUser(userId?: string) {
+  const { status } = useSession();
+  const isAuthenticated = status === "authenticated";
+
   return useQuery({
     queryKey: ["user", userId],
     queryFn: async () => {
@@ -43,12 +46,19 @@ export function useUser(userId?: string) {
         method: "GET",
         credentials: "include",
       });
-      if (!response.ok) throw new Error("Failed to fetch user");
+      if (!response.ok) {
+        // Handle 401 gracefully (user logged out) - don't throw error
+        if (response.status === 401) {
+          return null;
+        }
+        throw new Error("Failed to fetch user");
+      }
       const data = await response.json();
       return data as User;
     },
-    enabled: !!userId,
+    enabled: !!userId && isAuthenticated, // Only fetch when userId exists and user is authenticated
     staleTime: 5 * 60 * 1000,
+    retry: false, // Don't retry on 401 errors
   });
 }
 
@@ -163,6 +173,11 @@ export function useUpdateProfile() {
       // Invalidate queries to refetch updated data
       queryClient.invalidateQueries({ queryKey: ["auth"] });
       queryClient.invalidateQueries({ queryKey: ["user"] });
+      // Also invalidate posts queries to update author info in posts
+      queryClient.invalidateQueries({ queryKey: ["posts"] });
+      queryClient.invalidateQueries({ queryKey: ["post"] });
+      queryClient.invalidateQueries({ queryKey: ["saved-posts"] });
+      queryClient.invalidateQueries({ queryKey: ["comments"] });
       // Show success toast
       toast({
         title: "Profile Updated!",

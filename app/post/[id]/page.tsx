@@ -242,7 +242,14 @@ export default function PostDetails() {
         <div className="p-6">
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
-            <PostHeader author={post.author} createdAt={post.createdAt} />
+            <PostHeader
+              author={
+                post.author && post.author.id && user?.id && post.author.id === user.id
+                  ? user
+                  : post.author
+              }
+              createdAt={post.createdAt}
+            />
             {isLoggedIn && (
               <PostDropdownMenu
                 isAuthor={!!(user && post && user.id === post.author.id)}
