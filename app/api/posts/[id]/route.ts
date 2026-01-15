@@ -82,13 +82,14 @@ export async function PUT(
     const description = formData.get("description") as string;
     const content = formData.get("content") as string;
     const codeSnippet = formData.get("codeSnippet") as string;
-    const imageUrl = formData.get("imageUrl") as string;
+    const imageUrl = formData.get("imageUrl") as string | null;
     const fileId = formData.get("fileId") as string | null;
     const tagsStr = formData.get("tags") as string;
     const screenshotFile = formData.get("screenshot") as File | null;
 
-    let updatedImageUrl = imageUrl;
-    let updatedFileId = post.fileId;
+    // Initialize with existing values to preserve them if not changed
+    let updatedImageUrl = post.imageUrl || "";
+    let updatedFileId = post.fileId || null;
 
     // If new screenshot file provided, upload it
     if (screenshotFile) {
@@ -108,12 +109,32 @@ export async function PUT(
         await deleteFromImageKit(post.fileId);
       }
       updatedFileId = fileId;
-    } else if (!fileId && post.fileId) {
-      // Image removed by user: delete old image from ImageKit and clear fields
-      await deleteFromImageKit(post.fileId);
-      updatedImageUrl = "";
-      updatedFileId = "";
+      // Use imageUrl from formData if provided, otherwise keep existing
+      if (imageUrl) {
+        updatedImageUrl = imageUrl;
+      }
+    } else if (imageUrl !== null) {
+      // imageUrl explicitly provided in formData (could be empty string to remove)
+      if (imageUrl === "" && post.fileId) {
+        // Image removed by user: delete old image from ImageKit and clear fields
+        await deleteFromImageKit(post.fileId);
+        updatedImageUrl = "";
+        updatedFileId = null;
+      } else if (imageUrl) {
+        // New imageUrl provided (from client-side upload)
+        // If old fileId exists and is different, delete it from ImageKit
+        if (post.fileId && post.imageUrl !== imageUrl) {
+          await deleteFromImageKit(post.fileId);
+        }
+        updatedImageUrl = imageUrl;
+        // Note: fileId should be provided separately if it's a new upload
+        // If not provided, we'll need to extract it from imageUrl or keep existing
+        // For now, we preserve existing fileId if imageUrl changed but fileId not provided
+        // This handles the case where imageUrl is updated but fileId is not sent
+      }
+      // If imageUrl is null, we preserve existing values (already set above)
     }
+    // If imageUrl is null and fileId is null, we keep existing values (already set above)
 
     const tags = tagsStr ? JSON.parse(tagsStr) : [];
 

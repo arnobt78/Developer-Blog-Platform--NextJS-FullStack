@@ -23,6 +23,7 @@ import CommentInput from "./CommentInput";
 import CommentAvatar from "./CommentAvatar";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { useSession } from "next-auth/react";
+import { useIsMutating } from "@tanstack/react-query";
 import { useUser } from "@/hooks/use-auth";
 import { toast } from "@/hooks/use-toast";
 
@@ -79,6 +80,12 @@ const CommentSection: React.FC<CommentSectionProps> = ({
   const likeCommentMutation = useLikeComment();
   const helpfulCommentMutation = useHelpfulComment();
   const { uploadImage, uploading, progress } = useImageUpload();
+
+  // Track if any comment is being updated (for skeleton loading)
+  const isUpdatingComment = useIsMutating({
+    mutationKey: ["updateComment"],
+    exact: false,
+  }) > 0;
 
   // Authentication hooks
   const { data: session, status } = useSession();
@@ -288,11 +295,17 @@ const CommentSection: React.FC<CommentSectionProps> = ({
   return (
     <div key={`${postId}-${parentId}-${comments.length}`} className="space-y-4">
       <ul className="space-y-4">
-        {comments.map((comment) => (
-          <CommentItem
-            key={comment.id}
-            comment={comment}
-            user={user}
+        {comments.map((comment) => {
+          // Show skeleton during update to prevent flash of old data
+          const showSkeleton = isUpdatingComment && editingComment === comment.id;
+          
+          return showSkeleton ? (
+            <CommentSkeleton key={comment.id} />
+          ) : (
+            <CommentItem
+              key={comment.id}
+              comment={comment}
+              user={user}
             onEdit={() => handleEditComment(comment.id)}
             onDelete={() => handleDeleteComment(comment.id)}
             onLike={() => handleLikeComment(comment.id)}
@@ -345,7 +358,8 @@ const CommentSection: React.FC<CommentSectionProps> = ({
               />
             </div>
           </CommentItem>
-        ))}
+          );
+        })}
       </ul>
 
       {/* Main comment input - only show at top level */}

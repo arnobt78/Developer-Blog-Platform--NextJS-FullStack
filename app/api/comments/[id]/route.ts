@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth";
 import { deleteFromImageKit } from "@/lib/imagekit";
+import { handleFileUpload } from "@/lib/upload";
 
 // Edit a comment
 export async function PUT(
@@ -11,7 +12,6 @@ export async function PUT(
   try {
     const { id } = await params;
     const userId = await requireAuth();
-    const { content } = await request.json();
 
     // Check if user owns the comment
     const comment = await prisma.comment.findUnique({
@@ -30,9 +30,104 @@ export async function PUT(
       );
     }
 
+    // Handle both JSON and FormData requests
+    let content: string;
+    let imageUrl: string | null = null;
+    let fileId: string | null = null;
+    let imageFile: File | null = null;
+
+    const contentType = request.headers.get("content-type");
+    if (contentType?.includes("application/json")) {
+      // JSON request (legacy support)
+      const body = await request.json();
+      content = body.content;
+    } else {
+      // FormData request (supports image updates)
+      const formData = await request.formData();
+      content = formData.get("content") as string;
+      imageUrl = formData.get("imageUrl") as string | null;
+      fileId = formData.get("fileId") as string | null;
+      imageFile = formData.get("image") as File | null;
+    }
+
+    if (!content) {
+      return NextResponse.json(
+        { error: "Content is required" },
+        { status: 400 }
+      );
+    }
+
+    // Initialize with existing values to preserve them if not changed
+    let updatedImageUrl = comment.imageUrl || null;
+    let updatedFileId = comment.fileId || null;
+
+    // Handle image updates
+    if (imageFile) {
+      // New image file provided, upload it
+      const uploaded = await handleFileUpload(imageFile, "comments");
+      if (uploaded) {
+        // Delete old image from ImageKit if exists
+        if (comment.fileId) {
+          try {
+            await deleteFromImageKit(comment.fileId);
+          } catch (error) {
+            // Ignore file not found errors
+          }
+        }
+        updatedImageUrl = uploaded.url;
+        updatedFileId = uploaded.fileId;
+      }
+    } else if (fileId) {
+      // New image uploaded via client-side ImageKit
+      if (comment.fileId && comment.fileId !== fileId) {
+        // Delete old image from ImageKit if different
+        try {
+          await deleteFromImageKit(comment.fileId);
+        } catch (error) {
+          // Ignore file not found errors
+        }
+      }
+      updatedFileId = fileId;
+      // Use imageUrl from formData if provided, otherwise keep existing
+      if (imageUrl) {
+        updatedImageUrl = imageUrl;
+      }
+    } else if (imageUrl !== null) {
+      // imageUrl explicitly provided in formData (could be empty string to remove)
+      if (imageUrl === "" && comment.fileId) {
+        // Image removed by user: delete old image from ImageKit and clear fields
+        try {
+          await deleteFromImageKit(comment.fileId);
+        } catch (error) {
+          // Ignore file not found errors
+        }
+        updatedImageUrl = null;
+        updatedFileId = null;
+      } else if (imageUrl) {
+        // New imageUrl provided (from client-side upload)
+        // If old fileId exists and imageUrl changed, delete old image from ImageKit
+        if (comment.fileId && comment.imageUrl !== imageUrl) {
+          try {
+            await deleteFromImageKit(comment.fileId);
+          } catch (error) {
+            // Ignore file not found errors
+          }
+        }
+        updatedImageUrl = imageUrl;
+        // Note: fileId should be provided separately if it's a new upload
+        // If not provided, we preserve existing fileId
+      }
+      // If imageUrl is null, we preserve existing values (already set above)
+    }
+    // If imageUrl is null and fileId is null, we keep existing values (already set above)
+
     const updatedComment = await prisma.comment.update({
       where: { id },
-      data: { content },
+      data: {
+        content,
+        imageUrl: updatedImageUrl,
+        fileId: updatedFileId,
+      },
       include: {
         author: true,
         commentLikes: true,

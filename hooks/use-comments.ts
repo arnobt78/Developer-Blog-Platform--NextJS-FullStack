@@ -154,6 +154,7 @@ export function useUpdateComment() {
     Error,
     { id: string; content: string; postId: string }
   >({
+    mutationKey: ["updateComment"],
     mutationFn: async ({
       id,
       content,

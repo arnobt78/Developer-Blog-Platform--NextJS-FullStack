@@ -223,11 +223,13 @@ export function useUpdatePost() {
 
         // Handle image URL - preserve existing if not provided, update if provided
         const imageUrl = formData.get("imageUrl") as string | null;
-        if (imageUrl !== null && imageUrl !== undefined) {
-          // If imageUrl is empty string, it means image was removed
+        if (imageUrl !== null) {
+          // imageUrl was explicitly provided in formData
+          // If it's an empty string, it means image was removed
+          // If it's a non-empty string, use it (new or existing image)
           updatedPost.imageUrl = imageUrl || undefined;
         } else {
-          // Preserve existing imageUrl if not provided in formData
+          // imageUrl not in formData - preserve existing imageUrl
           updatedPost.imageUrl = previousPost.imageUrl;
         }
 
@@ -258,10 +260,15 @@ export function useUpdatePost() {
                 tags: formData.get("tags")
                   ? JSON.parse(formData.get("tags") as string)
                   : post.tags,
-                imageUrl:
-                  formData.get("imageUrl") !== null
-                    ? (formData.get("imageUrl") as string) || undefined
-                    : post.imageUrl,
+                imageUrl: (() => {
+                  const imageUrl = formData.get("imageUrl") as string | null;
+                  if (imageUrl !== null) {
+                    // imageUrl was explicitly provided - use it (empty string means removed)
+                    return imageUrl || undefined;
+                  }
+                  // imageUrl not provided - preserve existing
+                  return post.imageUrl;
+                })(),
               }
             : post
         )
@@ -289,10 +296,15 @@ export function useUpdatePost() {
                 tags: formData.get("tags")
                   ? JSON.parse(formData.get("tags") as string)
                   : post.tags,
-                imageUrl:
-                  formData.get("imageUrl") !== null
-                    ? (formData.get("imageUrl") as string) || undefined
-                    : post.imageUrl,
+                imageUrl: (() => {
+                  const imageUrl = formData.get("imageUrl") as string | null;
+                  if (imageUrl !== null) {
+                    // imageUrl was explicitly provided - use it (empty string means removed)
+                    return imageUrl || undefined;
+                  }
+                  // imageUrl not provided - preserve existing
+                  return post.imageUrl;
+                })(),
               }
             : post
         )

@@ -52,7 +52,9 @@ export default function EditPost() {
       setSolution(post.content);
       setCodeSnippet(post.codeSnippet || "");
       setTags(post.tags || []);
-      setImageUrl(post.imageUrl);
+      setImageUrl(post.imageUrl || undefined);
+      // Note: We don't set imageFileId here because it's only needed for new uploads
+      // The existing fileId is preserved on the server side
     }
   }, [post]);
 
@@ -75,7 +77,7 @@ export default function EditPost() {
       const file = e.target.files[0];
       setScreenshot(file);
       setImagePreview(URL.createObjectURL(file));
-      
+
       // Upload image immediately when selected
       const result = await uploadImage(file, "posts");
       if (result) {
@@ -110,9 +112,13 @@ export default function EditPost() {
     formData.append("content", solution);
     formData.append("codeSnippet", codeSnippet);
     formData.append("tags", JSON.stringify(tags));
-    if (imageUrl) {
-      formData.append("imageUrl", imageUrl);
+    // Always send imageUrl if it exists (preserves existing image if not changed)
+    // If imageUrl is undefined, it means image was removed, so we don't append it
+    // The API will preserve existing imageUrl if not provided
+    if (imageUrl !== undefined) {
+      formData.append("imageUrl", imageUrl || "");
     }
+    // Only send fileId if it's a new upload (imageFileId is set when new image is uploaded)
     if (imageFileId) {
       formData.append("fileId", imageFileId);
     }
