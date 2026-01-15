@@ -68,8 +68,8 @@ export async function PUT(request: NextRequest) {
       email?: string;
       country?: string;
       password?: string;
-      avatarUrl?: string;
-      fileId?: string;
+      avatarUrl?: string | null;
+      fileId?: string | null;
     } = {};
     if (typeof name === "string") updateData.name = name;
     if (typeof email === "string") updateData.email = email;
