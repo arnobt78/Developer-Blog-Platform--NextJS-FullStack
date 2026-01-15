@@ -91,13 +91,9 @@ const Navbar: React.FC<NavbarProps> = ({ user: ssrUser }) => {
     setSearch("");
   }, [pathname]);
 
-  // Reintroduced real-time updates for notifications
-  useEffect(() => {
-    const interval = setInterval(() => {
-      queryClient.invalidateQueries({ queryKey: ["notifications"] });
-    }, 60000); // Refetch every 60 seconds
-    return () => clearInterval(interval);
-  }, [queryClient]);
+  // Removed manual notification invalidation interval
+  // React Query's refetchInterval in useNotifications hook (2 minutes) handles automatic updates
+  // This prevents duplicate API calls and conflicts with the built-in refetch mechanism
 
   // Search submit handler
   const handleSearchSubmit = (e: React.FormEvent) => {

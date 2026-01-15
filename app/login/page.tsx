@@ -5,6 +5,7 @@ import Link from "next/link";
 import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Select,
   SelectContent,
@@ -45,6 +46,7 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   /**
    * Handle input field changes
@@ -127,6 +129,12 @@ export default function Login() {
             variant: "success",
           });
         }
+        
+        // Invalidate notifications query to trigger fresh fetch after login
+        // This ensures notifications appear immediately in navbar badge
+        // Note: useAuth hook also invalidates, but React Query deduplicates simultaneous invalidations
+        queryClient.invalidateQueries({ queryKey: ["notifications"] });
+        
         router.push("/posts");
         router.refresh();
       }

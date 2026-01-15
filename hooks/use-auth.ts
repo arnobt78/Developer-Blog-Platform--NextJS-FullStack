@@ -10,8 +10,6 @@ import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { toast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import type { User } from "@/types";
-import { useEffect } from "react";
-import { useNotifications } from "@/hooks/use-notifications";
 
 /**
  * Check if user is authenticated using NextAuth session
@@ -19,13 +17,10 @@ import { useNotifications } from "@/hooks/use-notifications";
  */
 export function useAuth() {
   const { data: session, status } = useSession();
-  const { refetch: refetchNotifications } = useNotifications();
-
-  useEffect(() => {
-    if (status === "authenticated") {
-      refetchNotifications();
-    }
-  }, [status, refetchNotifications]);
+  // Removed notification invalidation from useAuth to prevent duplicate API calls
+  // Login page handles notification invalidation on successful login
+  // This hook is used in multiple places (usePosts, useComments, etc.) and each
+  // instance was invalidating notifications, causing excessive API calls
 
   return {
     data: {

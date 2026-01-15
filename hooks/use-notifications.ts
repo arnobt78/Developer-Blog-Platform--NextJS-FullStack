@@ -8,12 +8,16 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/hooks/use-toast";
 import type { Notification } from "@/types";
+import { useSession } from "next-auth/react";
 
 /**
  * Fetch all notifications for current user
  * Requires authentication - NextAuth cookies are sent automatically
  */
 export function useNotifications() {
+  const { status } = useSession();
+  const isAuthenticated = status === "authenticated";
+
   return useQuery<Notification[], Error>({
     queryKey: ["notifications"],
     queryFn: async () => {
@@ -24,8 +28,11 @@ export function useNotifications() {
       if (!response.ok) throw new Error("Failed to fetch notifications");
       return response.json() as Promise<Notification[]>;
     },
-    staleTime: 1 * 60 * 1000, // 1 minute
-    refetchInterval: 2 * 60 * 1000, // Refetch every 2 minutes for real-time updates
+    enabled: isAuthenticated, // Only fetch when user is authenticated
+    staleTime: 2 * 60 * 1000, // 2 minutes - increased to reduce unnecessary refetches
+    refetchInterval: isAuthenticated ? 2 * 60 * 1000 : false, // Refetch every 2 minutes when authenticated
+    refetchOnMount: true, // Refetch on mount if data is stale (respects staleTime, React Query deduplicates simultaneous calls)
+    refetchOnWindowFocus: false, // Don't refetch on window focus to reduce API calls
   });
 }
 

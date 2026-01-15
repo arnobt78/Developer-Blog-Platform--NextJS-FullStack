@@ -299,14 +299,19 @@ export function useLikePost() {
     },
     onMutate: async (postId) => {
       console.log("Toggling like for post:", postId);
-      const previousPost = queryClient.getQueryData<Post>(["post", postId]);
-      console.log("Previous post cache:", previousPost);
-
+      
       // Cancel outgoing refetches to prevent race conditions
-      await queryClient.cancelQueries({ queryKey: ["post", postId] });
+      // Use exact: false to match all variations of the query key (with or without userId)
+      await queryClient.cancelQueries({ queryKey: ["post", postId], exact: false });
       await queryClient.cancelQueries({ queryKey: ["posts"] });
       await queryClient.cancelQueries({ queryKey: ["saved-posts"] });
 
+      // Get all single post queries (may have different userIds in query key)
+      const allPostQueries = queryClient.getQueriesData<Post>({
+        queryKey: ["post", postId],
+        exact: false,
+      });
+      
       // Snapshot the current values for potential rollback
       const previousPostsQueries = queryClient.getQueriesData<Post[]>({
         queryKey: ["posts"],
@@ -315,16 +320,21 @@ export function useLikePost() {
         queryKey: ["saved-posts"],
       });
 
-      // Optimistically update single post cache
-      if (previousPost) {
-        queryClient.setQueryData<Post>(["post", postId], {
-          ...previousPost,
-          likes: previousPost.liked
-            ? Math.max(0, previousPost.likes - 1)
-            : previousPost.likes + 1,
-          liked: !previousPost.liked,
-        });
-      }
+      // Optimistically update ALL single post cache variations (with or without userId)
+      allPostQueries.forEach(([queryKey, previousPost]) => {
+        if (previousPost) {
+          queryClient.setQueryData<Post>(queryKey, {
+            ...previousPost,
+            likes: previousPost.liked
+              ? Math.max(0, previousPost.likes - 1)
+              : previousPost.likes + 1,
+            liked: !previousPost.liked,
+          });
+        }
+      });
+      
+      // Store first post query for rollback (if exists)
+      const previousPost = allPostQueries[0]?.[1] || null;
 
       // Optimistically update ALL posts list queries instantly
       queryClient.setQueriesData<Post[]>({ queryKey: ["posts"] }, (old) =>
@@ -360,6 +370,7 @@ export function useLikePost() {
         previousPost,
         previousPostsQueries,
         previousSavedPostsQueries,
+        allPostQueries, // Store all post queries for rollback
       };
     },
     onSuccess: (data, postId) => {
@@ -369,9 +380,10 @@ export function useLikePost() {
       // This prevents flicker by not triggering a refetch
       const { liked, likes } = data;
 
-      // Update single post cache
-      queryClient.setQueryData<Post>(["post", postId], (old) =>
-        old ? { ...old, liked, likes } : old
+      // Update ALL single post cache variations (with or without userId in query key)
+      queryClient.setQueriesData<Post>(
+        { queryKey: ["post", postId], exact: false },
+        (old) => (old ? { ...old, liked, likes } : old)
       );
 
       // Update ALL posts queries (regardless of params) with matching postId
@@ -390,8 +402,11 @@ export function useLikePost() {
     },
     onError: (err, postId, context) => {
       // If mutation fails, rollback to previous state
-      if (context?.previousPost) {
-        queryClient.setQueryData(["post", postId], context.previousPost);
+      // Rollback all single post query variations
+      if (context?.allPostQueries) {
+        context.allPostQueries.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
       }
       // Rollback all posts queries
       if (context?.previousPostsQueries) {
@@ -433,13 +448,18 @@ export function useMarkHelpful() {
     },
     onMutate: async (postId) => {
       console.log("Toggling helpful for post:", postId);
-      const previousPost = queryClient.getQueryData<Post>(["post", postId]);
-      console.log("Previous post cache:", previousPost);
-
+      
       // Cancel outgoing refetches to prevent race conditions
-      await queryClient.cancelQueries({ queryKey: ["post", postId] });
+      // Use exact: false to match all variations of the query key (with or without userId)
+      await queryClient.cancelQueries({ queryKey: ["post", postId], exact: false });
       await queryClient.cancelQueries({ queryKey: ["posts"] });
       await queryClient.cancelQueries({ queryKey: ["saved-posts"] });
+
+      // Get all single post queries (may have different userIds in query key)
+      const allPostQueries = queryClient.getQueriesData<Post>({
+        queryKey: ["post", postId],
+        exact: false,
+      });
 
       // Snapshot the current values for potential rollback
       const previousPostsQueries = queryClient.getQueriesData<Post[]>({
@@ -449,16 +469,21 @@ export function useMarkHelpful() {
         queryKey: ["saved-posts"],
       });
 
-      // Optimistically update single post cache
-      if (previousPost) {
-        queryClient.setQueryData<Post>(["post", postId], {
-          ...previousPost,
-          helpfulCount: previousPost.helpful
-            ? Math.max(0, previousPost.helpfulCount - 1)
-            : previousPost.helpfulCount + 1,
-          helpful: !previousPost.helpful,
-        });
-      }
+      // Optimistically update ALL single post cache variations (with or without userId)
+      allPostQueries.forEach(([queryKey, previousPost]) => {
+        if (previousPost) {
+          queryClient.setQueryData<Post>(queryKey, {
+            ...previousPost,
+            helpfulCount: previousPost.helpful
+              ? Math.max(0, previousPost.helpfulCount - 1)
+              : previousPost.helpfulCount + 1,
+            helpful: !previousPost.helpful,
+          });
+        }
+      });
+      
+      // Store first post query for rollback (if exists)
+      const previousPost = allPostQueries[0]?.[1] || null;
 
       // Optimistically update ALL posts list queries instantly
       queryClient.setQueriesData<Post[]>({ queryKey: ["posts"] }, (old) =>
@@ -494,6 +519,7 @@ export function useMarkHelpful() {
         previousPost,
         previousPostsQueries,
         previousSavedPostsQueries,
+        allPostQueries, // Store all post queries for rollback
       };
     },
     onSuccess: (data, postId) => {
@@ -503,9 +529,10 @@ export function useMarkHelpful() {
       // This prevents flicker by not triggering a refetch
       const { helpful, helpfulCount } = data;
 
-      // Update single post cache
-      queryClient.setQueryData<Post>(["post", postId], (old) =>
-        old ? { ...old, helpful, helpfulCount } : old
+      // Update ALL single post cache variations (with or without userId in query key)
+      queryClient.setQueriesData<Post>(
+        { queryKey: ["post", postId], exact: false },
+        (old) => (old ? { ...old, helpful, helpfulCount } : old)
       );
 
       // Update ALL posts queries (regardless of params) with matching postId
@@ -524,8 +551,11 @@ export function useMarkHelpful() {
     },
     onError: (err, postId, context) => {
       // If mutation fails, rollback to previous state
-      if (context?.previousPost) {
-        queryClient.setQueryData(["post", postId], context.previousPost);
+      // Rollback all single post query variations
+      if (context?.allPostQueries) {
+        context.allPostQueries.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
       }
       // Rollback all posts queries
       if (context?.previousPostsQueries) {
