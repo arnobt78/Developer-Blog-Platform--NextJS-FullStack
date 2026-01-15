@@ -40,7 +40,7 @@ export default function EditPost() {
   const [imageFileId, setImageFileId] = useState<string | undefined>(undefined);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
-  const { uploadImage, uploading } = useImageUpload();
+  const { uploadImage, uploading, progress } = useImageUpload();
   const { data: post, isLoading: isLoadingPost } = usePost(id || "");
   const updatePost = useUpdatePost();
 
@@ -70,11 +70,22 @@ export default function EditPost() {
     setTags((prev) => prev.filter((t) => t !== tag));
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       setScreenshot(file);
       setImagePreview(URL.createObjectURL(file));
+      
+      // Upload image immediately when selected
+      const result = await uploadImage(file, "posts");
+      if (result) {
+        setImageUrl(result.url);
+        setImageFileId(result.fileId);
+      } else {
+        // If upload failed, clear the image
+        setScreenshot(null);
+        setImagePreview(null);
+      }
     }
   };
 
@@ -90,17 +101,8 @@ export default function EditPost() {
 
     if (!id) return;
 
-    // Always upload new image if a new file is selected
-    let uploadedImageUrl = imageUrl;
-    let uploadedFileId = imageFileId;
-
-    if (screenshot) {
-      const result = await uploadImage(screenshot, "posts");
-      if (result) {
-        uploadedImageUrl = result.url;
-        uploadedFileId = result.fileId;
-      }
-    }
+    // Image should already be uploaded when selected
+    // Just use the existing imageUrl and imageFileId
 
     const formData = new FormData();
     formData.append("title", headline);
@@ -108,11 +110,11 @@ export default function EditPost() {
     formData.append("content", solution);
     formData.append("codeSnippet", codeSnippet);
     formData.append("tags", JSON.stringify(tags));
-    if (uploadedImageUrl) {
-      formData.append("imageUrl", uploadedImageUrl);
+    if (imageUrl) {
+      formData.append("imageUrl", imageUrl);
     }
-    if (uploadedFileId) {
-      formData.append("fileId", uploadedFileId);
+    if (imageFileId) {
+      formData.append("fileId", imageFileId);
     }
 
     updatePost.mutate(
@@ -197,9 +199,6 @@ export default function EditPost() {
             onChange={handleImageChange}
             className="w-full p-2 border border-gray-300 rounded"
           />
-          {uploading && (
-            <p className="text-sm text-blue-600 mt-2">Uploading image...</p>
-          )}
           {(imagePreview || imageUrl) && (
             <div className="mt-2 relative h-32 w-48">
               <Image
@@ -209,13 +208,30 @@ export default function EditPost() {
                 sizes="192px"
                 className="object-cover rounded"
               />
-              <button
-                type="button"
-                onClick={handleRemoveImage}
-                className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center"
-              >
-                ×
-              </button>
+              {!uploading && (
+                <button
+                  type="button"
+                  onClick={handleRemoveImage}
+                  className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600"
+                >
+                  ×
+                </button>
+              )}
+              {/* Upload Progress Bar */}
+              {uploading && (
+                <div className="absolute bottom-0 left-0 right-0 bg-gray-900 bg-opacity-75 text-white p-2 rounded-b">
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className="flex-1 bg-gray-700 rounded-full h-2 overflow-hidden">
+                      <div
+                        className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${progress}%` }}
+                      />
+                    </div>
+                    <span className="text-xs font-semibold">{progress}%</span>
+                  </div>
+                  <p className="text-xs text-center">Uploading image...</p>
+                </div>
+              )}
             </div>
           )}
         </div>

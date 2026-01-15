@@ -14,6 +14,8 @@ interface CommentInputProps {
   onCancel?: () => void;
   placeholder?: string;
   submitLabel?: string;
+  uploading?: boolean;
+  uploadProgress?: number;
 }
 
 const CommentInput: React.FC<CommentInputProps> = ({
@@ -26,6 +28,8 @@ const CommentInput: React.FC<CommentInputProps> = ({
   onCancel,
   placeholder = "Write a comment...",
   submitLabel = "Comment",
+  uploading = false,
+  uploadProgress = 0,
 }) => {
   // Show cancel button only when there's text in the input or an image preview
   const showCancel = value.trim().length > 0 || !!imagePreview;
@@ -57,13 +61,28 @@ const CommentInput: React.FC<CommentInputProps> = ({
             sizes="(max-width: 768px) 100vw, 320px"
             className="object-cover rounded-lg"
           />
-          {onRemoveImage && (
+          {onRemoveImage && !uploading && (
             <button
               onClick={onRemoveImage}
               className="absolute top-1 right-1 p-1 bg-gray-800 bg-opacity-50 rounded-full text-white hover:bg-opacity-70 z-10"
             >
               <X className="w-4 h-4" />
             </button>
+          )}
+          {/* Upload Progress Bar */}
+          {uploading && (
+            <div className="absolute bottom-0 left-0 right-0 bg-gray-900 bg-opacity-75 text-white p-2 rounded-b-lg">
+              <div className="flex items-center gap-2 mb-1">
+                <div className="flex-1 bg-gray-700 rounded-full h-2 overflow-hidden">
+                  <div
+                    className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${uploadProgress}%` }}
+                  />
+                </div>
+                <span className="text-xs font-semibold">{uploadProgress}%</span>
+              </div>
+              <p className="text-xs text-center">Uploading image...</p>
+            </div>
           )}
         </div>
       )}

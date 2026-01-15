@@ -57,6 +57,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({
   // Form state for new comment
   const [newComment, setNewComment] = useState(""); // Comment text
   const [image, setImage] = useState<File | null>(null); // Image file to upload
+  const [uploadedImageUrl, setUploadedImageUrl] = useState<string | undefined>(undefined); // Uploaded image URL
   const [replyTo, setReplyTo] = useState<string | null>(null); // Comment ID being replied to
 
   // Edit state
@@ -77,7 +78,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({
   const deleteCommentMutation = useDeleteComment();
   const likeCommentMutation = useLikeComment();
   const helpfulCommentMutation = useHelpfulComment();
-  const { uploadImage, uploading: _uploading } = useImageUpload();
+  const { uploadImage, uploading, progress } = useImageUpload();
 
   // Authentication hooks
   const { data: session, status } = useSession();
@@ -96,8 +97,8 @@ const CommentSection: React.FC<CommentSectionProps> = ({
    * Handle adding a new comment with optimistic update
    *
    * Flow:
-   * 1. Validate: Must have text or image
-   * 2. Upload image if present (to ImageKit)
+   * 1. Validate: Must have text or uploaded image
+   * 2. Use already uploaded image URL (upload happens on image selection)
    * 3. Create comment with text + image URL
    * 4. React Query handles optimistic update automatically
    * 5. Reset form on success
@@ -105,25 +106,15 @@ const CommentSection: React.FC<CommentSectionProps> = ({
    * @param replyParentId - Optional: ID of comment being replied to (for nested replies)
    */
   const handleAddComment = async (replyParentId?: string) => {
-    // Validation: Must have either text or image
-    if (!newComment.trim() && !image) return;
-
-    // Upload image to ImageKit if present
-    // Images are uploaded first, then comment is created with image URL
-    let uploadedImageUrl: string | undefined;
-    if (image) {
-      const result = await uploadImage(image, "comments");
-      if (result) {
-        uploadedImageUrl = result.url; // Use uploaded image URL
-      }
-    }
+    // Validation: Must have either text or uploaded image
+    if (!newComment.trim() && !uploadedImageUrl) return;
 
     // Prepare comment data
     const commentData = {
       postId, // Which post this comment belongs to
       content: newComment, // Comment text
       parentId: replyParentId || undefined, // If replying, set parentId
-      imageUrl: uploadedImageUrl, // Optional image URL
+      imageUrl: uploadedImageUrl, // Optional image URL (already uploaded)
     };
 
     // Trigger mutation - React Query handles optimistic update
@@ -133,19 +124,31 @@ const CommentSection: React.FC<CommentSectionProps> = ({
         setNewComment("");
         setImage(null);
         setImagePreview(null);
+        setUploadedImageUrl(undefined);
         setReplyTo(null);
       },
     });
   };
 
   /**
-   * Handle image selection with preview
+   * Handle image selection with preview and immediate upload
+   * Uploads image immediately when selected for better UX
    */
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       setImage(file);
       setImagePreview(URL.createObjectURL(file));
+      
+      // Upload image immediately when selected
+      const result = await uploadImage(file, "comments");
+      if (result) {
+        setUploadedImageUrl(result.url);
+      } else {
+        // If upload failed, clear the image
+        setImage(null);
+        setImagePreview(null);
+      }
     }
   };
 
@@ -321,12 +324,14 @@ const CommentSection: React.FC<CommentSectionProps> = ({
               setNewComment("");
               setImage(null);
               setImagePreview(null);
+              setUploadedImageUrl(undefined);
             }}
             imagePreview={imagePreview}
             onImageChange={handleImageChange}
             onRemoveImage={() => {
               setImage(null);
               setImagePreview(null);
+              setUploadedImageUrl(undefined);
             }}
           >
             {/* Nested comments - recursive rendering */}
@@ -354,13 +359,17 @@ const CommentSection: React.FC<CommentSectionProps> = ({
               onRemoveImage={() => {
                 setImage(null);
                 setImagePreview(null);
+                setUploadedImageUrl(undefined);
               }}
               onSubmit={() => handleAddComment()}
               onCancel={() => {
                 setNewComment("");
                 setImage(null);
                 setImagePreview(null);
+                setUploadedImageUrl(undefined);
               }}
+              uploading={uploading}
+              uploadProgress={progress}
             />
           </div>
         </div>
