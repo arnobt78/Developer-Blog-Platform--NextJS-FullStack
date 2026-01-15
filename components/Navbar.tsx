@@ -11,7 +11,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter, usePathname } from "next/navigation";
 import { FiSearch, FiX } from "react-icons/fi";
-import { signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import { useUnreadCount } from "@/hooks/use-notifications";
 import {
   DropdownMenu,
@@ -36,6 +36,7 @@ interface NavbarProps {
 
 const Navbar: React.FC<NavbarProps> = ({ user: ssrUser }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
   const queryClient = useQueryClient();
@@ -44,9 +45,14 @@ const Navbar: React.FC<NavbarProps> = ({ user: ssrUser }) => {
   const [search, setSearch] = useState("");
   const searchInputRef = useRef<HTMLInputElement>(null);
 
+  // Check session status to immediately reflect logout state
+  const { status: sessionStatus } = useSession();
+  const isAuthenticated = sessionStatus === "authenticated";
+  
   // Always use client-fetched user for latest info, fallback to SSR user for initial render
+  // Only show user if authenticated and not logging out (prevents flicker on logout)
   const { data: clientUser, isLoading: isUserLoading } = useUser(ssrUser?.id);
-  const user = clientUser || ssrUser || null;
+  const user = isAuthenticated && !isLoggingOut ? (clientUser || ssrUser || null) : null;
   // DEBUG: Log what user prop is received and what is used
   console.log("[Navbar] ssrUser prop:", JSON.stringify(ssrUser));
   console.log("[Navbar] clientUser:", JSON.stringify(clientUser));
@@ -58,6 +64,15 @@ const Navbar: React.FC<NavbarProps> = ({ user: ssrUser }) => {
   const { toast } = useToast();
 
   const handleLogout = async () => {
+    // Immediately set logging out state to hide user UI instantly
+    setIsLoggingOut(true);
+    
+    // Immediately clear user data from cache to prevent navbar flicker
+    // This ensures navbar updates instantly before redirect
+    queryClient.setQueryData(["user", ssrUser?.id], null);
+    queryClient.invalidateQueries({ queryKey: ["user"] });
+    queryClient.invalidateQueries({ queryKey: ["auth"] });
+    
     // Show friendly goodbye toast first
     toast({
       title: "See you soon 👋",
