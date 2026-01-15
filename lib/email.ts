@@ -40,7 +40,8 @@ function formatTimestamp(): string {
 
 export async function sendPasswordResetEmail(
   email: string,
-  resetToken: string
+  resetToken: string,
+  userName: string = "User"
 ): Promise<void> {
   const transporter = nodemailer.createTransport({
     service: "gmail",
@@ -53,7 +54,7 @@ export async function sendPasswordResetEmail(
   const baseUrl = getBaseUrl();
   const resetLink = `${baseUrl}/reset-password?email=${encodeURIComponent(
     email
-  )}&token=${resetToken}`;
+  )}&token=${encodeURIComponent(resetToken)}`;
   const ticketNumber = generateTicketNumber();
   const timestamp = formatTimestamp();
 
@@ -85,8 +86,8 @@ export async function sendPasswordResetEmail(
           
           <!-- Header -->
           <tr>
-            <td style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 40px 30px; text-align: center; border-radius: 8px 8px 0 0;">
-              <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 600; letter-spacing: -0.5px;">
+            <td style="background-color: #667eea; padding: 40px 40px 30px; text-align: center; border-radius: 8px 8px 0 0;">
+              <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 600; letter-spacing: -0.5px; text-shadow: 0 1px 2px rgba(0,0,0,0.1);">
                 🔒 Password Reset Request
               </h1>
             </td>
@@ -96,7 +97,7 @@ export async function sendPasswordResetEmail(
           <tr>
             <td style="padding: 40px 40px 30px;">
               <p style="margin: 0 0 20px; color: #333333; font-size: 16px; line-height: 1.6;">
-                Hello,
+                Hello${userName && userName !== "User" ? `, ${userName}` : ""},
               </p>
               <p style="margin: 0 0 25px; color: #555555; font-size: 16px; line-height: 1.6;">
                 We received a request to reset your password for your account. If you made this request, please click the button below to reset your password:
@@ -106,9 +107,17 @@ export async function sendPasswordResetEmail(
               <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
                 <tr>
                   <td align="center" style="padding: 0 0 30px;">
-                    <a href="${resetLink}" style="display: inline-block; padding: 14px 32px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px; text-align: center; box-shadow: 0 4px 6px rgba(102, 126, 234, 0.3);">
+                    <!--[if mso]>
+                    <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="${resetLink}" style="height:48px;v-text-anchor:middle;width:220px;" arcsize="6%" stroke="f" fillcolor="#667eea">
+                      <w:anchorlock/>
+                      <center style="color:#ffffff;font-family:sans-serif;font-size:16px;font-weight:600;">Reset Your Password</center>
+                    </v:roundrect>
+                    <![endif]-->
+                    <!--[if !mso]><!-- -->
+                    <a href="${resetLink}" style="display: inline-block; padding: 14px 32px; background-color: #667eea; color: #ffffff !important; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px; text-align: center; box-shadow: 0 4px 6px rgba(102, 126, 234, 0.3); border: 2px solid #667eea;">
                       Reset Your Password
                     </a>
+                    <!--<![endif]-->
                   </td>
                 </tr>
               </table>
@@ -173,7 +182,7 @@ export async function sendPasswordResetEmail(
     // Plain text version for email clients that don't support HTML
     text: `Password Reset Request
 
-Hello,
+Hello${userName && userName !== "User" ? `, ${userName}` : ""},
 
 We received a request to reset your password for your account. If you made this request, please click the link below to reset your password:
 

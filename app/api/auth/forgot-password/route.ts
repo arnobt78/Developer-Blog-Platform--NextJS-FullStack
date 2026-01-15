@@ -25,8 +25,8 @@ export async function POST(request: NextRequest) {
       data: { resetToken, resetTokenExpiry },
     });
 
-    // Send email with reset link
-    await sendPasswordResetEmail(email, resetToken);
+    // Send email with reset link and user name
+    await sendPasswordResetEmail(email, resetToken, user.name || "User");
 
     return NextResponse.json({
       message: "If that email exists, a reset link has been sent.",

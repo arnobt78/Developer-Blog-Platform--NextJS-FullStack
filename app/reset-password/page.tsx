@@ -18,9 +18,16 @@ function ResetPasswordForm() {
   const [localError, setLocalError] = useState("");
   const resetPassword = useResetPassword();
 
+  // Debug: Log URL parameters
+  useEffect(() => {
+    console.log("[ResetPassword] URL params - email:", email, "token:", token ? `${token.substring(0, 10)}...` : "missing");
+  }, [email, token]);
+
   useEffect(() => {
     if (!email || !token) {
-      setLocalError("Invalid or missing reset token.");
+      setLocalError("Invalid or missing reset token. Please check the email link and ensure both email and token parameters are present.");
+    } else {
+      setLocalError(""); // Clear error if both are present
     }
   }, [email, token]);
 
