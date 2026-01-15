@@ -40,6 +40,10 @@ function PostsContent() {
 
   // Get search query from URL (e.g., /posts?search=react)
   const searchQuery = searchParams.get("search")?.toLowerCase() || null;
+  
+  // Get page number from URL (e.g., /posts?page=2), default to 1
+  const currentPage = parseInt(searchParams.get("page") || "1", 10);
+  const postsPerPage = 10;
 
   // Check if user is authenticated
   const { data: session, status } = useSession();
@@ -83,7 +87,15 @@ function PostsContent() {
   useEffect(() => {
     const tagFromUrl = searchParams.get("tag");
     setSelectedTag(tagFromUrl);
-  }, [searchParams]);
+    
+    // Reset to page 1 when tag or search changes
+    const pageFromUrl = searchParams.get("page");
+    if ((tagFromUrl || searchQuery) && pageFromUrl && parseInt(pageFromUrl, 10) > 1) {
+      const params = new URLSearchParams(searchParams);
+      params.delete("page");
+      router.replace(`/posts${params.toString() ? "?" + params.toString() : ""}`);
+    }
+  }, [searchParams, searchQuery, router]);
 
   /**
    * Filter posts by tag or search query (client-side filtering as fallback)
@@ -111,6 +123,41 @@ function PostsContent() {
     }
     return true; // No filter, show all posts
   });
+
+  // Pagination calculations
+  const totalPosts = filteredPosts.length;
+  const totalPages = Math.max(1, Math.ceil(totalPosts / postsPerPage));
+  // Ensure currentPage is within valid range
+  const validPage = Math.min(Math.max(1, currentPage), totalPages);
+  const startIndex = (validPage - 1) * postsPerPage;
+  const endIndex = startIndex + postsPerPage;
+  const paginatedPosts = filteredPosts.slice(startIndex, endIndex);
+  
+  // Redirect to valid page if current page is out of bounds
+  useEffect(() => {
+    if (currentPage !== validPage && totalPages > 0) {
+      const params = new URLSearchParams(searchParams);
+      if (validPage === 1) {
+        params.delete("page");
+      } else {
+        params.set("page", validPage.toString());
+      }
+      router.replace(`/posts${params.toString() ? "?" + params.toString() : ""}`);
+    }
+  }, [currentPage, validPage, totalPages, searchParams, router]);
+  
+  // Navigation handlers
+  const handlePageChange = (newPage: number) => {
+    const params = new URLSearchParams(searchParams);
+    if (newPage === 1) {
+      params.delete("page");
+    } else {
+      params.set("page", newPage.toString());
+    }
+    router.push(`/posts${params.toString() ? "?" + params.toString() : ""}`);
+    // Scroll to top of posts section
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   // Recent posts (last 5)
   const recentPosts = [...posts]
@@ -226,7 +273,7 @@ function PostsContent() {
         ) : (
           <>
             <div className="grid grid-cols-1 gap-4 w-full">
-              {filteredPosts.map((post) => (
+              {paginatedPosts.map((post) => (
                 <PostCard
                   key={post.id}
                   post={{
@@ -251,15 +298,28 @@ function PostsContent() {
                 />
               ))}
             </div>
-            {/* Pagination buttons */}
-            <div className="mt-8 flex justify-between">
-              <button className="bg-blue-500 font-courier text-white px-4 py-2 rounded hover:bg-blue-600">
-                Previous
-              </button>
-              <button className="bg-blue-500 font-courier text-white px-4 py-2 rounded hover:bg-blue-600">
-                Next
-              </button>
-            </div>
+            {/* Pagination buttons - Always show when there are posts */}
+            {totalPosts > 0 && (
+              <div className="mt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
+                <button
+                  onClick={() => handlePageChange(validPage - 1)}
+                  disabled={validPage === 1}
+                  className="bg-blue-500 font-courier text-white px-4 py-2 rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-blue-500 transition-colors"
+                >
+                  Previous
+                </button>
+                <span className="text-gray-600 font-courier text-sm sm:text-base">
+                  Page {validPage} of {totalPages}
+                </span>
+                <button
+                  onClick={() => handlePageChange(validPage + 1)}
+                  disabled={validPage === totalPages}
+                  className="bg-blue-500 font-courier text-white px-4 py-2 rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-blue-500 transition-colors"
+                >
+                  Next
+                </button>
+              </div>
+            )}
           </>
         )}
       </main>
