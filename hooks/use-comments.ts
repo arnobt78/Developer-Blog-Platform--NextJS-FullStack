@@ -143,7 +143,7 @@ export function useUpdateComment() {
     mutationFn: async ({
       id,
       content,
-      postId,
+      postId: _postId,
     }: {
       id: string;
       content: string;
@@ -349,7 +349,7 @@ export function useLikeComment() {
   return useMutation({
     mutationFn: async ({
       commentId,
-      postId,
+      postId: _postId,
     }: {
       commentId: string;
       postId: string;
@@ -372,7 +372,7 @@ export function useLikeComment() {
     onMutate: async ({ commentId, postId }) => {
       console.log(`Optimistically updating like for comment: ${commentId}`);
       // Cancel all comment queries for this post (regardless of userId in query key)
-      await queryClient.cancelQueries({ 
+      await queryClient.cancelQueries({
         queryKey: ["comments", postId],
         exact: false, // Match all queries starting with ["comments", postId]
       });
@@ -384,16 +384,22 @@ export function useLikeComment() {
       });
 
       // Snapshot previous values for rollback
-      const previousCommentsQueries = allCommentQueries.map(([queryKey, data]) => [
-        queryKey,
-        data,
-      ]);
+      // Filter out undefined values and type explicitly
+      const previousCommentsQueries: Array<[readonly unknown[], Comment[]]> =
+        allCommentQueries
+          .filter(
+            (entry): entry is [readonly unknown[], Comment[]] =>
+              entry[1] !== undefined
+          )
+          .map(([queryKey, data]) => [queryKey, data]);
 
       // Optimistically update ALL comment queries for this post
       allCommentQueries.forEach(([queryKey, previousComments]) => {
         if (!previousComments) {
           console.warn(
-            `No previous comments found in cache for key: ${JSON.stringify(queryKey)}. Skipping.`
+            `No previous comments found in cache for key: ${JSON.stringify(
+              queryKey
+            )}. Skipping.`
           );
           return;
         }
@@ -406,7 +412,9 @@ export function useLikeComment() {
             return {
               ...comment,
               liked: isLiked,
-              likeCount: isLiked ? comment.likeCount + 1 : comment.likeCount - 1,
+              likeCount: isLiked
+                ? comment.likeCount + 1
+                : comment.likeCount - 1,
             };
           }
         );
@@ -437,16 +445,16 @@ export function useLikeComment() {
         }
       );
     },
-    onError: (err, { postId }, context) => {
+    onError: (err, { postId: _postId }, context) => {
       console.error("Error toggling like:", err);
-      
+
       // Rollback to previous state
       if (context?.previousCommentsQueries) {
         context.previousCommentsQueries.forEach(([queryKey, data]) => {
-          queryClient.setQueryData(queryKey, data);
+          queryClient.setQueryData<Comment[]>(queryKey, data);
         });
       }
-      
+
       toast({
         title: "Error",
         description: err.message || "Failed to like comment",
@@ -465,7 +473,7 @@ export function useHelpfulComment() {
   return useMutation({
     mutationFn: async ({
       commentId,
-      postId,
+      postId: _postId,
     }: {
       commentId: string;
       postId: string;
@@ -488,7 +496,7 @@ export function useHelpfulComment() {
     onMutate: async ({ commentId, postId }) => {
       console.log(`Optimistically updating helpful for comment: ${commentId}`);
       // Cancel all comment queries for this post (regardless of userId in query key)
-      await queryClient.cancelQueries({ 
+      await queryClient.cancelQueries({
         queryKey: ["comments", postId],
         exact: false, // Match all queries starting with ["comments", postId]
       });
@@ -500,16 +508,22 @@ export function useHelpfulComment() {
       });
 
       // Snapshot previous values for rollback
-      const previousCommentsQueries = allCommentQueries.map(([queryKey, data]) => [
-        queryKey,
-        data,
-      ]);
+      // Filter out undefined values and type explicitly
+      const previousCommentsQueries: Array<[readonly unknown[], Comment[]]> =
+        allCommentQueries
+          .filter(
+            (entry): entry is [readonly unknown[], Comment[]] =>
+              entry[1] !== undefined
+          )
+          .map(([queryKey, data]) => [queryKey, data]);
 
       // Optimistically update ALL comment queries for this post
       allCommentQueries.forEach(([queryKey, previousComments]) => {
         if (!previousComments) {
           console.warn(
-            `No previous comments found in cache for key: ${JSON.stringify(queryKey)}. Skipping.`
+            `No previous comments found in cache for key: ${JSON.stringify(
+              queryKey
+            )}. Skipping.`
           );
           return;
         }
@@ -555,16 +569,16 @@ export function useHelpfulComment() {
         }
       );
     },
-    onError: (err, { postId }, context) => {
+    onError: (err, { postId: _postId }, context) => {
       console.error("Error toggling helpful:", err);
-      
+
       // Rollback to previous state
       if (context?.previousCommentsQueries) {
         context.previousCommentsQueries.forEach(([queryKey, data]) => {
-          queryClient.setQueryData(queryKey, data);
+          queryClient.setQueryData<Comment[]>(queryKey, data);
         });
       }
-      
+
       toast({
         title: "Error",
         description: err.message || "Failed to mark comment as helpful",

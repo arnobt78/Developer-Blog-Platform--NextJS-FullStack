@@ -2,7 +2,6 @@
 
 import React from "react";
 import Image from "next/image";
-import { Comment } from "@/types";
 
 interface CommentAvatarProps {
   author: { avatarUrl?: string; name?: string };

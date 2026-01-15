@@ -239,12 +239,18 @@ export function useDeletePost() {
       // Rollback on error
       if (context?.previousPostsQueries) {
         context.previousPostsQueries.forEach(([key, data]) => {
-          queryClient.setQueryData(key, data);
+          // Only set query data if data exists (not undefined)
+          if (data !== undefined) {
+            queryClient.setQueryData(key, data);
+          }
         });
       }
       if (context?.previousSavedPostsQueries) {
         context.previousSavedPostsQueries.forEach(([key, data]) => {
-          queryClient.setQueryData(key, data);
+          // Only set query data if data exists (not undefined)
+          if (data !== undefined) {
+            queryClient.setQueryData(key, data);
+          }
         });
       }
       toast({
@@ -299,10 +305,13 @@ export function useLikePost() {
     },
     onMutate: async (postId) => {
       console.log("Toggling like for post:", postId);
-      
+
       // Cancel outgoing refetches to prevent race conditions
       // Use exact: false to match all variations of the query key (with or without userId)
-      await queryClient.cancelQueries({ queryKey: ["post", postId], exact: false });
+      await queryClient.cancelQueries({
+        queryKey: ["post", postId],
+        exact: false,
+      });
       await queryClient.cancelQueries({ queryKey: ["posts"] });
       await queryClient.cancelQueries({ queryKey: ["saved-posts"] });
 
@@ -311,7 +320,7 @@ export function useLikePost() {
         queryKey: ["post", postId],
         exact: false,
       });
-      
+
       // Snapshot the current values for potential rollback
       const previousPostsQueries = queryClient.getQueriesData<Post[]>({
         queryKey: ["posts"],
@@ -332,7 +341,7 @@ export function useLikePost() {
           });
         }
       });
-      
+
       // Store first post query for rollback (if exists)
       const previousPost = allPostQueries[0]?.[1] || null;
 
@@ -405,19 +414,28 @@ export function useLikePost() {
       // Rollback all single post query variations
       if (context?.allPostQueries) {
         context.allPostQueries.forEach(([queryKey, data]) => {
-          queryClient.setQueryData(queryKey, data);
+          // Only set query data if data exists (not undefined)
+          if (data !== undefined) {
+            queryClient.setQueryData(queryKey, data);
+          }
         });
       }
       // Rollback all posts queries
       if (context?.previousPostsQueries) {
         context.previousPostsQueries.forEach(([queryKey, data]) => {
-          queryClient.setQueryData(queryKey, data);
+          // Only set query data if data exists (not undefined)
+          if (data !== undefined) {
+            queryClient.setQueryData(queryKey, data);
+          }
         });
       }
       // Rollback all saved-posts queries
       if (context?.previousSavedPostsQueries) {
         context.previousSavedPostsQueries.forEach(([queryKey, data]) => {
-          queryClient.setQueryData(queryKey, data);
+          // Only set query data if data exists (not undefined)
+          if (data !== undefined) {
+            queryClient.setQueryData(queryKey, data);
+          }
         });
       }
       toast({
@@ -448,10 +466,13 @@ export function useMarkHelpful() {
     },
     onMutate: async (postId) => {
       console.log("Toggling helpful for post:", postId);
-      
+
       // Cancel outgoing refetches to prevent race conditions
       // Use exact: false to match all variations of the query key (with or without userId)
-      await queryClient.cancelQueries({ queryKey: ["post", postId], exact: false });
+      await queryClient.cancelQueries({
+        queryKey: ["post", postId],
+        exact: false,
+      });
       await queryClient.cancelQueries({ queryKey: ["posts"] });
       await queryClient.cancelQueries({ queryKey: ["saved-posts"] });
 
@@ -481,7 +502,7 @@ export function useMarkHelpful() {
           });
         }
       });
-      
+
       // Store first post query for rollback (if exists)
       const previousPost = allPostQueries[0]?.[1] || null;
 
@@ -554,19 +575,28 @@ export function useMarkHelpful() {
       // Rollback all single post query variations
       if (context?.allPostQueries) {
         context.allPostQueries.forEach(([queryKey, data]) => {
-          queryClient.setQueryData(queryKey, data);
+          // Only set query data if data exists (not undefined)
+          if (data !== undefined) {
+            queryClient.setQueryData(queryKey, data);
+          }
         });
       }
       // Rollback all posts queries
       if (context?.previousPostsQueries) {
         context.previousPostsQueries.forEach(([queryKey, data]) => {
-          queryClient.setQueryData(queryKey, data);
+          // Only set query data if data exists (not undefined)
+          if (data !== undefined) {
+            queryClient.setQueryData(queryKey, data);
+          }
         });
       }
       // Rollback all saved-posts queries
       if (context?.previousSavedPostsQueries) {
         context.previousSavedPostsQueries.forEach(([queryKey, data]) => {
-          queryClient.setQueryData(queryKey, data);
+          // Only set query data if data exists (not undefined)
+          if (data !== undefined) {
+            queryClient.setQueryData(queryKey, data);
+          }
         });
       }
       toast({
@@ -686,7 +716,10 @@ export function useSavePost() {
       }
       if (context?.previousPostsQueries) {
         context.previousPostsQueries.forEach(([queryKey, data]) => {
-          queryClient.setQueryData(queryKey, data);
+          // Only set query data if data exists (not undefined)
+          if (data !== undefined) {
+            queryClient.setQueryData(queryKey, data);
+          }
         });
       }
       if (context?.previousSavedPosts) {
@@ -798,7 +831,10 @@ export function useUnsavePost() {
       }
       if (context?.previousPostsQueries) {
         context.previousPostsQueries.forEach(([queryKey, data]) => {
-          queryClient.setQueryData(queryKey, data);
+          // Only set query data if data exists (not undefined)
+          if (data !== undefined) {
+            queryClient.setQueryData(queryKey, data);
+          }
         });
       }
       if (context?.previousSavedPosts) {

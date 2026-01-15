@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import { Comment } from "@/types";
 
 interface CommentHeaderProps {
   author: { name?: string };
